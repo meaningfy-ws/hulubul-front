@@ -1,0 +1,1544 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>hulubul.com — Trimite un colet acasă, fără bătăi de cap</title>
+<meta name="description" content="Platforma care conectează diaspora cu transportatorii care trec prin orașul tău. Un singur loc, fără telefoane nesfârșite prin grupurile de Facebook.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,800;1,9..144,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --cream: #F5EFE4;
+    --cream-dark: #EDE4D3;
+    --ink: #1A1A1A;
+    --ink-soft: #3D3D3D;
+    --turquoise: #0FB5BA;
+    --turquoise-dark: #0A8A8E;
+    --turquoise-soft: #B8E8EA;
+    --stamp-red: #C8462C;
+    --postmark: #2C3E50;
+    --gold: #C9A961;
+    --line: #D4C9B5;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: var(--cream);
+    color: var(--ink);
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  .serif { font-family: 'Fraunces', Georgia, serif; }
+
+  /* ================ NAV ================ */
+  nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    padding: 18px 40px;
+    background: rgba(245, 239, 228, 0.92);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .logo {
+    font-family: 'Fraunces', serif;
+    font-weight: 800;
+    font-size: 22px;
+    letter-spacing: -0.02em;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .logo-mark {
+    width: 32px;
+    height: 32px;
+    background: var(--turquoise);
+    border-radius: 50%;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--cream);
+    font-size: 18px;
+  }
+
+  .nav-cta {
+    background: var(--ink);
+    color: var(--cream);
+    padding: 10px 22px;
+    border: none;
+    border-radius: 999px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    text-decoration: none;
+  }
+  .nav-cta:hover {
+    background: var(--turquoise);
+    transform: translateY(-1px);
+  }
+
+  /* ================ HERO ================ */
+  .hero {
+    min-height: 100vh;
+    padding: 140px 40px 80px;
+    position: relative;
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 60px;
+    align-items: center;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: 80px;
+    right: -100px;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, var(--turquoise-soft) 0%, transparent 70%);
+    opacity: 0.5;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .hero-content { position: relative; z-index: 2; }
+
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--stamp-red);
+    margin-bottom: 28px;
+    padding: 6px 14px;
+    border: 1.5px solid var(--stamp-red);
+    border-radius: 2px;
+    background: var(--cream);
+    transform: rotate(-1deg);
+  }
+  .eyebrow::before {
+    content: '✦';
+    font-size: 14px;
+  }
+
+  h1.hero-title {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(44px, 6vw, 82px);
+    font-weight: 800;
+    line-height: 0.98;
+    letter-spacing: -0.035em;
+    margin-bottom: 28px;
+    color: var(--ink);
+  }
+
+  h1.hero-title em {
+    font-style: italic;
+    font-weight: 400;
+    color: var(--turquoise-dark);
+  }
+
+  .hero-subtitle {
+    font-size: 19px;
+    line-height: 1.55;
+    color: var(--ink-soft);
+    margin-bottom: 40px;
+    max-width: 540px;
+  }
+
+  .cta-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--ink);
+    color: var(--cream);
+    padding: 18px 32px;
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 16px;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  .cta-primary::after {
+    content: '→';
+    font-size: 20px;
+    transition: transform 0.3s ease;
+  }
+  .cta-primary:hover {
+    background: var(--turquoise-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(10, 138, 142, 0.3);
+  }
+  .cta-primary:hover::after { transform: translateX(4px); }
+
+  .social-proof {
+    margin-top: 24px;
+    font-size: 14px;
+    color: var(--ink-soft);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-style: italic;
+  }
+  .social-proof .dot {
+    width: 8px;
+    height: 8px;
+    background: var(--turquoise);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.3); }
+  }
+
+  /* ================ HERO ILLUSTRATION (POSTCARD) ================ */
+  .postcard {
+    position: relative;
+    background: var(--cream-dark);
+    border: 1px solid var(--line);
+    box-shadow:
+      0 30px 60px rgba(0,0,0,0.12),
+      0 2px 6px rgba(0,0,0,0.08);
+    padding: 28px;
+    transform: rotate(2deg);
+    z-index: 2;
+    max-width: 480px;
+    margin-left: auto;
+  }
+  .postcard::before {
+    content: '';
+    position: absolute;
+    inset: 8px;
+    border: 1.5px dashed var(--line);
+    pointer-events: none;
+  }
+
+  .stamp {
+    position: absolute;
+    top: -12px;
+    right: 24px;
+    width: 80px;
+    height: 100px;
+    background: var(--stamp-red);
+    padding: 6px;
+    transform: rotate(8deg);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 3;
+  }
+  .stamp-inner {
+    width: 100%;
+    height: 100%;
+    background: var(--cream);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    font-family: 'Fraunces', serif;
+  }
+  .stamp-inner .bird {
+    font-size: 36px;
+    line-height: 1;
+  }
+  .stamp-inner .price {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--stamp-red);
+    letter-spacing: 0.05em;
+  }
+
+  .postmark {
+    position: absolute;
+    top: 40px;
+    left: 40px;
+    width: 120px;
+    height: 120px;
+    border: 2px solid var(--postmark);
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.6;
+    transform: rotate(-12deg);
+    pointer-events: none;
+    z-index: 1;
+  }
+  .postmark::before {
+    content: '';
+    position: absolute;
+    inset: 8px;
+    border: 1px solid var(--postmark);
+    border-radius: 50%;
+  }
+  .postmark-text {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: var(--postmark);
+    text-transform: uppercase;
+  }
+  .postmark-date {
+    font-family: 'Fraunces', serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--postmark);
+    margin: 4px 0;
+  }
+
+  .postcard-content {
+    margin-top: 140px;
+    padding-top: 20px;
+    border-top: 1.5px dashed var(--line);
+    position: relative;
+    z-index: 2;
+  }
+
+  .postcard-line {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 15px;
+    color: var(--ink-soft);
+    margin-bottom: 12px;
+    line-height: 1.5;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 6px;
+  }
+
+  .postcard-route {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+  }
+  .postcard-route .city {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+  }
+  .postcard-route .city small {
+    display: block;
+    font-size: 11px;
+    color: var(--ink-soft);
+    font-weight: 400;
+    font-style: italic;
+  }
+  .flight-path {
+    flex: 1;
+    margin: 0 16px;
+    height: 20px;
+    position: relative;
+  }
+  .flight-path svg {
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  /* ================ SECTIONS COMMON ================ */
+  section {
+    padding: 120px 40px;
+    max-width: 1400px;
+    margin: 0 auto;
+    position: relative;
+  }
+
+  .section-label {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--stamp-red);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .section-label::before {
+    content: '';
+    width: 32px;
+    height: 1px;
+    background: var(--stamp-red);
+  }
+
+  h2 {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(36px, 4.5vw, 60px);
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+    margin-bottom: 24px;
+    max-width: 800px;
+  }
+  h2 em {
+    font-style: italic;
+    font-weight: 400;
+    color: var(--turquoise-dark);
+  }
+
+  .section-intro {
+    font-size: 18px;
+    color: var(--ink-soft);
+    max-width: 640px;
+    margin-bottom: 64px;
+  }
+
+  /* ================ PROBLEM SECTION ================ */
+  .problem-section {
+    background: var(--ink);
+    color: var(--cream);
+    max-width: none;
+    padding: 120px 40px;
+    position: relative;
+  }
+  .problem-section::before,
+  .problem-section::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 8px;
+    background-image: repeating-linear-gradient(
+      -45deg,
+      var(--stamp-red) 0 14px,
+      transparent 14px 28px,
+      var(--turquoise) 28px 42px,
+      transparent 42px 56px
+    );
+  }
+  .problem-section::before { top: 0; }
+  .problem-section::after { bottom: 0; }
+
+  .problem-inner {
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  .problem-section h2 { color: var(--cream); }
+  .problem-section h2 em { color: var(--turquoise-soft); }
+
+  .problem-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 32px;
+    margin-top: 56px;
+  }
+
+  .problem-card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.1);
+    padding: 36px 28px;
+    border-radius: 4px;
+    position: relative;
+    transition: all 0.3s ease;
+  }
+  .problem-card:hover {
+    background: rgba(255,255,255,0.08);
+    border-color: var(--turquoise);
+    transform: translateY(-4px);
+  }
+
+  .problem-number {
+    font-family: 'Fraunces', serif;
+    font-size: 48px;
+    font-weight: 800;
+    font-style: italic;
+    color: var(--turquoise);
+    line-height: 1;
+    margin-bottom: 20px;
+  }
+
+  .problem-card h3 {
+    font-family: 'Fraunces', serif;
+    font-size: 22px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: var(--cream);
+  }
+
+  .problem-card p {
+    font-size: 15px;
+    color: rgba(245, 239, 228, 0.75);
+    line-height: 1.6;
+  }
+
+  /* ================ HOW IT WORKS ================ */
+  .how-section {
+    padding-top: 140px;
+  }
+
+  .steps {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 40px;
+    position: relative;
+    margin-top: 40px;
+  }
+
+  .step-line {
+    position: absolute;
+    top: 40px;
+    left: 10%;
+    right: 10%;
+    height: 2px;
+    background-image: linear-gradient(to right, var(--turquoise) 50%, transparent 0%);
+    background-size: 16px 2px;
+    background-repeat: repeat-x;
+    z-index: 0;
+  }
+
+  .step {
+    position: relative;
+    z-index: 1;
+  }
+
+  .step-num {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: var(--cream);
+    border: 2px solid var(--ink);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Fraunces', serif;
+    font-size: 32px;
+    font-weight: 800;
+    margin-bottom: 28px;
+    position: relative;
+  }
+  .step-num::after {
+    content: '';
+    position: absolute;
+    inset: 4px;
+    border: 1px dashed var(--ink);
+    border-radius: 50%;
+    opacity: 0.3;
+  }
+
+  .step:nth-child(2) .step-num { background: var(--turquoise); color: var(--cream); border-color: var(--turquoise); }
+  .step:nth-child(4) .step-num { background: var(--ink); color: var(--cream); }
+
+  .step h3 {
+    font-family: 'Fraunces', serif;
+    font-size: 26px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    letter-spacing: -0.02em;
+  }
+
+  .step p {
+    color: var(--ink-soft);
+    font-size: 16px;
+  }
+
+  .how-note {
+    margin-top: 60px;
+    padding: 20px 28px;
+    background: var(--cream-dark);
+    border-left: 3px solid var(--stamp-red);
+    font-style: italic;
+    color: var(--ink-soft);
+    font-size: 15px;
+    max-width: 640px;
+  }
+
+  /* ================ WHO IS IT FOR ================ */
+  .audience-section {
+    padding: 140px 40px;
+  }
+
+  .audience-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+    margin-top: 40px;
+  }
+
+  .audience-card {
+    background: var(--cream-dark);
+    border: 1px solid var(--line);
+    padding: 48px 40px;
+    position: relative;
+    transition: all 0.3s ease;
+    overflow: hidden;
+  }
+  .audience-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 6px;
+    background: var(--turquoise);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.4s ease;
+  }
+  .audience-card:hover::before { transform: scaleX(1); }
+  .audience-card:hover {
+    background: var(--cream);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+    transform: translateY(-4px);
+  }
+
+  .audience-card .icon {
+    width: 64px;
+    height: 64px;
+    background: var(--turquoise);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    margin-bottom: 28px;
+  }
+  .audience-card:nth-child(2) .icon { background: var(--stamp-red); }
+
+  .audience-card h3 {
+    font-family: 'Fraunces', serif;
+    font-size: 30px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 16px;
+  }
+  .audience-card h3 em {
+    font-style: italic;
+    font-weight: 400;
+    color: var(--turquoise-dark);
+  }
+
+  .audience-card p {
+    color: var(--ink-soft);
+    font-size: 16px;
+    margin-bottom: 28px;
+    line-height: 1.65;
+  }
+
+  .audience-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--ink);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 15px;
+    padding-bottom: 4px;
+    border-bottom: 2px solid var(--ink);
+    transition: all 0.25s ease;
+  }
+  .audience-link:hover {
+    color: var(--turquoise-dark);
+    border-color: var(--turquoise-dark);
+    gap: 14px;
+  }
+
+  /* ================ TRUST / WHY US ================ */
+  .trust-section {
+    background: var(--cream-dark);
+    max-width: none;
+    padding: 120px 40px;
+  }
+  .trust-inner {
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  .trust-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 56px 80px;
+    margin-top: 40px;
+  }
+
+  .trust-item {
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
+  }
+
+  .trust-icon {
+    flex-shrink: 0;
+    width: 48px;
+    height: 48px;
+    background: var(--cream);
+    border: 2px solid var(--ink);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Fraunces', serif;
+    font-weight: 800;
+    font-size: 18px;
+  }
+
+  .trust-item h3 {
+    font-family: 'Fraunces', serif;
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    letter-spacing: -0.01em;
+  }
+
+  .trust-item p {
+    color: var(--ink-soft);
+    font-size: 16px;
+    line-height: 1.6;
+  }
+
+  /* ================ SIGNUP FORM ================ */
+  .signup-section {
+    padding: 140px 40px;
+    background:
+      radial-gradient(ellipse at top left, var(--turquoise-soft) 0%, transparent 50%),
+      radial-gradient(ellipse at bottom right, rgba(200, 70, 44, 0.1) 0%, transparent 50%),
+      var(--cream);
+    max-width: none;
+    position: relative;
+  }
+
+  .signup-inner {
+    max-width: 620px;
+    margin: 0 auto;
+    text-align: center;
+    position: relative;
+  }
+
+  .signup-section h2 {
+    margin: 0 auto 20px;
+    text-align: center;
+  }
+
+  .signup-section .section-intro {
+    text-align: center;
+    margin: 0 auto 48px;
+  }
+
+  .form-card {
+    background: var(--cream);
+    border: 1px solid var(--ink);
+    padding: 48px 40px;
+    text-align: left;
+    position: relative;
+    box-shadow: 12px 12px 0 var(--turquoise);
+  }
+
+  .form-group {
+    margin-bottom: 24px;
+  }
+
+  .form-group label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 8px;
+    color: var(--ink);
+  }
+
+  .form-group label .hint {
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: 0;
+    color: var(--ink-soft);
+    font-style: italic;
+    font-size: 12px;
+    margin-left: 6px;
+  }
+
+  .form-group input[type="text"],
+  .form-group input[type="email"] {
+    width: 100%;
+    padding: 14px 16px;
+    background: var(--cream-dark);
+    border: 1.5px solid var(--line);
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    color: var(--ink);
+    transition: all 0.25s ease;
+    border-radius: 2px;
+  }
+  .form-group input:focus {
+    outline: none;
+    border-color: var(--turquoise);
+    background: var(--cream);
+  }
+
+  .radio-group {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+
+  .radio-option {
+    position: relative;
+  }
+  .radio-option input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .radio-option label {
+    display: block;
+    padding: 14px 10px;
+    background: var(--cream-dark);
+    border: 1.5px solid var(--line);
+    text-align: center;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    text-transform: none;
+    letter-spacing: 0;
+    transition: all 0.2s ease;
+    border-radius: 2px;
+    margin: 0;
+  }
+  .radio-option input:checked + label {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: var(--cream);
+  }
+  .radio-option label:hover {
+    border-color: var(--turquoise);
+  }
+
+  .form-submit {
+    width: 100%;
+    padding: 18px;
+    background: var(--ink);
+    color: var(--cream);
+    border: none;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 16px;
+    cursor: pointer;
+    margin-top: 12px;
+    border-radius: 999px;
+    transition: all 0.25s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+  .form-submit:hover:not(:disabled) {
+    background: var(--turquoise-dark);
+    transform: translateY(-2px);
+  }
+  .form-submit:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .form-footer {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 13px;
+    color: var(--ink-soft);
+    font-style: italic;
+  }
+
+  .form-success {
+    display: none;
+    text-align: center;
+    padding: 48px 20px;
+  }
+  .form-success .success-icon {
+    width: 80px;
+    height: 80px;
+    background: var(--turquoise);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 24px;
+    font-size: 40px;
+    color: var(--cream);
+    animation: successPop 0.5s ease;
+  }
+  @keyframes successPop {
+    0% { transform: scale(0); }
+    70% { transform: scale(1.15); }
+    100% { transform: scale(1); }
+  }
+  .form-success h3 {
+    font-family: 'Fraunces', serif;
+    font-size: 28px;
+    margin-bottom: 12px;
+  }
+  .form-success p {
+    color: var(--ink-soft);
+    font-size: 16px;
+    max-width: 420px;
+    margin: 0 auto;
+  }
+
+  /* ================ FAQ ================ */
+  .faq-section {
+    padding: 120px 40px;
+    max-width: 900px;
+  }
+
+  .faq-list {
+    margin-top: 48px;
+  }
+
+  details {
+    border-top: 1px solid var(--line);
+    padding: 24px 0;
+    transition: all 0.3s ease;
+  }
+  details:last-child { border-bottom: 1px solid var(--line); }
+
+  summary {
+    list-style: none;
+    cursor: pointer;
+    font-family: 'Fraunces', serif;
+    font-size: 22px;
+    font-weight: 600;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    transition: color 0.25s ease;
+    letter-spacing: -0.01em;
+  }
+  summary::-webkit-details-marker { display: none; }
+  summary::after {
+    content: '+';
+    font-size: 28px;
+    font-weight: 400;
+    color: var(--turquoise-dark);
+    transition: transform 0.3s ease;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+  details[open] summary::after { transform: rotate(45deg); }
+  summary:hover { color: var(--turquoise-dark); }
+
+  details[open] .faq-answer {
+    padding-top: 16px;
+    animation: fadeIn 0.4s ease;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .faq-answer {
+    color: var(--ink-soft);
+    font-size: 16px;
+    line-height: 1.65;
+  }
+  .faq-answer a {
+    color: var(--turquoise-dark);
+    font-weight: 600;
+    text-decoration: underline;
+    text-decoration-thickness: 1.5px;
+    text-underline-offset: 3px;
+  }
+  .faq-answer a:hover { color: var(--stamp-red); }
+
+  /* ================ FOOTER ================ */
+  footer {
+    background: var(--ink);
+    color: var(--cream);
+    padding: 60px 40px 40px;
+    max-width: none;
+    position: relative;
+  }
+  footer::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 6px;
+    background-image: repeating-linear-gradient(
+      -45deg,
+      var(--stamp-red) 0 12px,
+      transparent 12px 24px,
+      var(--turquoise) 24px 36px,
+      transparent 36px 48px
+    );
+  }
+
+  .footer-inner {
+    max-width: 1400px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 60px;
+    align-items: start;
+  }
+
+  .footer-brand p {
+    margin-top: 16px;
+    color: rgba(245, 239, 228, 0.7);
+    font-size: 15px;
+    max-width: 320px;
+  }
+
+  .footer-col h4 {
+    font-family: 'Fraunces', serif;
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--turquoise-soft);
+  }
+
+  .footer-col a {
+    display: block;
+    color: rgba(245, 239, 228, 0.7);
+    text-decoration: none;
+    font-size: 15px;
+    margin-bottom: 10px;
+    transition: color 0.2s;
+  }
+  .footer-col a:hover { color: var(--cream); }
+
+  .footer-bottom {
+    max-width: 1400px;
+    margin: 48px auto 0;
+    padding-top: 28px;
+    border-top: 1px solid rgba(245, 239, 228, 0.15);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    color: rgba(245, 239, 228, 0.5);
+    font-style: italic;
+  }
+
+  /* ================ ANIMATIONS ================ */
+  .reveal {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.8s ease, transform 0.8s ease;
+  }
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* ================ MOBILE ================ */
+  @media (max-width: 900px) {
+    nav { padding: 14px 20px; }
+    .logo { font-size: 18px; }
+
+    .hero {
+      grid-template-columns: 1fr;
+      padding: 120px 20px 60px;
+      gap: 40px;
+    }
+    .postcard {
+      transform: rotate(1deg);
+      margin: 0 auto;
+      max-width: 100%;
+    }
+    .stamp { width: 64px; height: 80px; top: -8px; right: 16px; }
+    .stamp-inner .bird { font-size: 28px; }
+    .postmark { width: 90px; height: 90px; top: 30px; left: 20px; }
+    .postmark-date { font-size: 11px; }
+    .postmark-text { font-size: 9px; }
+    .postcard-content { margin-top: 110px; }
+
+    section { padding: 80px 20px; }
+    .problem-section, .trust-section, .signup-section, footer { padding: 80px 20px; }
+
+    .problem-grid, .steps, .audience-grid, .trust-grid {
+      grid-template-columns: 1fr;
+      gap: 24px;
+    }
+    .step-line { display: none; }
+
+    .form-card {
+      padding: 32px 24px;
+      box-shadow: 6px 6px 0 var(--turquoise);
+    }
+
+    .radio-group {
+      grid-template-columns: 1fr;
+    }
+
+    .footer-inner {
+      grid-template-columns: 1fr;
+      gap: 32px;
+    }
+    .footer-bottom {
+      flex-direction: column;
+      gap: 12px;
+      text-align: center;
+    }
+
+    summary { font-size: 18px; }
+  }
+
+  @media (max-width: 500px) {
+    h1.hero-title { font-size: 40px; }
+    .hero-subtitle { font-size: 17px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============== NAV ============== -->
+<nav>
+  <div class="logo">
+    <div class="logo-mark">🕊</div>
+    <span>hulubul<span style="color: var(--turquoise-dark);">.com</span></span>
+  </div>
+  <a href="#signup" class="nav-cta">Mă înscriu</a>
+</nav>
+
+<!-- ============== HERO ============== -->
+<section class="hero">
+  <div class="hero-content">
+    <div class="eyebrow">În pregătire pentru lansare</div>
+    <h1 class="hero-title">
+      Trimite un colet acasă, <em>fără bătăi de cap.</em>
+    </h1>
+    <p class="hero-subtitle">
+      Un singur loc unde îi găsești pe toți transportatorii care trec prin orașul tău.
+      Fără telefoane nesfârșite, fără anunțuri peste anunțuri prin grupurile de Facebook —
+      îți rezolvi problema, nu te pierzi în căutări.
+    </p>
+    <a href="#signup" class="cta-primary">Anunță-mă la lansare</a>
+    <div class="social-proof">
+      <span class="dot"></span>
+      Primele persoane se înscriu zilele acestea — fii printre ele.
+    </div>
+  </div>
+
+  <div class="postcard">
+    <div class="stamp">
+      <div class="stamp-inner">
+        <div class="bird">🕊</div>
+        <div class="price">HULUBUL</div>
+      </div>
+    </div>
+
+    <div class="postmark">
+      <span class="postmark-text">Chișinău</span>
+      <span class="postmark-date">2026</span>
+      <span class="postmark-text">Livrat</span>
+    </div>
+
+    <div class="postcard-content">
+      <div class="postcard-line">Mamă, am trimis coletul săptămâna asta.</div>
+      <div class="postcard-line">Tolea pleacă miercuri, ajunge vineri la tine.</div>
+      <div class="postcard-line">Te sună înainte, să fii acasă.</div>
+
+      <div class="postcard-route">
+        <div class="city">
+          Luxembourg
+          <small>plecare mier., 14 apr.</small>
+        </div>
+        <div class="flight-path">
+          <svg viewBox="0 0 100 20" preserveAspectRatio="none">
+            <path d="M 2 10 Q 50 -5, 98 10" stroke="var(--stamp-red)" stroke-width="1.5" fill="none" stroke-dasharray="3 2"/>
+            <circle cx="2" cy="10" r="2" fill="var(--stamp-red)"/>
+            <circle cx="98" cy="10" r="2" fill="var(--stamp-red)"/>
+          </svg>
+        </div>
+        <div class="city" style="text-align: right;">
+          Chișinău
+          <small>sosire vin., 16 apr.</small>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============== PROBLEM ============== -->
+<div class="problem-section">
+  <div class="problem-inner">
+    <div class="reveal">
+      <div class="section-label" style="color: var(--turquoise-soft);">Problema</div>
+      <h2>Cunoști situația, <em>nu-i așa?</em></h2>
+      <p class="section-intro" style="color: rgba(245, 239, 228, 0.75);">
+        Vrei să trimiți un colet acasă. Și începe povestea pe care toți o știm.
+      </p>
+    </div>
+
+    <div class="problem-grid">
+      <div class="problem-card reveal">
+        <div class="problem-number">01</div>
+        <h3>Cauți ore întregi</h3>
+        <p>Scrii în 3–4 grupuri de Facebook. Aștepți răspunsuri. Suni cunoscuți care cunosc pe alții.</p>
+      </div>
+      <div class="problem-card reveal">
+        <div class="problem-number">02</div>
+        <h3>Negociezi pe bucăți</h3>
+        <p>Cu cine? Când? De unde pleacă, pe unde trece? Cât costă? De fiecare dată o iei de la capăt cu altcineva.</p>
+      </div>
+      <div class="problem-card reveal">
+        <div class="problem-number">03</div>
+        <h3>Nu știi pe cine să crezi</h3>
+        <p>Primul care răspunde nu e neapărat cel mai bun. Iar tu nu ai cum să verifici dinainte.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============== HOW IT WORKS ============== -->
+<section class="how-section">
+  <div class="reveal">
+    <div class="section-label">Cum funcționează</div>
+    <h2>Trei pași. <em>Atât.</em></h2>
+    <p class="section-intro">
+      Aceleași conversații pe care le ai și acum, dar strânse într-un singur loc — și făcute mult mai simplu.
+    </p>
+  </div>
+
+  <div class="steps">
+    <div class="step-line"></div>
+
+    <div class="step reveal">
+      <div class="step-num">1</div>
+      <h3>Spune ce vrei să trimiți</h3>
+      <p>Un colet, din ce oraș, până unde și cam când. Durează sub un minut.</p>
+    </div>
+
+    <div class="step reveal">
+      <div class="step-num">2</div>
+      <h3>Vezi cine trece prin oraș</h3>
+      <p>Transportatorii care trec prin localitatea ta îți răspund cu preț și detalii clare.</p>
+    </div>
+
+    <div class="step reveal">
+      <div class="step-num">3</div>
+      <h3>Alegi și trimiți</h3>
+      <p>Vorbești direct cu transportatorul ales. Stabiliți împreună cum și unde predai coletul.</p>
+    </div>
+  </div>
+
+  <div class="how-note reveal">
+    Fără comisioane ascunse. Plătești direct transportatorului, ca până acum — doar că mult mai simplu de găsit.
+  </div>
+</section>
+
+<!-- ============== AUDIENCE ============== -->
+<section class="audience-section">
+  <div class="reveal">
+    <div class="section-label">Pentru cine</div>
+    <h2>Cine ești? <em>Cel care...</em></h2>
+  </div>
+
+  <div class="audience-grid">
+    <div class="audience-card reveal">
+      <div class="icon">📦</div>
+      <h3>...<em>trimite pachete</em></h3>
+      <p>
+        Ai familie sau prieteni în Moldova? Sau invers, în diaspora?
+        Găsești rapid pe cineva de încredere care trece prin orașul tău săptămâna asta —
+        fără ore pierdute prin grupuri.
+      </p>
+      <a href="#signup" class="audience-link" data-role="expeditor">Mă înscriu ca expeditor →</a>
+    </div>
+
+    <div class="audience-card reveal">
+      <div class="icon">🚐</div>
+      <h3>...<em>face curse regulate</em></h3>
+      <p>
+        Conduci pe rutele Moldova–Europa?
+        Umple spațiul liber din mașină cu cereri relevante, fără să cauți tu prin grupuri.
+        Clienții rămân ai tăi — noi îți aducem alții noi.
+      </p>
+      <a href="#signup" class="audience-link" data-role="transportator">Mă înscriu ca transportator →</a>
+    </div>
+  </div>
+</section>
+
+<!-- ============== TRUST ============== -->
+<div class="trust-section">
+  <div class="trust-inner">
+    <div class="reveal">
+      <div class="section-label">De ce hulubul</div>
+      <h2>Ce facem <em>diferit.</em></h2>
+    </div>
+
+    <div class="trust-grid">
+      <div class="trust-item reveal">
+        <div class="trust-icon">€</div>
+        <div>
+          <h3>Fără intermediari lacomi</h3>
+          <p>Nu luăm comision din tranzacție. Vorbești și plătești direct transportatorului, ca până acum.</p>
+        </div>
+      </div>
+
+      <div class="trust-item reveal">
+        <div class="trust-icon">◷</div>
+        <div>
+          <h3>Fără formulare lungi</h3>
+          <p>Câteva câmpuri, limbaj normal. Funcționează și la telefon, nu doar la calculator.</p>
+        </div>
+      </div>
+
+      <div class="trust-item reveal">
+        <div class="trust-icon">✦</div>
+        <div>
+          <h3>Rute reale, oameni reali</h3>
+          <p>Afișăm doar transportatori activi pe rute active. Nu listări vechi, nu promisiuni pe hârtie.</p>
+        </div>
+      </div>
+
+      <div class="trust-item reveal">
+        <div class="trust-icon">✎</div>
+        <div>
+          <h3>Construim împreună cu voi</h3>
+          <p>Suntem la început. Ce ne spui tu acum modelează platforma înainte să lansăm oficial.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============== SIGNUP ============== -->
+<div class="signup-section" id="signup">
+  <div class="signup-inner">
+    <div class="reveal">
+      <div class="section-label" style="justify-content: center;">Lista de așteptare</div>
+      <h2>Intră pe listă, fii <em>primul</em> anunțat.</h2>
+      <p class="section-intro">
+        Îți scriem pe email sau pe WhatsApp când lansăm, și te ținem la curent cu dezvoltarea.
+        Fără spam, fără reclame, fără date împărtășite terților.
+      </p>
+    </div>
+
+    <div class="form-card reveal">
+      <form id="waitlist-form">
+        <div class="form-group">
+          <label>Nume <span class="hint">(ca să îți scriem pe nume)</span></label>
+          <input type="text" name="name" id="name" placeholder="Ex: Ion Popescu" required>
+        </div>
+
+        <div class="form-group">
+          <label>Email sau WhatsApp</label>
+          <input type="text" name="contact" id="contact" placeholder="email@exemplu.com sau +373..." required>
+        </div>
+
+        <div class="form-group">
+          <label>Cine ești?</label>
+          <div class="radio-group">
+            <div class="radio-option">
+              <input type="radio" name="role" id="r1" value="expeditor" checked>
+              <label for="r1">Trimit pachete</label>
+            </div>
+            <div class="radio-option">
+              <input type="radio" name="role" id="r2" value="transportator">
+              <label for="r2">Sunt transportator</label>
+            </div>
+            <div class="radio-option">
+              <input type="radio" name="role" id="r3" value="ambele">
+              <label for="r3">Ambele</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Ruta care te interesează <span class="hint">(opțional)</span></label>
+          <input type="text" name="route" id="route" placeholder="Ex: Luxembourg → Chișinău">
+        </div>
+
+        <button type="submit" class="form-submit" id="submit-btn">
+          Mă înscriu pe listă →
+        </button>
+
+        <p class="form-footer">
+          Datele tale rămân la noi. Le folosim doar ca să te anunțăm la lansare.
+        </p>
+      </form>
+
+      <div class="form-success" id="form-success">
+        <div class="success-icon">✓</div>
+        <h3>Te-am adăugat pe listă!</h3>
+        <p>Îți scriem pe email sau pe WhatsApp când lansăm pe ruta ta, și te ținem la curent cu dezvoltarea. Mulțumim că crezi în hulubul.com.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============== FAQ ============== -->
+<section class="faq-section">
+  <div class="reveal">
+    <div class="section-label">Întrebări frecvente</div>
+    <h2>Ce ne <em>întreabă</em> lumea.</h2>
+  </div>
+
+  <div class="faq-list">
+    <details>
+      <summary>Când lansați?</summary>
+      <div class="faq-answer">
+        Primele rute sunt în pregătire. Cei din lista de așteptare primesc acces înaintea celorlalți.
+        De aceea te întrebăm și ruta de interes — lansăm mai repede acolo unde avem mai multe cereri.
+      </div>
+    </details>
+
+    <details>
+      <summary>Este gratuit?</summary>
+      <div class="faq-answer">
+        Da, complet gratuit deocamdată. Nu luăm comision din tranzacție, nu avem costuri ascunse.
+        Scopul nostru acum este să rezolvăm problema — modelul de finanțare îl vom construi împreună
+        cu utilizatorii, transparent, atunci când va fi momentul.
+      </div>
+    </details>
+
+    <details>
+      <summary>Ce rute operăm?</summary>
+      <div class="faq-answer">
+        Am adunat rutele cele mai populare din anunțurile publice de pe internet și le-am pus pe o hartă.
+        Pe măsură ce transportatorii se înscriu, datele devin tot mai exacte și mai complete.
+        <a href="#">Vezi harta noastră →</a>
+      </div>
+    </details>
+
+    <details>
+      <summary>Sunt transportator — îmi luați clienții?</summary>
+      <div class="faq-answer">
+        Nu, dimpotrivă. Îți aducem clienți noi și îți dăm posibilitatea să-i localizezi și să-i identifici
+        ușor, pe rutele pe care deja le faci. Relația rămâne între tine și expeditor — păstrezi controlul
+        complet, vorbești direct cu ei, primești banii direct.
+      </div>
+    </details>
+
+    <details>
+      <summary>Cum știu că transportatorul este serios?</summary>
+      <div class="faq-answer">
+        La început, verificăm manual fiecare transportator înainte să apară pe platformă.
+        Pe termen lung, construim un sistem de reputație bazat pe curse reale — nu pe stele plătite.
+      </div>
+    </details>
+
+    <details>
+      <summary>Ce fac dacă pierd pachetul sau se deteriorează?</summary>
+      <div class="faq-answer">
+        Aceasta este o temă serioasă pe care o construim cu atenție împreună cu transportatorii și
+        expeditorii. Dacă vrei să ne ajuți să găsim cea mai bună formulă, înscrie-te pe listă și îți
+        scriem pentru o discuție scurtă.
+      </div>
+    </details>
+  </div>
+</section>
+
+<!-- ============== FOOTER ============== -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <div class="logo" style="color: var(--cream);">
+        <div class="logo-mark">🕊</div>
+        <span>hulubul<span style="color: var(--turquoise-soft);">.com</span></span>
+      </div>
+      <p>Conectăm oameni, locuri și povești. O platformă construită pentru diaspora moldovenească și pentru cei care fac cursele acasă.</p>
+    </div>
+
+    <div class="footer-col">
+      <h4>Platformă</h4>
+      <a href="#signup">Lista de așteptare</a>
+      <a href="#">Despre</a>
+      <a href="#">Pentru transportatori</a>
+    </div>
+
+    <div class="footer-col">
+      <h4>Contact</h4>
+      <a href="mailto:contact@hulubul.com">contact@hulubul.com</a>
+      <a href="#">Confidențialitate</a>
+      <a href="#">Termeni</a>
+    </div>
+  </div>
+
+  <div class="footer-bottom">
+    <div>© 2026 hulubul.com — Toate drepturile rezervate.</div>
+    <div>Construit cu grijă, în Luxembourg și Chișinău.</div>
+  </div>
+</footer>
+
+<script>
+  // ============ Scroll reveal animation ============
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+      }
+    });
+  }, { threshold: 0.12 });
+
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+  // ============ Pre-select role when clicking audience cards ============
+  document.querySelectorAll('.audience-link').forEach(link => {
+    link.addEventListener('click', (e) => {
+      const role = link.getAttribute('data-role');
+      if (role === 'expeditor') document.getElementById('r1').checked = true;
+      if (role === 'transportator') document.getElementById('r2').checked = true;
+    });
+  });
+
+  // ============ Form submission ============
+  const form = document.getElementById('waitlist-form');
+  const successEl = document.getElementById('form-success');
+  const submitBtn = document.getElementById('submit-btn');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Se înscrie...';
+
+    const data = {
+      name: document.getElementById('name').value.trim(),
+      contact: document.getElementById('contact').value.trim(),
+      role: document.querySelector('input[name="role"]:checked').value,
+      route: document.getElementById('route').value.trim() || null,
+      submitted_at: new Date().toISOString()
+    };
+
+    try {
+      const key = 'waitlist:' + Date.now() + ':' + Math.random().toString(36).substring(2, 8);
+      await window.storage.set(key, JSON.stringify(data), true);
+
+      form.style.display = 'none';
+      successEl.style.display = 'block';
+      successEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } catch (err) {
+      console.error('Failed to save:', err);
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = 'Mă înscriu pe listă →';
+      alert('A apărut o eroare. Încearcă din nou, te rog.');
+    }
+  });
+</script>
+
+</body>
+</html>
