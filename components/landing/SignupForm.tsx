@@ -9,10 +9,21 @@ import {
   readRemembered,
   saveRemembered,
 } from "@/lib/remember-me";
+import { CitiesQuestion } from "@/components/landing/CitiesQuestion";
+import {
+  LocationPrompt,
+  type LocationPromptValue,
+} from "@/components/landing/LocationPrompt";
+import {
+  GdprConsent,
+  type GdprConsentValue,
+} from "@/components/landing/GdprConsent";
+import { captureUtmFromUrl, readStoredUtm } from "@/lib/utm";
+import { GDPR_CONSENT_VERSION } from "@/lib/gdpr-consent";
 
 type Status = "idle" | "submitting" | "success" | "error";
 
-const ROLES: readonly Role[] = ["expeditor", "transportator", "ambele"] as const;
+const ROLES: readonly Role[] = ["expeditor", "transportator", "destinatar"] as const;
 
 function parseRole(value: string | null, fallback: Role): Role {
   if (value && (ROLES as readonly string[]).includes(value)) return value as Role;
@@ -21,7 +32,7 @@ function parseRole(value: string | null, fallback: Role): Role {
 
 export function SignupForm({ data }: { data: SignupSection }) {
   const searchParams = useSearchParams();
-  const defaultRole = data.roleDefault ?? "expeditor";
+  const defaultRole = (data.roleDefault as Role) ?? "expeditor";
   const initialRole = useMemo(
     () => parseRole(searchParams?.get("role") ?? null, defaultRole),
     [searchParams, defaultRole],
@@ -31,15 +42,21 @@ export function SignupForm({ data }: { data: SignupSection }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
-  const [routes, setRoutes] = useState("");
+  const [cities, setCities] = useState<string[]>([]);
   const [remember, setRemember] = useState(true);
   const [hasPrefill, setHasPrefill] = useState(false);
+  const [location, setLocation] = useState<LocationPromptValue>({
+    consent: "not_asked",
+    location: null,
+  });
+  const [consent, setConsent] = useState<GdprConsentValue>({
+    consent: false,
+    consentAt: null,
+    version: GDPR_CONSENT_VERSION,
+  });
   const [status, setStatus] = useState<Status>("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Prefill from localStorage on mount. Purely client-side; the server
-  // rendered this form with empty values, which is correct (SSR cannot
-  // see localStorage, and we don't want a hydration mismatch).
   useEffect(() => {
     const remembered = readRemembered();
     if (remembered) {
@@ -48,6 +65,9 @@ export function SignupForm({ data }: { data: SignupSection }) {
       if (remembered.whatsapp) setWhatsapp(remembered.whatsapp);
       setRemember(true);
       setHasPrefill(true);
+    }
+    if (typeof window !== "undefined") {
+      captureUtmFromUrl(window.location.search, document.referrer);
     }
   }, []);
 
@@ -62,21 +82,43 @@ export function SignupForm({ data }: { data: SignupSection }) {
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (!consent.consent) return;
     setStatus("submitting");
     setErrorMessage(null);
 
     const trimmedName = name.trim();
     const trimmedEmail = email.trim();
     const trimmedWhatsapp = whatsapp.trim();
-    const trimmedRoutes = routes.trim();
 
-    const payload: Record<string, string> = {
+    // Re-stamp consentAt at submit time to satisfy the backend's 1-hour freshness window.
+    const submitConsentAt = new Date().toISOString();
+
+    const payload: Record<string, unknown> = {
       name: trimmedName,
       email: trimmedEmail,
       role,
-      routes: trimmedRoutes,
+      cities,
+      source: "landing",
+      gdprConsent: true,
+      gdprConsentAt: submitConsentAt,
+      gdprConsentVersion: consent.version,
+      locationConsent: location.consent,
+      location: location.location,
+      client: {
+        viewport:
+          typeof window !== "undefined"
+            ? { w: window.innerWidth, h: window.innerHeight }
+            : undefined,
+        timezone:
+          typeof Intl !== "undefined"
+            ? Intl.DateTimeFormat().resolvedOptions().timeZone
+            : undefined,
+      },
     };
     if (trimmedWhatsapp) payload.whatsapp = trimmedWhatsapp;
+
+    const utm = readStoredUtm();
+    if (utm && Object.keys(utm).length > 0) payload.utm = utm;
 
     try {
       const res = await fetch("/api/waitlist", {
@@ -139,18 +181,7 @@ export function SignupForm({ data }: { data: SignupSection }) {
     );
   }
 
-  // CMS exposes `contactLabel`/`routeLabel` from the old single-field design.
-  // For the new schema (email + whatsapp + routes) we prefer explicit field
-  // labels so the editor doesn't need to remember that `contactLabel` really
-  // means the email field. Fall back to the CMS value only where it still fits.
-  const emailLabel = data.contactLabel?.toLowerCase().includes("email")
-    ? "Email"
-    : "Email";
-  const emailPlaceholder = "email@exemplu.com";
-  const whatsappPlaceholder = "+373 600 00 000";
-  const routesLabel = data.routeLabel ?? "Rutele care te interesează";
-  const routesPlaceholder =
-    data.routePlaceholder ?? "Ex: Luxembourg - Chișinău, Milano - Chișinău";
+  const submitDisabled = status === "submitting" || !consent.consent;
 
   return (
     <form onSubmit={onSubmit} noValidate>
@@ -158,7 +189,9 @@ export function SignupForm({ data }: { data: SignupSection }) {
         <div className="form-label-row">
           <label htmlFor="waitlist-name">
             {data.nameLabel}
-            {data.nameHint ? <span className="hint">{data.nameHint}</span> : null}
+            {data.nameHint ? (
+              <span className="hint">{data.nameHint}</span>
+            ) : null}
           </label>
           {hasPrefill ? (
             <button
@@ -183,14 +216,14 @@ export function SignupForm({ data }: { data: SignupSection }) {
 
       <div className="form-group">
         <label htmlFor="waitlist-email">
-          {emailLabel}
+          Email
           <span className="hint">Aici îți trimitem anunțul de lansare.</span>
         </label>
         <input
           id="waitlist-email"
           name="email"
           type="email"
-          placeholder={emailPlaceholder}
+          placeholder="email@exemplu.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
@@ -201,13 +234,15 @@ export function SignupForm({ data }: { data: SignupSection }) {
       <div className="form-group">
         <label htmlFor="waitlist-whatsapp">
           WhatsApp
-          <span className="hint">Opțional — mai rapid pentru anunțuri scurte.</span>
+          <span className="hint">
+            Opțional — mai rapid pentru anunțuri scurte.
+          </span>
         </label>
         <input
           id="waitlist-whatsapp"
           name="whatsapp"
           type="tel"
-          placeholder={whatsappPlaceholder}
+          placeholder="+373 600 00 000"
           value={whatsapp}
           onChange={(e) => setWhatsapp(e.target.value)}
           autoComplete="tel"
@@ -227,7 +262,7 @@ export function SignupForm({ data }: { data: SignupSection }) {
                   name="role"
                   value={option.value}
                   checked={role === option.value}
-                  onChange={() => setRole(option.value)}
+                  onChange={() => setRole(option.value as Role)}
                 />
                 <label htmlFor={id}>{option.label}</label>
               </div>
@@ -236,21 +271,9 @@ export function SignupForm({ data }: { data: SignupSection }) {
         </div>
       </div>
 
-      <div className="form-group">
-        <label htmlFor="waitlist-routes">
-          {routesLabel}
-          <span className="hint">Una sau mai multe, separate prin virgulă.</span>
-        </label>
-        <input
-          id="waitlist-routes"
-          name="routes"
-          type="text"
-          placeholder={routesPlaceholder}
-          value={routes}
-          onChange={(e) => setRoutes(e.target.value)}
-          required
-        />
-      </div>
+      <CitiesQuestion role={role} value={cities} onChange={setCities} />
+
+      <LocationPrompt onChange={setLocation} />
 
       <div className="form-remember">
         <input
@@ -268,10 +291,12 @@ export function SignupForm({ data }: { data: SignupSection }) {
         </label>
       </div>
 
+      <GdprConsent onChange={setConsent} />
+
       <button
         type="submit"
         className="form-submit"
-        disabled={status === "submitting"}
+        disabled={submitDisabled}
       >
         {status === "submitting" ? "Se înscrie..." : data.submitLabel}
       </button>

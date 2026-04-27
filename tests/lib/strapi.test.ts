@@ -68,7 +68,12 @@ describe("submitWaitlist", () => {
     name: "Ion",
     email: "ion@example.com",
     role: "expeditor" as const,
-    routes: "LUX - KIV",
+    cities: ["Luxembourg", "Chișinău"],
+    source: "landing" as const,
+    gdprConsent: true as const,
+    gdprConsentAt: "2026-04-27T15:42:11.000Z",
+    gdprConsentVersion: "2026-04-27",
+    locationConsent: "not_asked" as const,
   };
 
   it("POSTs { data: payload } to waitlist-submissions with the new fields", async () => {

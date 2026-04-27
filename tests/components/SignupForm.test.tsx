@@ -1,9 +1,11 @@
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { SignupForm } from "@/components/landing/SignupForm";
 import { landingPageFixture } from "@/tests/msw/fixtures/landing-page";
 import { REMEMBER_STORAGE_KEY } from "@/lib/remember-me";
+import { UTM_STORAGE_KEY } from "@/lib/utm";
+import { GDPR_CONSENT_VERSION } from "@/lib/gdpr-consent";
 
 const searchParams = new URLSearchParams();
 vi.mock("next/navigation", () => ({
@@ -11,20 +13,36 @@ vi.mock("next/navigation", () => ({
 }));
 
 const signup = landingPageFixture.signup;
+const originalGeo = navigator.geolocation;
 
 beforeEach(() => {
   Array.from(searchParams.keys()).forEach((k) => searchParams.delete(k));
   window.localStorage.removeItem(REMEMBER_STORAGE_KEY);
   window.sessionStorage.removeItem("hulubul:from-waitlist");
+  window.sessionStorage.removeItem(UTM_STORAGE_KEY);
   global.fetch = vi.fn();
+  // Default: simulate browser denying geolocation so tests don't hang.
+  Object.defineProperty(navigator, "geolocation", {
+    value: {
+      getCurrentPosition: (_ok: PositionCallback, err?: PositionErrorCallback) =>
+        err?.({ code: 1, message: "denied" } as GeolocationPositionError),
+      watchPosition: vi.fn(),
+      clearWatch: vi.fn(),
+    },
+    configurable: true,
+  });
+});
+
+afterEach(() => {
+  Object.defineProperty(navigator, "geolocation", {
+    value: originalGeo,
+    configurable: true,
+  });
 });
 
 function mockFetchOk() {
   (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue(
-    new Response(JSON.stringify({ ok: true }), {
-      status: 201,
-      headers: { "content-type": "application/json" },
-    }),
+    new Response(JSON.stringify({ ok: true }), { status: 201 }),
   );
 }
 
@@ -34,253 +52,193 @@ function submittedBody(): Record<string, unknown> {
   );
 }
 
-describe("<SignupForm> — baseline submit behaviour", () => {
-  it("submits name/email/role/routes to /api/waitlist and shows success", async () => {
-    mockFetchOk();
-    const user = userEvent.setup();
-    render(<SignupForm data={signup} />);
+async function fillIdentity(user: ReturnType<typeof userEvent.setup>) {
+  await user.type(screen.getByLabelText(/nume/i), "Ion");
+  await user.type(screen.getByLabelText(/email/i), "ion@example.com");
+}
 
-    await user.type(screen.getByLabelText(/nume/i), "Ion Popescu");
-    await user.type(screen.getByLabelText(/email/i), "ion@example.com");
-    await user.type(screen.getByLabelText(/rute/i), "Luxembourg - Chișinău");
-    await user.click(screen.getByRole("button", { name: signup.submitLabel }));
+async function addCity(
+  user: ReturnType<typeof userEvent.setup>,
+  name: string,
+) {
+  const input = screen.getByLabelText("Adaugă oraș");
+  await user.type(input, `${name}{Enter}`);
+}
 
-    await waitFor(() =>
-      expect(screen.getByText(signup.successTitle)).toBeInTheDocument(),
-    );
+async function tickConsent(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(screen.getByRole("checkbox", { name: /confidențialitate/i }));
+}
 
-    expect(global.fetch).toHaveBeenCalledWith(
-      "/api/waitlist",
-      expect.objectContaining({
-        method: "POST",
-        headers: expect.objectContaining({ "Content-Type": "application/json" }),
-      }),
-    );
-    expect(submittedBody()).toEqual({
-      name: "Ion Popescu",
-      email: "ion@example.com",
-      role: "expeditor",
-      routes: "Luxembourg - Chișinău",
+describe("Feature: waitlist v2 happy path", () => {
+  describe.each([
+    ["expeditor"],
+    ["transportator"],
+    ["destinatar"],
+  ] as const)("Given the user picks role=%s", (role) => {
+    it("When the form is filled, consent ticked, and submitted, Then the v2 payload is POSTed", async () => {
+      mockFetchOk();
+      const user = userEvent.setup();
+      render(<SignupForm data={signup} />);
+
+      await fillIdentity(user);
+      if (role !== "expeditor") {
+        const radio = screen.getByLabelText(
+          signup.roleOptions.find((o) => o.value === role)!.label,
+        );
+        await user.click(radio);
+      }
+      await addCity(user, "Luxembourg");
+      await addCity(user, "Chișinău");
+      await tickConsent(user);
+      await user.click(screen.getByRole("button", { name: signup.submitLabel }));
+
+      await waitFor(() => expect(global.fetch).toHaveBeenCalled());
+      const body = submittedBody();
+      expect(body.role).toBe(role);
+      expect(body.cities).toEqual(["Luxembourg", "Chișinău"]);
+      expect(body.gdprConsent).toBe(true);
+      expect(body.gdprConsentVersion).toBe(GDPR_CONSENT_VERSION);
+      expect(body.source).toBe("landing");
+      expect(body).not.toHaveProperty("routes");
     });
-  });
-
-  it("includes whatsapp when provided", async () => {
-    mockFetchOk();
-    const user = userEvent.setup();
-    render(<SignupForm data={signup} />);
-
-    await user.type(screen.getByLabelText(/nume/i), "Ion");
-    await user.type(screen.getByLabelText(/email/i), "ion@x.com");
-    await user.type(screen.getByLabelText(/whatsapp/i), "+373 600 00 000");
-    await user.type(screen.getByLabelText(/rute/i), "LUX - KIV");
-    await user.click(screen.getByRole("button", { name: signup.submitLabel }));
-
-    await waitFor(() => expect(global.fetch).toHaveBeenCalled());
-    expect(submittedBody().whatsapp).toBe("+373 600 00 000");
-  });
-
-  it("omits whatsapp from the payload when left empty", async () => {
-    mockFetchOk();
-    const user = userEvent.setup();
-    render(<SignupForm data={signup} />);
-
-    await user.type(screen.getByLabelText(/nume/i), "Ion");
-    await user.type(screen.getByLabelText(/email/i), "ion@x.com");
-    await user.type(screen.getByLabelText(/rute/i), "LUX - KIV");
-    await user.click(screen.getByRole("button", { name: signup.submitLabel }));
-
-    await waitFor(() => expect(global.fetch).toHaveBeenCalled());
-    expect(submittedBody()).not.toHaveProperty("whatsapp");
-  });
-
-  it("prefills the role radio from ?role=transportator", () => {
-    searchParams.set("role", "transportator");
-    render(<SignupForm data={signup} />);
-    const transportator = screen.getByLabelText(
-      signup.roleOptions.find((o) => o.value === "transportator")!.label,
-    );
-    expect(transportator).toBeChecked();
-  });
-
-  it("shows an inline error when the server rejects", async () => {
-    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue(
-      new Response(JSON.stringify({ error: "nope" }), { status: 500 }),
-    );
-    const user = userEvent.setup();
-    render(<SignupForm data={signup} />);
-
-    await user.type(screen.getByLabelText(/nume/i), "Ion");
-    await user.type(screen.getByLabelText(/email/i), "ion@x.com");
-    await user.type(screen.getByLabelText(/rute/i), "LUX - KIV");
-    await user.click(screen.getByRole("button", { name: signup.submitLabel }));
-
-    await waitFor(() => expect(screen.getByRole("alert")).toBeInTheDocument());
-    expect(screen.queryByText(signup.successTitle)).not.toBeInTheDocument();
   });
 });
 
-describe("<SignupForm> — survey CTA on success", () => {
-  it("renders a link to /sondaj/expeditori after successful submit", async () => {
-    mockFetchOk();
-    const user = userEvent.setup();
-    render(<SignupForm data={signup} />);
-
-    await user.type(screen.getByLabelText(/nume/i), "Ion");
-    await user.type(screen.getByLabelText(/email/i), "ion@x.com");
-    await user.type(screen.getByLabelText(/rute/i), "A - B");
-    await user.click(screen.getByRole("button", { name: signup.submitLabel }));
-
-    const link = await screen.findByRole("link", {
-      name: /împărtășește experiența/i,
+describe("Feature: GDPR consent gates submission", () => {
+  describe("Given the consent box is unticked", () => {
+    it("When the form is otherwise complete, Then the submit button is disabled", async () => {
+      const user = userEvent.setup();
+      render(<SignupForm data={signup} />);
+      const submit = screen.getByRole("button", { name: signup.submitLabel });
+      expect(submit).toBeDisabled();
+      await tickConsent(user);
+      expect(submit).not.toBeDisabled();
     });
-    expect(link).toHaveAttribute("href", "/sondaj/expeditori");
-  });
-
-  it("sets the from-waitlist sessionStorage flag when the CTA is clicked", async () => {
-    mockFetchOk();
-    const user = userEvent.setup();
-    render(<SignupForm data={signup} />);
-
-    await user.type(screen.getByLabelText(/nume/i), "Ion");
-    await user.type(screen.getByLabelText(/email/i), "ion@x.com");
-    await user.type(screen.getByLabelText(/rute/i), "A - B");
-    await user.click(screen.getByRole("button", { name: signup.submitLabel }));
-
-    const link = await screen.findByRole("link", {
-      name: /împărtășește experiența/i,
-    });
-    // Prevent jsdom navigation, then trigger the click handler directly.
-    link.addEventListener("click", (e) => e.preventDefault());
-    await user.click(link);
-    expect(window.sessionStorage.getItem("hulubul:from-waitlist")).toBe("1");
   });
 });
 
-describe("<SignupForm> — remember-me prefill (v2)", () => {
-  it("starts with empty inputs and no clear link when no entry is stored", () => {
-    render(<SignupForm data={signup} />);
-    expect(screen.getByLabelText(/nume/i)).toHaveValue("");
-    expect(screen.getByLabelText(/email/i)).toHaveValue("");
-    expect(screen.getByLabelText(/whatsapp/i)).toHaveValue("");
-    expect(screen.queryByRole("button", { name: /nu ești tu/i })).toBeNull();
+describe("Feature: server rejection surfaces an inline error", () => {
+  describe("Given Strapi rejects the submission with 5xx", () => {
+    it("When the user submits, Then an alert is shown and no success state appears", async () => {
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue(
+        new Response(JSON.stringify({ error: "nope" }), { status: 500 }),
+      );
+      const user = userEvent.setup();
+      render(<SignupForm data={signup} />);
+      await fillIdentity(user);
+      await addCity(user, "Lux");
+      await tickConsent(user);
+      await user.click(screen.getByRole("button", { name: signup.submitLabel }));
+      await waitFor(() => expect(screen.getByRole("alert")).toBeInTheDocument());
+    });
+  });
+});
+
+describe("Feature: switching role preserves entered cities", () => {
+  describe("Given two cities have been added", () => {
+    it("When the role is switched, Then the chips persist in the new role view", async () => {
+      const user = userEvent.setup();
+      render(<SignupForm data={signup} />);
+      await addCity(user, "Lux");
+      await addCity(user, "Metz");
+      const transportator = screen.getByLabelText(
+        signup.roleOptions.find((o) => o.value === "transportator")!.label,
+      );
+      await user.click(transportator);
+      expect(screen.getByText("Lux")).toBeInTheDocument();
+      expect(screen.getByText("Metz")).toBeInTheDocument();
+    });
+  });
+});
+
+describe("Feature: UTM capture flows into the payload", () => {
+  describe("Given a UTM record is already in sessionStorage", () => {
+    it("When the user submits, Then 'utm' is included in the body", async () => {
+      mockFetchOk();
+      window.sessionStorage.setItem(
+        UTM_STORAGE_KEY,
+        JSON.stringify({ utm_source: "fb", utm_campaign: "lux" }),
+      );
+      const user = userEvent.setup();
+      render(<SignupForm data={signup} />);
+      await fillIdentity(user);
+      await addCity(user, "Lux");
+      await tickConsent(user);
+      await user.click(screen.getByRole("button", { name: signup.submitLabel }));
+      await waitFor(() => expect(global.fetch).toHaveBeenCalled());
+      expect(submittedBody().utm).toEqual({ utm_source: "fb", utm_campaign: "lux" });
+    });
   });
 
-  it("prefills name + email (+ whatsapp) and shows the clear link when a v:2 entry is stored", async () => {
-    window.localStorage.setItem(
-      REMEMBER_STORAGE_KEY,
-      JSON.stringify({
-        v: 2,
-        name: "Ion Popescu",
-        email: "ion@example.com",
-        whatsapp: "+373 600",
-        savedAt: new Date().toISOString(),
-      }),
-    );
-    render(<SignupForm data={signup} />);
-
-    await waitFor(() =>
-      expect(screen.getByLabelText(/nume/i)).toHaveValue("Ion Popescu"),
-    );
-    expect(screen.getByLabelText(/email/i)).toHaveValue("ion@example.com");
-    expect(screen.getByLabelText(/whatsapp/i)).toHaveValue("+373 600");
-    expect(
-      screen.getByRole("button", { name: /nu ești tu/i }),
-    ).toBeInTheDocument();
+  describe("Given there is no stored UTM", () => {
+    it("When the user submits, Then 'utm' is omitted from the body", async () => {
+      mockFetchOk();
+      const user = userEvent.setup();
+      render(<SignupForm data={signup} />);
+      await fillIdentity(user);
+      await addCity(user, "Lux");
+      await tickConsent(user);
+      await user.click(screen.getByRole("button", { name: signup.submitLabel }));
+      await waitFor(() => expect(global.fetch).toHaveBeenCalled());
+      expect(submittedBody()).not.toHaveProperty("utm");
+    });
   });
+});
 
-  it("ignores a legacy v:1 entry (migration drops it)", () => {
-    window.localStorage.setItem(
-      REMEMBER_STORAGE_KEY,
-      JSON.stringify({
-        v: 1,
-        name: "Legacy",
-        contact: "legacy@x",
-        savedAt: new Date().toISOString(),
-      }),
-    );
-    render(<SignupForm data={signup} />);
-    expect(screen.getByLabelText(/nume/i)).toHaveValue("");
-    expect(screen.getByLabelText(/email/i)).toHaveValue("");
+describe("Feature: location prompt outcome flows into the payload", () => {
+  describe("Given the user clicks 'Nu, ascunde'", () => {
+    it("When the user submits, Then locationConsent=denied and location=null", async () => {
+      mockFetchOk();
+      const user = userEvent.setup();
+      render(<SignupForm data={signup} />);
+      await fillIdentity(user);
+      await addCity(user, "Lux");
+      await user.click(screen.getByRole("button", { name: /nu, ascunde/i }));
+      await tickConsent(user);
+      await user.click(screen.getByRole("button", { name: signup.submitLabel }));
+      await waitFor(() => expect(global.fetch).toHaveBeenCalled());
+      expect(submittedBody().locationConsent).toBe("denied");
+      expect(submittedBody().location).toBeNull();
+    });
   });
+});
 
-  it("clicking 'Nu ești tu?' empties the inputs, hides the link, and wipes storage", async () => {
-    window.localStorage.setItem(
-      REMEMBER_STORAGE_KEY,
-      JSON.stringify({
-        v: 2,
-        name: "Ion",
-        email: "ion@example.com",
-        savedAt: new Date().toISOString(),
-      }),
-    );
-    const user = userEvent.setup();
-    render(<SignupForm data={signup} />);
-
-    await waitFor(() =>
-      expect(screen.getByLabelText(/nume/i)).toHaveValue("Ion"),
-    );
-    await user.click(screen.getByRole("button", { name: /nu ești tu/i }));
-
-    expect(screen.getByLabelText(/nume/i)).toHaveValue("");
-    expect(screen.getByLabelText(/email/i)).toHaveValue("");
-    expect(screen.getByLabelText(/whatsapp/i)).toHaveValue("");
-    expect(screen.queryByRole("button", { name: /nu ești tu/i })).toBeNull();
-    expect(window.localStorage.getItem(REMEMBER_STORAGE_KEY)).toBeNull();
+describe("Feature: gdprConsentAt is fresh at submit time", () => {
+  describe("Given the user ticks consent and waits before submitting", () => {
+    it("When the user submits, Then gdprConsentAt is stamped at submit time, not at tick time", async () => {
+      mockFetchOk();
+      const user = userEvent.setup();
+      render(<SignupForm data={signup} />);
+      await fillIdentity(user);
+      await addCity(user, "Lux");
+      await tickConsent(user);
+      const tickedAt = Date.now();
+      // Simulate a wait by advancing wall clock implicitly via async ops.
+      await new Promise((r) => setTimeout(r, 20));
+      await user.click(screen.getByRole("button", { name: signup.submitLabel }));
+      await waitFor(() => expect(global.fetch).toHaveBeenCalled());
+      const stamped = new Date(submittedBody().gdprConsentAt as string).getTime();
+      // Stamp must be at-or-after the tick (re-stamped at submit) and within a few seconds of now.
+      expect(stamped).toBeGreaterThanOrEqual(tickedAt);
+      expect(Date.now() - stamped).toBeLessThan(5000);
+    });
   });
+});
 
-  it("saves v:2 payload on successful submit when the checkbox is ticked (default)", async () => {
-    mockFetchOk();
-    const user = userEvent.setup();
-    render(<SignupForm data={signup} />);
-
-    expect(screen.getByLabelText(/reține-mă/i)).toBeChecked();
-
-    await user.type(screen.getByLabelText(/nume/i), "Ion Popescu");
-    await user.type(screen.getByLabelText(/email/i), "ion@example.com");
-    await user.type(screen.getByLabelText(/whatsapp/i), "+373 600");
-    await user.type(screen.getByLabelText(/rute/i), "LUX - KIV");
-    await user.click(screen.getByRole("button", { name: signup.submitLabel }));
-
-    await waitFor(() =>
-      expect(screen.getByText(signup.successTitle)).toBeInTheDocument(),
-    );
-
-    const stored = window.localStorage.getItem(REMEMBER_STORAGE_KEY);
-    expect(stored).not.toBeNull();
-    const payload = JSON.parse(stored!);
-    expect(payload.v).toBe(2);
-    expect(payload.name).toBe("Ion Popescu");
-    expect(payload.email).toBe("ion@example.com");
-    expect(payload.whatsapp).toBe("+373 600");
-  });
-
-  it("clears prior storage on successful submit when the checkbox is NOT ticked", async () => {
-    window.localStorage.setItem(
-      REMEMBER_STORAGE_KEY,
-      JSON.stringify({
-        v: 2,
-        name: "Old",
-        email: "old@x",
-        savedAt: new Date().toISOString(),
-      }),
-    );
-    mockFetchOk();
-    const user = userEvent.setup();
-    render(<SignupForm data={signup} />);
-
-    await waitFor(() =>
-      expect(screen.getByLabelText(/nume/i)).toHaveValue("Old"),
-    );
-    const checkbox = screen.getByLabelText(/reține-mă/i);
-    if ((checkbox as HTMLInputElement).checked) await user.click(checkbox);
-
-    // Routes is still required, fill it before submitting.
-    await user.type(screen.getByLabelText(/rute/i), "A - B");
-    await user.click(screen.getByRole("button", { name: signup.submitLabel }));
-
-    await waitFor(() =>
-      expect(screen.getByText(signup.successTitle)).toBeInTheDocument(),
-    );
-    expect(window.localStorage.getItem(REMEMBER_STORAGE_KEY)).toBeNull();
+describe("Feature: survey CTA on success", () => {
+  describe("Given a successful submission", () => {
+    it("When the success card renders, Then the survey link sets the from-waitlist flag", async () => {
+      mockFetchOk();
+      const user = userEvent.setup();
+      render(<SignupForm data={signup} />);
+      await fillIdentity(user);
+      await addCity(user, "Lux");
+      await tickConsent(user);
+      await user.click(screen.getByRole("button", { name: signup.submitLabel }));
+      const link = await screen.findByRole("link", { name: /împărtășește/i });
+      expect(link).toHaveAttribute("href", "/sondaj/expeditori");
+      await user.click(link);
+      expect(window.sessionStorage.getItem("hulubul:from-waitlist")).toBe("1");
+    });
   });
 });

@@ -109,7 +109,7 @@ export const landingPageFixture: LandingPage = {
     roleOptions: [
       { id: 1, value: "expeditor", label: "Trimit" },
       { id: 2, value: "transportator", label: "Transport" },
-      { id: 3, value: "ambele", label: "Ambele" },
+      { id: 3, value: "destinatar", label: "Primesc pachete" },
     ],
     roleDefault: "expeditor",
     routeLabel: "Rutele care te interesează",

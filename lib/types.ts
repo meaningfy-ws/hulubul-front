@@ -1,4 +1,4 @@
-export type Role = "expeditor" | "transportator" | "ambele";
+export type Role = "expeditor" | "transportator" | "destinatar";
 
 export interface StrapiMediaFormat {
   url: string;
