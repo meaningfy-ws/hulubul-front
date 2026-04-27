@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { CityTagInput } from "@/components/routes/CityTagInput";
 
@@ -141,5 +141,120 @@ describe("<CityTagInput>", () => {
     await userEvent.type(screen.getByRole("combobox"), "L");
     await waitFor(() => {}, { timeout: 500 });
     expect(global.fetch).not.toHaveBeenCalled();
+  });
+});
+
+describe("Feature: origin/destination badges (waitlist v2)", () => {
+  describe("Given originDestinationLabels=false (transporter mode)", () => {
+    it("When chips render, Then no Plecare/Destinație labels appear", () => {
+      render(
+        <CityTagInput
+          value={["Lux", "Metz", "Chișinău"]}
+          onChange={noop}
+          originDestinationLabels={false}
+        />,
+      );
+      expect(screen.queryByText("Plecare")).not.toBeInTheDocument();
+      expect(screen.queryByText("Destinație")).not.toBeInTheDocument();
+    });
+  });
+
+  describe("Given originDestinationLabels is left at default", () => {
+    it("When chips render, Then Plecare and Destinație appear (backwards-compatible)", () => {
+      render(<CityTagInput value={["Lux", "Chișinău"]} onChange={noop} />);
+      expect(screen.getByText("Plecare")).toBeInTheDocument();
+      expect(screen.getByText("Destinație")).toBeInTheDocument();
+    });
+  });
+});
+
+describe("Feature: maxCities cap", () => {
+  describe("Given maxCities=2 and 2 chips already present", () => {
+    it("When the user types a new city and presses Enter, Then onChange is not called", async () => {
+      const onChange = vi.fn();
+      render(<CityTagInput value={["A", "B"]} onChange={onChange} maxCities={2} />);
+      const input = screen.getByRole("combobox");
+      await userEvent.type(input, "C");
+      await userEvent.keyboard("{Enter}");
+      expect(onChange).not.toHaveBeenCalled();
+    });
+  });
+});
+
+describe("Feature: keyboard reorder via Alt+Arrow", () => {
+  describe("Given chips [A, B, C] with chip A focused", () => {
+    it("When the user presses Alt+ArrowRight, Then the array becomes [B, A, C]", async () => {
+      const onChange = vi.fn();
+      render(<CityTagInput value={["A", "B", "C"]} onChange={onChange} />);
+      const chipA = screen.getByRole("button", { name: /chip A/i });
+      chipA.focus();
+      await userEvent.keyboard("{Alt>}{ArrowRight}{/Alt}");
+      expect(onChange).toHaveBeenCalledWith(["B", "A", "C"]);
+    });
+  });
+
+  describe("Given chips [A, B, C] with chip B focused", () => {
+    it("When the user presses Alt+ArrowLeft, Then the array becomes [B, A, C]", async () => {
+      const onChange = vi.fn();
+      render(<CityTagInput value={["A", "B", "C"]} onChange={onChange} />);
+      const chipB = screen.getByRole("button", { name: /chip B/i });
+      chipB.focus();
+      await userEvent.keyboard("{Alt>}{ArrowLeft}{/Alt}");
+      expect(onChange).toHaveBeenCalledWith(["B", "A", "C"]);
+    });
+  });
+
+  describe("Given the leftmost chip is focused", () => {
+    it("When the user presses Alt+ArrowLeft, Then onChange is not called (no-op at boundary)", async () => {
+      const onChange = vi.fn();
+      render(<CityTagInput value={["A", "B"]} onChange={onChange} />);
+      const chipA = screen.getByRole("button", { name: /chip A/i });
+      chipA.focus();
+      await userEvent.keyboard("{Alt>}{ArrowLeft}{/Alt}");
+      expect(onChange).not.toHaveBeenCalled();
+    });
+  });
+});
+
+describe("Feature: insert-between via gap button", () => {
+  describe("Given chips [A, C] with a gap between them", () => {
+    it("When the user clicks the gap and types 'B', Then chips become [A, B, C]", async () => {
+      const onChange = vi.fn();
+      render(<CityTagInput value={["A", "C"]} onChange={onChange} />);
+      const insertBtn = screen.getByRole("button", { name: /inserează între A și C/i });
+      await userEvent.click(insertBtn);
+      const input = screen.getByLabelText(/oraș nou între A și C/i);
+      fireEvent.change(input, { target: { value: "B" } });
+      fireEvent.keyDown(input, { key: "Enter" });
+      expect(onChange).toHaveBeenCalledWith(["A", "B", "C"]);
+    });
+  });
+});
+
+describe("Feature: drag-to-reorder", () => {
+  describe("Given chips [A, B, C]", () => {
+    it("When chip A is dropped onto chip C, Then chips become [B, C, A]", () => {
+      const onChange = vi.fn();
+      render(<CityTagInput value={["A", "B", "C"]} onChange={onChange} />);
+      const chipA = screen.getByRole("button", { name: /chip A/i });
+      const chipC = screen.getByRole("button", { name: /chip C/i });
+
+      // jsdom does not implement DragEvent. Synthesise via Event + dataTransfer.
+      const dt = {
+        setData: vi.fn(),
+        getData: () => "0",
+        effectAllowed: "move",
+      } as unknown as DataTransfer;
+
+      const dragstart = new Event("dragstart", { bubbles: true, cancelable: true });
+      Object.defineProperty(dragstart, "dataTransfer", { value: dt });
+      chipA.dispatchEvent(dragstart);
+
+      const drop = new Event("drop", { bubbles: true, cancelable: true });
+      Object.defineProperty(drop, "dataTransfer", { value: dt });
+      chipC.dispatchEvent(drop);
+
+      expect(onChange).toHaveBeenCalledWith(["B", "C", "A"]);
+    });
   });
 });
