@@ -14,7 +14,7 @@ const contentSecurityPolicy = [
     ? "script-src 'self' 'unsafe-inline' 'unsafe-eval'"
     : "script-src 'self' 'unsafe-inline'",
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: https://*.strapiapp.com https://*.media.strapiapp.com",
+  "img-src 'self' data: https://*.strapiapp.com https://*.media.strapiapp.com https://*.tile.openstreetmap.org",
   "font-src 'self' data:",
   "connect-src 'self' https://*.strapiapp.com",
   "frame-ancestors 'none'",

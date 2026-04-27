@@ -107,9 +107,9 @@ export const landingPageFixture: LandingPage = {
     contactPlaceholder: "email@x",
     roleLabel: "Cine?",
     roleOptions: [
-      { id: 1, value: "expeditor", label: "Trimit" },
-      { id: 2, value: "transportator", label: "Transport" },
-      { id: 3, value: "ambele", label: "Ambele" },
+      { id: 1, value: "expeditor", label: "Trimit pachete" },
+      { id: 2, value: "transportator", label: "Transport pachete" },
+      { id: 3, value: "destinatar", label: "Primesc pachete" },
     ],
     roleDefault: "expeditor",
     routeLabel: "Rutele care te interesează",

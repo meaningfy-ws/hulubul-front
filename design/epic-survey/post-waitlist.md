@@ -2,6 +2,7 @@
 
 > **Status:** Spec only. Not implemented.
 > **Date:** 2026-04-23.
+> **Note 2026-04-27:** The role enum in this doc (`expeditor | transportator | ambele`) is superseded by `expeditor | transportator | destinatar` — see `design/spec-waitlist-backend.md` §4. Update §5 of this doc when survey implementation begins.
 > **Scope:** this frontend repo (`hulubul-front`). Backend `survey-response` collection already exists at `/api/survey-responses` on Strapi Cloud — field list confirmed by live probe on 2026-04-23.
 > **Relationship to other epics:**
 > - Ships *after* the waitlist form but *before* `design/epic-signup/login.md` (no auth needed).

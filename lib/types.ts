@@ -1,4 +1,4 @@
-export type Role = "expeditor" | "transportator" | "ambele";
+export type Role = "expeditor" | "transportator" | "destinatar";
 
 export interface StrapiMediaFormat {
   url: string;
@@ -127,6 +127,7 @@ export interface RoleOption {
   id: number;
   value: Role;
   label: string;
+  icon?: string;
 }
 
 export interface SignupSection {

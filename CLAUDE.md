@@ -1,7 +1,7 @@
 <!-- gitnexus:start -->
 # GitNexus — Code Intelligence
 
-This project is indexed by GitNexus as **strapi-cloud-template-blog-18c70c3ea8** (199 symbols, 328 relationships, 12 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
+This project is indexed by GitNexus as **hulubul-front** (422 symbols, 863 relationships, 27 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
 
 > If any GitNexus tool warns the index is stale, run `npx gitnexus analyze` in terminal first.
 
@@ -17,7 +17,7 @@ This project is indexed by GitNexus as **strapi-cloud-template-blog-18c70c3ea8**
 
 1. `gitnexus_query({query: "<error or symptom>"})` — find execution flows related to the issue
 2. `gitnexus_context({name: "<suspect function>"})` — see all callers, callees, and process participation
-3. `READ gitnexus://repo/strapi-cloud-template-blog-18c70c3ea8/process/{processName}` — trace the full execution flow step by step
+3. `READ gitnexus://repo/hulubul-front/process/{processName}` — trace the full execution flow step by step
 4. For regressions: `gitnexus_detect_changes({scope: "compare", base_ref: "main"})` — see what your branch changed
 
 ## When Refactoring
@@ -56,10 +56,10 @@ This project is indexed by GitNexus as **strapi-cloud-template-blog-18c70c3ea8**
 
 | Resource | Use for |
 |----------|---------|
-| `gitnexus://repo/strapi-cloud-template-blog-18c70c3ea8/context` | Codebase overview, check index freshness |
-| `gitnexus://repo/strapi-cloud-template-blog-18c70c3ea8/clusters` | All functional areas |
-| `gitnexus://repo/strapi-cloud-template-blog-18c70c3ea8/processes` | All execution flows |
-| `gitnexus://repo/strapi-cloud-template-blog-18c70c3ea8/process/{name}` | Step-by-step execution trace |
+| `gitnexus://repo/hulubul-front/context` | Codebase overview, check index freshness |
+| `gitnexus://repo/hulubul-front/clusters` | All functional areas |
+| `gitnexus://repo/hulubul-front/processes` | All execution flows |
+| `gitnexus://repo/hulubul-front/process/{name}` | Step-by-step execution trace |
 
 ## Self-Check Before Finishing
 
