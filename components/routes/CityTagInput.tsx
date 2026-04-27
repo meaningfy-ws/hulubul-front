@@ -1,6 +1,23 @@
 "use client";
 
 import { Fragment, useState, useRef, useEffect, useCallback } from "react";
+import {
+  DndContext,
+  KeyboardSensor,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  arrayMove,
+  horizontalListSortingStrategy,
+  sortableKeyboardCoordinates,
+  useSortable,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import type { GeocodeSuggestion } from "@/lib/routes-types";
 
 interface Props {
@@ -25,12 +42,15 @@ export function CityTagInput({
   const [isOpen, setIsOpen] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const [loading, setLoading] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const dragSourceIndex = useRef<number | null>(null);
-
   const [insertIndex, setInsertIndex] = useState<number | null>(null);
-  const [insertText, setInsertText] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+  const gapInputRef = useRef<HTMLInputElement>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
 
   const fetchSuggestions = useCallback(async (query: string) => {
     if (query.length < 2) {
@@ -71,11 +91,18 @@ export function CityTagInput({
 
   function addCity(name: string) {
     if (value.length >= maxCities) return;
-    onChange([...value, name]);
+    const next = [...value];
+    if (insertIndex != null) {
+      next.splice(insertIndex, 0, name);
+    } else {
+      next.push(name);
+    }
+    onChange(next);
     setInputText("");
     setSuggestions([]);
     setIsOpen(false);
     setHighlightedIndex(-1);
+    setInsertIndex(null);
     inputRef.current?.focus();
   }
 
@@ -88,6 +115,15 @@ export function CityTagInput({
     const next = [...value];
     [next[i], next[j]] = [next[j]!, next[i]!];
     onChange(next);
+  }
+
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const from = Number(active.id);
+    const to = Number(over.id);
+    if (Number.isNaN(from) || Number.isNaN(to)) return;
+    onChange(arrayMove(value, from, to));
   }
 
   function handleChipKeyDown(
@@ -104,53 +140,23 @@ export function CityTagInput({
     }
   }
 
-  function handleDragStart(
-    e: React.DragEvent<HTMLButtonElement>,
-    index: number,
-  ) {
-    if (disabled) return;
-    dragSourceIndex.current = index;
-    e.dataTransfer.effectAllowed = "move";
-    e.dataTransfer.setData("text/plain", String(index));
-  }
-
-  function handleDrop(
-    e: React.DragEvent<HTMLButtonElement>,
-    targetIndex: number,
-  ) {
-    e.preventDefault();
-    const fromStr = e.dataTransfer.getData("text/plain");
-    const from = fromStr !== "" ? Number(fromStr) : dragSourceIndex.current;
-    dragSourceIndex.current = null;
-    if (from == null || Number.isNaN(from) || from === targetIndex) return;
-    const next = [...value];
-    const [moved] = next.splice(from, 1);
-    next.splice(targetIndex, 0, moved!);
-    onChange(next);
-  }
-
-  function commitInsert() {
-    const trimmed = insertText.trim();
-    if (insertIndex == null || !trimmed || value.length >= maxCities) {
-      setInsertIndex(null);
-      setInsertText("");
-      return;
-    }
-    const next = [...value];
-    next.splice(insertIndex, 0, trimmed);
-    onChange(next);
-    setInsertIndex(null);
-    setInsertText("");
-  }
-
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key === "Backspace" && inputText === "" && value.length > 0) {
+    if (
+      e.key === "Backspace" &&
+      inputText === "" &&
+      insertIndex == null &&
+      value.length > 0
+    ) {
       removeCity(value.length - 1);
       return;
     }
     if (e.key === "Escape") {
       setIsOpen(false);
       setHighlightedIndex(-1);
+      if (insertIndex != null) {
+        setInsertIndex(null);
+        setInputText("");
+      }
       return;
     }
     if (e.key === "ArrowDown") {
@@ -180,159 +186,125 @@ export function CityTagInput({
     return null;
   }
 
+  const sortableIds = value.map((_, i) => String(i));
+
   return (
     <div style={{ position: "relative" }}>
-      <div
-        style={{
-          display: "flex",
-          flexWrap: "wrap",
-          gap: "4px",
-          alignItems: "center",
-          padding: "6px 8px",
-          border: "1px solid #d1d5db",
-          borderRadius: "6px",
-          minHeight: "40px",
-          cursor: "text",
-        }}
-        onClick={() => inputRef.current?.focus()}
-      >
-        {value.map((city, i) => (
-          <Fragment key={i}>
-            {i > 0 &&
-              (insertIndex === i ? (
-                <input
-                  autoFocus
-                  aria-label={`Oraș nou între ${value[i - 1]} și ${value[i]}`}
-                  value={insertText}
-                  onChange={(e) => setInsertText(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      commitInsert();
-                    } else if (e.key === "Escape") {
-                      setInsertIndex(null);
-                      setInsertText("");
-                    }
-                  }}
-                  onBlur={commitInsert}
-                  style={{
-                    minWidth: "100px",
-                    border: "1px dashed #d1d5db",
-                    borderRadius: "12px",
-                    padding: "2px 8px",
-                    fontSize: "0.875rem",
-                  }}
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <SortableContext items={sortableIds} strategy={horizontalListSortingStrategy}>
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: "4px",
+              alignItems: "center",
+              padding: "6px 8px",
+              border: "1px solid #d1d5db",
+              borderRadius: "6px",
+              minHeight: "40px",
+              cursor: "text",
+            }}
+            onClick={(e) => {
+              if (e.target === e.currentTarget) inputRef.current?.focus();
+            }}
+          >
+            {value.map((city, i) => (
+              <Fragment key={i}>
+                {i > 0 &&
+                  (insertIndex === i ? (
+                    <input
+                      ref={gapInputRef}
+                      autoFocus
+                      aria-label={`Oraș nou între ${value[i - 1]} și ${value[i]}`}
+                      value={inputText}
+                      onChange={(e) => setInputText(e.target.value)}
+                      onKeyDown={handleKeyDown}
+                      onBlur={() => {
+                        // Cancel the gap if the user clicks away without picking.
+                        setTimeout(() => {
+                          setInsertIndex(null);
+                          setInputText("");
+                          setIsOpen(false);
+                        }, 200);
+                      }}
+                      placeholder="Tastează un oraș…"
+                      style={{
+                        minWidth: "120px",
+                        border: "1px dashed #6b7280",
+                        outline: "none",
+                        borderRadius: "12px",
+                        padding: "2px 8px",
+                        fontSize: "0.875rem",
+                      }}
+                      role="combobox"
+                      aria-autocomplete="list"
+                      aria-expanded={isOpen}
+                    />
+                  ) : (
+                    <button
+                      type="button"
+                      aria-label={`Inserează între ${value[i - 1]} și ${value[i]}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setInsertIndex(i);
+                        setInputText("");
+                      }}
+                      style={{
+                        background: "none",
+                        border: "1px dashed #d1d5db",
+                        borderRadius: "999px",
+                        width: "18px",
+                        height: "18px",
+                        padding: 0,
+                        cursor: "pointer",
+                        color: "#9ca3af",
+                        fontSize: "0.75rem",
+                        lineHeight: 1,
+                      }}
+                    >
+                      +
+                    </button>
+                  ))}
+                <SortableChip
+                  id={String(i)}
+                  index={i}
+                  city={city}
+                  badge={chipLabel(i)}
+                  disabled={disabled}
+                  onRemove={() => removeCity(i)}
+                  onChipKeyDown={(e) => handleChipKeyDown(e, i)}
                 />
-              ) : (
-                <button
-                  type="button"
-                  aria-label={`Inserează între ${value[i - 1]} și ${value[i]}`}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setInsertIndex(i);
-                  }}
-                  style={{
-                    background: "none",
-                    border: "1px dashed #d1d5db",
-                    borderRadius: "999px",
-                    width: "18px",
-                    height: "18px",
-                    padding: 0,
-                    cursor: "pointer",
-                    color: "#9ca3af",
-                    fontSize: "0.75rem",
-                    lineHeight: 1,
-                  }}
-                >
-                  +
-                </button>
-              ))}
-            <span
-              style={{
-                display: "inline-flex",
-                flexDirection: "column",
-                alignItems: "flex-start",
-              }}
-            >
-              {chipLabel(i) && (
-                <span
-                  style={{
-                    fontSize: "0.6rem",
-                    color: "#6b7280",
-                    lineHeight: 1,
-                  }}
-                >
-                  {chipLabel(i)}
-                </span>
-              )}
-              <button
-                type="button"
-                aria-label={`chip ${city}`}
-                onKeyDown={(e) => handleChipKeyDown(e, i)}
-                draggable={!disabled}
-                onDragStart={(e) => handleDragStart(e, i)}
-                onDragOver={(e) => e.preventDefault()}
-                onDrop={(e) => handleDrop(e, i)}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "4px",
-                  padding: "2px 8px",
-                  backgroundColor: "#e5e7eb",
-                  borderRadius: "12px",
-                  fontSize: "0.875rem",
-                  border: "none",
-                  cursor: disabled ? "default" : "grab",
+              </Fragment>
+            ))}
+            {insertIndex == null && (
+              <input
+                ref={inputRef}
+                value={inputText}
+                onChange={(e) => setInputText(e.target.value)}
+                onKeyDown={handleKeyDown}
+                onFocus={() => {
+                  if (suggestions.length > 0) setIsOpen(true);
                 }}
-              >
-                {city}
-                {!disabled && (
-                  <span
-                    role="button"
-                    aria-label={`Elimină ${city}`}
-                    tabIndex={-1}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      removeCity(i);
-                    }}
-                    style={{
-                      cursor: "pointer",
-                      padding: 0,
-                      lineHeight: 1,
-                    }}
-                  >
-                    ×
-                  </span>
-                )}
-              </button>
-            </span>
-          </Fragment>
-        ))}
-        <input
-          ref={inputRef}
-          value={inputText}
-          onChange={(e) => setInputText(e.target.value)}
-          onKeyDown={handleKeyDown}
-          onFocus={() => {
-            if (suggestions.length > 0) setIsOpen(true);
-          }}
-          onBlur={() => setTimeout(() => setIsOpen(false), 150)}
-          placeholder={value.length === 0 ? placeholder : ""}
-          disabled={disabled}
-          style={{
-            border: "none",
-            outline: "none",
-            flex: 1,
-            minWidth: "120px",
-            fontSize: "0.875rem",
-            background: "transparent",
-          }}
-          aria-label="Adaugă oraș"
-          aria-autocomplete="list"
-          aria-expanded={isOpen}
-          role="combobox"
-        />
-      </div>
+                onBlur={() => setTimeout(() => setIsOpen(false), 150)}
+                placeholder={value.length === 0 ? placeholder : ""}
+                disabled={disabled}
+                style={{
+                  border: "none",
+                  outline: "none",
+                  flex: 1,
+                  minWidth: "120px",
+                  fontSize: "0.875rem",
+                  background: "transparent",
+                }}
+                aria-label="Adaugă oraș"
+                aria-autocomplete="list"
+                aria-expanded={isOpen}
+                role="combobox"
+              />
+            )}
+          </div>
+        </SortableContext>
+      </DndContext>
 
       {isOpen && (
         <ul
@@ -355,13 +327,7 @@ export function CityTagInput({
           }}
         >
           {suggestions.length === 0 && !loading && (
-            <li
-              style={{
-                padding: "8px 12px",
-                color: "#6b7280",
-                fontSize: "0.875rem",
-              }}
-            >
+            <li style={{ padding: "8px 12px", color: "#6b7280", fontSize: "0.875rem" }}>
               Nu s-au găsit sugestii
             </li>
           )}
@@ -370,24 +336,20 @@ export function CityTagInput({
               key={i}
               role="option"
               aria-selected={i === highlightedIndex}
-              onMouseDown={() => addCity(s.name)}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                addCity(s.name);
+              }}
               style={{
                 padding: "8px 12px",
                 cursor: "pointer",
                 fontSize: "0.875rem",
-                backgroundColor:
-                  i === highlightedIndex ? "#f3f4f6" : "transparent",
+                backgroundColor: i === highlightedIndex ? "#f3f4f6" : "transparent",
               }}
             >
               {s.name}
               {s.country && (
-                <span
-                  style={{
-                    marginLeft: "6px",
-                    color: "#9ca3af",
-                    fontSize: "0.75rem",
-                  }}
-                >
+                <span style={{ marginLeft: "6px", color: "#9ca3af", fontSize: "0.75rem" }}>
                   {s.country}
                 </span>
               )}
@@ -396,5 +358,93 @@ export function CityTagInput({
         </ul>
       )}
     </div>
+  );
+}
+
+function SortableChip({
+  id,
+  index: _index,
+  city,
+  badge,
+  disabled,
+  onRemove,
+  onChipKeyDown,
+}: {
+  id: string;
+  index: number;
+  city: string;
+  badge: string | null;
+  disabled?: boolean;
+  onRemove: () => void;
+  onChipKeyDown: (e: React.KeyboardEvent<HTMLButtonElement>) => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id, disabled });
+
+  const style: React.CSSProperties = {
+    transform: CSS.Translate.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    display: "inline-flex",
+    flexDirection: "column",
+    alignItems: "flex-start",
+  };
+
+  return (
+    <span ref={setNodeRef} style={style}>
+      {badge && (
+        <span style={{ fontSize: "0.6rem", color: "#6b7280", lineHeight: 1 }}>
+          {badge}
+        </span>
+      )}
+      <button
+        type="button"
+        aria-label={`chip ${city}`}
+        {...attributes}
+        {...listeners}
+        onKeyDown={(e) => {
+          // Alt+Arrow keyboard reorder takes priority over dnd-kit's Space/Enter.
+          if (e.altKey && (e.key === "ArrowLeft" || e.key === "ArrowRight")) {
+            e.stopPropagation();
+            onChipKeyDown(e);
+            return;
+          }
+          // Forward the rest to dnd-kit's keyboard sensor.
+          listeners?.onKeyDown?.(e);
+        }}
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: "4px",
+          padding: "2px 8px",
+          backgroundColor: "#e5e7eb",
+          borderRadius: "12px",
+          fontSize: "0.875rem",
+          border: "none",
+          cursor: disabled ? "default" : "grab",
+          touchAction: "none",
+        }}
+      >
+        {city}
+        {!disabled && (
+          <span
+            role="button"
+            aria-label={`Elimină ${city}`}
+            tabIndex={-1}
+            onPointerDown={(e) => {
+              // Prevent dnd-kit from claiming this gesture as a drag.
+              e.stopPropagation();
+            }}
+            onClick={(e) => {
+              e.stopPropagation();
+              onRemove();
+            }}
+            style={{ cursor: "pointer", padding: 0, lineHeight: 1 }}
+          >
+            ×
+          </span>
+        )}
+      </button>
+    </span>
   );
 }

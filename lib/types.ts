@@ -127,6 +127,7 @@ export interface RoleOption {
   id: number;
   value: Role;
   label: string;
+  icon?: string;
 }
 
 export interface SignupSection {

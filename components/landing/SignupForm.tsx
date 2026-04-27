@@ -23,11 +23,35 @@ interface LocationState {
   location: LocationGranted | null;
 }
 
-const ROLE_OPTIONS_FALLBACK: { value: Role; label: string }[] = [
-  { value: "expeditor", label: "Trimit pachete" },
-  { value: "transportator", label: "Transport pachete" },
-  { value: "destinatar", label: "Primesc pachete" },
+interface RoleRadio {
+  value: Role;
+  label: string;
+  icon: string;
+}
+
+// Order: sender → receiver → transporter (transporter last per UX call).
+const ROLE_OPTIONS_FALLBACK: RoleRadio[] = [
+  { value: "expeditor", label: "Trimit pachete", icon: "📤" },
+  { value: "destinatar", label: "Primesc pachete", icon: "📥" },
+  { value: "transportator", label: "Transport pachete", icon: "🚚" },
 ];
+
+function resolveRoleOptions(
+  cms: { value: Role; label: string; icon?: string }[] | undefined,
+): RoleRadio[] {
+  // Map CMS entries (when valid) to the v2 trio in the canonical order, falling
+  // back per-field to the hardcoded defaults. Stale CMS values like "ambele" are
+  // ignored. Editors can override label and icon per role; if either is empty,
+  // the fallback fills the gap.
+  return ROLE_OPTIONS_FALLBACK.map((fallback) => {
+    const match = cms?.find((o) => o.value === fallback.value);
+    return {
+      value: fallback.value,
+      label: match?.label || fallback.label,
+      icon: match?.icon || fallback.icon,
+    };
+  });
+}
 
 type Status = "idle" | "submitting" | "success" | "error";
 
@@ -270,7 +294,7 @@ export function SignupForm({ data }: { data: SignupSection }) {
       <div className="form-group">
         <label>{data.roleLabel}</label>
         <div className="radio-group" role="radiogroup">
-          {ROLE_OPTIONS_FALLBACK.map((option) => {
+          {resolveRoleOptions(data.roleOptions).map((option) => {
             const id = `waitlist-role-${option.value}`;
             return (
               <div key={option.value} className="radio-option">
@@ -282,7 +306,12 @@ export function SignupForm({ data }: { data: SignupSection }) {
                   checked={role === option.value}
                   onChange={() => setRole(option.value)}
                 />
-                <label htmlFor={id}>{option.label}</label>
+                <label htmlFor={id}>
+                  <span className="role-icon" aria-hidden="true">
+                    {option.icon}
+                  </span>
+                  <span className="role-label-text">{option.label}</span>
+                </label>
               </div>
             );
           })}

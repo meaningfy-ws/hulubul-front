@@ -145,6 +145,44 @@ describe("Feature: role set is the v2 trio regardless of CMS", () => {
       expect(screen.queryByLabelText(/Ambele/i)).not.toBeInTheDocument();
     });
   });
+
+  describe("Given the form has rendered", () => {
+    it("When the radios are inspected, Then their order is sender → receiver → transporter", () => {
+      render(<SignupForm data={signup} />);
+      const radios = screen.getAllByRole("radio");
+      expect(radios.map((r) => (r as HTMLInputElement).value)).toEqual([
+        "expeditor",
+        "destinatar",
+        "transportator",
+      ]);
+    });
+  });
+
+  describe("Given the form has rendered with no CMS icon override", () => {
+    it("When the radios are inspected, Then each label carries its fallback emoji", () => {
+      render(<SignupForm data={signup} />);
+      expect(screen.getByLabelText(/Trimit pachete/i).closest("div")).toHaveTextContent("📤");
+      expect(screen.getByLabelText(/Primesc pachete/i).closest("div")).toHaveTextContent("📥");
+      expect(screen.getByLabelText(/Transport pachete/i).closest("div")).toHaveTextContent("🚚");
+    });
+  });
+
+  describe("Given the CMS supplies a custom icon for one role", () => {
+    it("When the form renders, Then that role's label carries the CMS icon", () => {
+      const overridden = {
+        ...signup,
+        roleOptions: [
+          { id: 1, value: "expeditor" as const, label: "Trimit pachete", icon: "✈️" },
+          { id: 2, value: "destinatar" as const, label: "Primesc pachete" },
+          { id: 3, value: "transportator" as const, label: "Transport pachete" },
+        ],
+      };
+      render(<SignupForm data={overridden} />);
+      expect(screen.getByLabelText(/Trimit pachete/i).closest("div")).toHaveTextContent("✈️");
+      // Other roles still get fallbacks.
+      expect(screen.getByLabelText(/Primesc pachete/i).closest("div")).toHaveTextContent("📥");
+    });
+  });
 });
 
 describe("Feature: switching role preserves entered cities", () => {
