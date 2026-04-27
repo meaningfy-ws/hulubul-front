@@ -30,7 +30,9 @@ interface Props {
 }
 
 export function CitiesQuestion({ role, value, onChange }: Props) {
-  const copy = COPY[role];
+  // Defensive fallback: if a stale CMS role value (e.g. legacy "ambele")
+  // ever reaches this component, render the sender copy instead of crashing.
+  const copy = COPY[role] ?? COPY.expeditor;
   return (
     <div className="form-group">
       <label htmlFor="waitlist-cities">

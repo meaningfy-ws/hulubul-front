@@ -11,15 +11,23 @@ import {
 } from "@/lib/remember-me";
 import { CitiesQuestion } from "@/components/landing/CitiesQuestion";
 import {
-  LocationPrompt,
-  type LocationPromptValue,
-} from "@/components/landing/LocationPrompt";
-import {
   GdprConsent,
   type GdprConsentValue,
 } from "@/components/landing/GdprConsent";
 import { captureUtmFromUrl, readStoredUtm } from "@/lib/utm";
 import { GDPR_CONSENT_VERSION } from "@/lib/gdpr-consent";
+import { requestLocation, type LocationGranted } from "@/lib/geolocation";
+
+interface LocationState {
+  consent: "granted" | "denied" | "not_asked";
+  location: LocationGranted | null;
+}
+
+const ROLE_OPTIONS_FALLBACK: { value: Role; label: string }[] = [
+  { value: "expeditor", label: "Trimit pachete" },
+  { value: "transportator", label: "Transport pachete" },
+  { value: "destinatar", label: "Primesc pachete" },
+];
 
 type Status = "idle" | "submitting" | "success" | "error";
 
@@ -45,7 +53,7 @@ export function SignupForm({ data }: { data: SignupSection }) {
   const [cities, setCities] = useState<string[]>([]);
   const [remember, setRemember] = useState(true);
   const [hasPrefill, setHasPrefill] = useState(false);
-  const [location, setLocation] = useState<LocationPromptValue>({
+  const [location, setLocation] = useState<LocationState>({
     consent: "not_asked",
     location: null,
   });
@@ -69,6 +77,16 @@ export function SignupForm({ data }: { data: SignupSection }) {
     if (typeof window !== "undefined") {
       captureUtmFromUrl(window.location.search, document.referrer);
     }
+    // Silent geolocation request — no in-form prompt. The browser shows its
+    // native permission dialog the first time; we record the outcome.
+    void (async () => {
+      const loc = await requestLocation();
+      setLocation(
+        loc
+          ? { consent: "granted", location: loc }
+          : { consent: "denied", location: null },
+      );
+    })();
   }, []);
 
   function handleClearIdentity() {
@@ -252,17 +270,17 @@ export function SignupForm({ data }: { data: SignupSection }) {
       <div className="form-group">
         <label>{data.roleLabel}</label>
         <div className="radio-group" role="radiogroup">
-          {data.roleOptions.map((option) => {
+          {ROLE_OPTIONS_FALLBACK.map((option) => {
             const id = `waitlist-role-${option.value}`;
             return (
-              <div key={option.id} className="radio-option">
+              <div key={option.value} className="radio-option">
                 <input
                   id={id}
                   type="radio"
                   name="role"
                   value={option.value}
                   checked={role === option.value}
-                  onChange={() => setRole(option.value as Role)}
+                  onChange={() => setRole(option.value)}
                 />
                 <label htmlFor={id}>{option.label}</label>
               </div>
@@ -272,8 +290,6 @@ export function SignupForm({ data }: { data: SignupSection }) {
       </div>
 
       <CitiesQuestion role={role} value={cities} onChange={setCities} />
-
-      <LocationPrompt onChange={setLocation} />
 
       <div className="form-remember">
         <input

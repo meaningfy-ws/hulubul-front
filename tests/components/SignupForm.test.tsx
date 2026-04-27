@@ -82,10 +82,11 @@ describe("Feature: waitlist v2 happy path", () => {
 
       await fillIdentity(user);
       if (role !== "expeditor") {
-        const radio = screen.getByLabelText(
-          signup.roleOptions.find((o) => o.value === role)!.label,
-        );
-        await user.click(radio);
+        const labels: Record<string, RegExp> = {
+          transportator: /Transport pachete/i,
+          destinatar: /Primesc pachete/i,
+        };
+        await user.click(screen.getByLabelText(labels[role]!));
       }
       await addCity(user, "Luxembourg");
       await addCity(user, "Chișinău");
@@ -134,6 +135,18 @@ describe("Feature: server rejection surfaces an inline error", () => {
   });
 });
 
+describe("Feature: role set is the v2 trio regardless of CMS", () => {
+  describe("Given the form has rendered", () => {
+    it("When inspecting radios, Then exactly the three v2 roles appear (no 'ambele')", () => {
+      render(<SignupForm data={signup} />);
+      expect(screen.getByLabelText(/Trimit pachete/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/Transport pachete/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/Primesc pachete/i)).toBeInTheDocument();
+      expect(screen.queryByLabelText(/Ambele/i)).not.toBeInTheDocument();
+    });
+  });
+});
+
 describe("Feature: switching role preserves entered cities", () => {
   describe("Given two cities have been added", () => {
     it("When the role is switched, Then the chips persist in the new role view", async () => {
@@ -141,9 +154,7 @@ describe("Feature: switching role preserves entered cities", () => {
       render(<SignupForm data={signup} />);
       await addCity(user, "Lux");
       await addCity(user, "Metz");
-      const transportator = screen.getByLabelText(
-        signup.roleOptions.find((o) => o.value === "transportator")!.label,
-      );
+      const transportator = screen.getByLabelText(/Transport pachete/i);
       await user.click(transportator);
       expect(screen.getByText("Lux")).toBeInTheDocument();
       expect(screen.getByText("Metz")).toBeInTheDocument();
@@ -185,15 +196,14 @@ describe("Feature: UTM capture flows into the payload", () => {
   });
 });
 
-describe("Feature: location prompt outcome flows into the payload", () => {
-  describe("Given the user clicks 'Nu, ascunde'", () => {
+describe("Feature: silent geolocation captures the outcome", () => {
+  describe("Given the browser denies geolocation on mount", () => {
     it("When the user submits, Then locationConsent=denied and location=null", async () => {
       mockFetchOk();
       const user = userEvent.setup();
       render(<SignupForm data={signup} />);
       await fillIdentity(user);
       await addCity(user, "Lux");
-      await user.click(screen.getByRole("button", { name: /nu, ascunde/i }));
       await tickConsent(user);
       await user.click(screen.getByRole("button", { name: signup.submitLabel }));
       await waitFor(() => expect(global.fetch).toHaveBeenCalled());

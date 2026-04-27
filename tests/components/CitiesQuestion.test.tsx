@@ -45,6 +45,18 @@ describe("Feature: role-driven cities question", () => {
     );
   });
 
+  describe("Given an unknown legacy role (e.g. CMS-stale 'ambele')", () => {
+    it("When rendered, Then it falls back to expeditor copy without crashing", () => {
+      render(
+        // @ts-expect-error — deliberately passing a legacy role string
+        <CitiesQuestion role="ambele" value={[]} onChange={() => {}} />,
+      );
+      expect(
+        screen.getByText(/de unde trimiți și unde trebuie să ajungă/i),
+      ).toBeInTheDocument();
+    });
+  });
+
   describe("Given a chip is removed", () => {
     it("When the × is clicked, Then onChange forwards the new array", async () => {
       const onChange = vi.fn();
