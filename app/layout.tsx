@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Fraunces, Inter } from "next/font/google";
 import "./globals.css";
+import { Analytics } from "@/components/analytics/Analytics";
 
 const inter = Inter({
   subsets: ["latin", "latin-ext"],
@@ -37,7 +38,10 @@ export default function RootLayout({
       className={`${inter.variable} ${fraunces.variable}`}
       suppressHydrationWarning
     >
-      <body>{children}</body>
+      <body>
+        {children}
+        <Analytics />
+      </body>
     </html>
   );
 }
