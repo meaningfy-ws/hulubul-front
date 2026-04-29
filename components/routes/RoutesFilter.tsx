@@ -11,6 +11,7 @@ const STATUS_PILLS: Array<{ value: RouteFilter["status"]; label: string }> = [
 ];
 
 const FREQUENCY_OPTIONS: Array<{ value: Frequency; label: string }> = [
+  { value: "daily", label: "Zilnic" },
   { value: "weekly", label: "Săptămânal" },
   { value: "biweekly", label: "La 2 săptămâni" },
   { value: "monthly", label: "Lunar" },
