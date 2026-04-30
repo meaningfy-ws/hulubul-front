@@ -1,0 +1,81 @@
+# CI workflow for hulubul-front (Next.js)
+# ========================================
+# Runs on push to main and on PRs targeting main.
+#
+# Jobs:
+#   1. quality — typecheck, lint, test
+#   2. trigger-staging-deploy — on push to main only, triggers the
+#      Deploy Hulubul Staging workflow on infrastructure-stacks via the
+#      GitHub workflow_dispatch API
+#
+# Required secrets:
+#   - CI_GH_TOKEN: org-level PAT for cross-repo workflow dispatch
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "docs/**"
+      - "design/**"
+      - "*.md"
+      - "LICENSE"
+      - ".claude/**"
+      - ".mcp.json"
+  pull_request:
+    branches: [main]
+    paths-ignore:
+      - "docs/**"
+      - "design/**"
+      - "*.md"
+      - "LICENSE"
+      - ".claude/**"
+      - ".mcp.json"
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    name: Typecheck, Lint & Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm test
+
+  trigger-staging-deploy:
+    name: Trigger staging deploy
+    needs: quality
+    if: github.event_name == 'push' && github.repository_owner == 'meaningfy-ws'
+    runs-on: ubuntu-latest
+    env:
+      OPS_REPO: meaningfy-ws/infrastructure-stacks
+      DEPLOY_WORKFLOW: deploy-hulubul.yml
+      DEPLOY_REF: main
+    steps:
+      - name: Trigger deploy workflow on ops repo
+        run: |
+          curl -sf -X POST \
+            -H "Authorization: token ${{ secrets.CI_GH_TOKEN }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            "https://api.github.com/repos/${OPS_REPO}/actions/workflows/${DEPLOY_WORKFLOW}/dispatches" \
+            -d '{"ref":"${{ env.DEPLOY_REF }}","inputs":{"repo":"${{ github.repository }}","sha":"${{ github.sha }}"}}'
