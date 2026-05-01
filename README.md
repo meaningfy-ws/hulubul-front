@@ -151,11 +151,28 @@ Structure follows `design/testing-strategy.md`:
 
 ## Deployment
 
+### Vercel
+
 - Set `NEXT_PUBLIC_STRAPI_URL` and `STRAPI_API_TOKEN` in the hosting dashboard.
 - Pages are statically rendered with ISR (`revalidate = 300`). Content changes
   in Strapi propagate within 5 minutes without a redeploy.
 - If Strapi is unreachable at build time, the build still succeeds — the page
   renders a "coming soon" placeholder and ISR retries on the next request cycle.
+
+### Docker
+
+```bash
+docker build \
+  --build-arg NEXT_PUBLIC_STRAPI_URL=https://your-project.strapiapp.com \
+  -t hulubul-front .
+
+docker run -e STRAPI_API_TOKEN=your-token -p 3000:3000 hulubul-front
+```
+
+- `NEXT_PUBLIC_STRAPI_URL` — your Strapi Cloud URL (e.g. `https://xyz.strapiapp.com`),
+  or a local Strapi instance. Baked in at build time for client bundles + ISR.
+- `STRAPI_API_TOKEN` — runtime-only, used by server-side route handlers.
+- Build tolerates Strapi downtime — renders a placeholder, ISR retries at runtime.
 
 ---
 

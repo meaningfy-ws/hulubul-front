@@ -1,0 +1,60 @@
+# Dependencies
+node_modules
+.pnp
+.pnp.js
+
+# Build output
+.next
+out
+build
+
+# Test artifacts
+coverage
+tests
+
+# Design / docs (not needed at runtime)
+design
+docs
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Env files (never in image)
+.env
+.env.*
+!.env.example
+
+# Editor / IDE
+.idea
+.vscode
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# TypeScript build info
+*.tsbuildinfo
+next-env.d.ts
+
+# CI / tooling
+.github
+.gitnexus
+.mcp.json
+AGENTS.md
+CLAUDE.md
+
+# Vercel
+.vercel
+
+# Misc
+LICENSE
+*.md
