@@ -24,7 +24,7 @@ export interface Transporter {
   claimedBy: string | null;
 }
 
-export type Frequency = "weekly" | "biweekly" | "monthly" | "on_demand";
+export type Frequency = "daily" | "weekly" | "biweekly" | "monthly" | "on_demand";
 export type DayCode = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
 export type RouteStatus = "draft" | "approved" | "suspended";
 
