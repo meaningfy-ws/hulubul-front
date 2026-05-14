@@ -9,6 +9,20 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => searchParams,
 }));
 
+vi.mock("@/components/consent/ConsentProvider", () => ({
+  useConsent: () => ({
+    state: {
+      necessary: true,
+      analytics: "denied",
+      marketing: "denied",
+      version: "test",
+      choseAt: null,
+    },
+    needsBanner: true,
+    setChoice: vi.fn(),
+  }),
+}));
+
 beforeEach(() => {
   // forEach-while-deleting skips entries; snapshot keys first.
   Array.from(searchParams.keys()).forEach((k) => searchParams.delete(k));

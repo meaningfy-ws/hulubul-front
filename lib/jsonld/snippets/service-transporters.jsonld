@@ -1,0 +1,32 @@
+{
+  "@type": "Service",
+  "name": "hulubul.com — parcel-route matchmaking for transporters",
+  "serviceType": "Peer-to-peer logistics matchmaking",
+  "description": "A directory of vetted transporters who run regular passenger and cargo routes between the Moldovan diaspora (primarily in Luxembourg, Germany, France, Italy, the United Kingdom, and Ireland) and the Republic of Moldova. Senders search by route, see verified transporters and their schedules, and arrange delivery directly. Transporters keep ownership of every customer relationship; hulubul.com facilitates discovery, not the transaction.",
+  "provider": {
+    "@type": "Organization",
+    "name": "hulubul.com",
+    "url": "https://hulubul.com"
+  },
+  "areaServed": [
+    { "@type": "Country", "name": "Moldova" },
+    { "@type": "Place", "name": "European Union" }
+  ],
+  "audience": [
+    {
+      "@type": "Audience",
+      "audienceType": "Transporters running regular routes between MD and EU"
+    }
+  ],
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "EUR",
+    "availability": "https://schema.org/PreOrder",
+    "description": "Free of charge during the pilot phase. No commission on the underlying transport transaction."
+  },
+  "isRelatedTo": {
+    "@type": "Service",
+    "name": "Diaspora courier services"
+  }
+}

@@ -1,6 +1,13 @@
 import type { Metadata } from "next";
 import { getLandingPage, LandingPageNotPublishedError } from "@/lib/strapi";
 import { logger } from "@/lib/logger";
+import { makeCanonical } from "@/lib/seo";
+import {
+  buildFaqPage,
+  buildGraph,
+  loadJsonLdSnippet,
+} from "@/lib/jsonld/builders";
+import { JsonLd } from "@/components/seo/JsonLd";
 import { Hero } from "@/components/landing/Hero";
 import { Problem } from "@/components/landing/Problem";
 import { HowItWorks } from "@/components/landing/HowItWorks";
@@ -33,10 +40,12 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: seo.metaTitle,
     description: seo.metaDescription,
+    alternates: { canonical: makeCanonical("/") },
     openGraph: {
       title: seo.metaTitle,
       description: seo.metaDescription,
       locale: "ro_RO",
+      url: makeCanonical("/"),
       images: seo.shareImage?.url ? [{ url: seo.shareImage.url }] : undefined,
     },
     twitter: {
@@ -55,8 +64,20 @@ export default async function HomePage() {
     return <ComingSoon />;
   }
 
+  // Page-level JSON-LD: the sender/recipient Service + the FAQPage built
+  // from CMS items. The Organization/WebSite live in the root layout.
+  const faqEntries = page.faq.items.map((item) => ({
+    question: item.question,
+    answer: item.answer,
+  }));
+  const pageGraph = buildGraph([
+    loadJsonLdSnippet("service-senders"),
+    buildFaqPage(faqEntries),
+  ]);
+
   return (
     <main>
+      <JsonLd data={pageGraph} />
       <Hero data={page.hero} />
       <Problem data={page.problem} />
       <HowItWorks data={page.howItWorks} />

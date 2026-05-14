@@ -1,0 +1,25 @@
+{
+  "@type": "Organization",
+  "name": "hulubul.com",
+  "alternateName": "Hulubul",
+  "url": "https://hulubul.com",
+  "logo": "https://hulubul.com/logo-square.png",
+  "description": "hulubul.com is a digital platform that connects the Moldovan diaspora with transporters running regular routes between the Republic of Moldova and Western Europe. It replaces scattered Facebook groups and ad-hoc WhatsApp threads with a searchable directory of trusted carriers, their routes, and their schedules — so sending a parcel home becomes a matter of minutes, not days of phone calls.",
+  "slogan": "Connecting people, places, and stories — built for the Moldovan diaspora.",
+  "foundingDate": "2026",
+  "foundingLocation": [
+    { "@type": "Place", "name": "Luxembourg, Luxembourg" },
+    { "@type": "Place", "name": "Chișinău, Republic of Moldova" }
+  ],
+  "areaServed": [
+    { "@type": "Country", "name": "Moldova" },
+    { "@type": "Place", "name": "European Union" }
+  ],
+  "knowsLanguage": ["ro", "ru", "en"],
+  "parentOrganization": {
+    "@type": "Organization",
+    "name": "Meaningfy",
+    "url": "https://meaningfy.ws",
+    "description": "Meaningfy designs and builds knowledge-driven digital platforms. hulubul.com is one of its civic-tech projects."
+  }
+}

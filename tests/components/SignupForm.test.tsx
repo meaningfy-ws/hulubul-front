@@ -12,6 +12,22 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => searchParams,
 }));
 
+// Stub the consent context so the form can mount without a real
+// <ConsentProvider> in tree.
+vi.mock("@/components/consent/ConsentProvider", () => ({
+  useConsent: () => ({
+    state: {
+      necessary: true,
+      analytics: "denied",
+      marketing: "denied",
+      version: "test",
+      choseAt: null,
+    },
+    needsBanner: true,
+    setChoice: vi.fn(),
+  }),
+}));
+
 const signup = landingPageFixture.signup;
 const originalGeo = navigator.geolocation;
 

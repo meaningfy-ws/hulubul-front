@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { surveySchema } from "@/lib/survey-schema";
 import { submitSurvey } from "@/lib/survey";
+import {
+  dispatchConversion,
+  generateEventId,
+} from "@/lib/server-events/dispatcher";
 
 export const runtime = "nodejs";
 
@@ -21,8 +25,13 @@ export async function POST(request: Request) {
     );
   }
 
+  // Strip server-only `consent` before forwarding to Strapi.
+  const { consent, ...strapiPayload } = parsed.data;
+
   try {
-    await submitSurvey(parsed.data);
+    await submitSurvey(
+      strapiPayload as unknown as Parameters<typeof submitSurvey>[0],
+    );
   } catch (error) {
     const message =
       error instanceof Error
@@ -31,5 +40,19 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: message }, { status: 502 });
   }
 
-  return NextResponse.json({ ok: true }, { status: 201 });
+  const eventId = generateEventId();
+  await dispatchConversion(
+    {
+      eventName: "survey_submit",
+      eventId,
+      clientId: consent?.recordId ?? eventId,
+      params: { role: parsed.data.role, source: parsed.data.source },
+    },
+    consent ?? { analytics: "denied", marketing: "denied" },
+  );
+
+  return NextResponse.json(
+    { ok: true, event_id: eventId },
+    { status: 201 },
+  );
 }

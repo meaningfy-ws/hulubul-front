@@ -77,6 +77,18 @@ export const waitlistSchema = z.object({
       timezone: z.string().max(64).optional(),
     })
     .optional(),
+
+  // Tracker-cookie consent passed from the form so the route handler
+  // can decide whether to dispatch server-side conversions. Optional
+  // because the consent flow may not yet have happened. Distinct from
+  // the per-submission `gdprConsent` checkbox above.
+  consent: z
+    .object({
+      analytics: z.enum(["granted", "denied"]),
+      marketing: z.enum(["granted", "denied"]),
+      recordId: z.string().optional(),
+    })
+    .optional(),
 });
 
 export type WaitlistPayload = z.infer<typeof waitlistSchema>;

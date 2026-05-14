@@ -141,6 +141,15 @@ export const surveySchema = z
     willShipSoon: z.boolean().optional(),
     wantsCallback: z.boolean().optional(),
     callbackPhone: optionalText,
+
+    // Tracker-cookie consent for server-side conversion dispatch.
+    consent: z
+      .object({
+        analytics: z.enum(["granted", "denied"]),
+        marketing: z.enum(["granted", "denied"]),
+        recordId: z.string().optional(),
+      })
+      .optional(),
   })
   .refine(
     (v) =>

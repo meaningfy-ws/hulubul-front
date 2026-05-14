@@ -1,62 +1,84 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
-import { render } from "@testing-library/react";
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
+import { render, screen } from "@testing-library/react";
+import type { ReactNode } from "react";
 
 vi.mock("@next/third-parties/google", () => ({
   GoogleAnalytics: ({ gaId }: { gaId: string }) => (
-    <script data-testid="ga" data-ga-id={gaId} />
+    <div data-testid="ga4-mock" data-ga-id={gaId} />
   ),
 }));
 
-vi.mock("next/script", () => ({
-  default: ({ id, children }: { id: string; children?: string }) => (
-    <script data-testid={`script-${id}`}>{children}</script>
-  ),
+const mockConsent = {
+  state: { analytics: "denied" as "granted" | "denied", marketing: "denied" as "granted" | "denied" },
+};
+
+vi.mock("@/components/consent/ConsentProvider", () => ({
+  useConsent: () => mockConsent,
+  ConsentProvider: ({ children }: { children: ReactNode }) => <>{children}</>,
 }));
+
+import { Analytics } from "@/components/analytics/Analytics";
 
 beforeEach(() => {
-  delete process.env.NEXT_PUBLIC_GA_ID;
-  delete process.env.NEXT_PUBLIC_META_PIXEL_ID;
-  delete process.env.NEXT_PUBLIC_LINKEDIN_PARTNER_ID;
+  delete (window as { dataLayer?: unknown[] }).dataLayer;
+  vi.stubEnv("NEXT_PUBLIC_GA_ID", "G-TESTID");
+  mockConsent.state = { analytics: "denied", marketing: "denied" };
 });
 
-async function renderAnalytics() {
-  const mod = await import("@/components/analytics/Analytics");
-  return render(<mod.Analytics />);
-}
+afterEach(() => {
+  vi.unstubAllEnvs();
+  delete (window as { dataLayer?: unknown[] }).dataLayer;
+});
 
-describe("Feature: third-party analytics injection", () => {
-  describe("Given no analytics IDs are configured", () => {
-    it("When rendered, Then no pixel scripts are emitted", async () => {
-      const { queryByTestId } = await renderAnalytics();
-      expect(queryByTestId("ga")).toBeNull();
-      expect(queryByTestId("script-meta-pixel")).toBeNull();
-      expect(queryByTestId("script-linkedin-insight")).toBeNull();
-    });
+describe("<Analytics>", () => {
+  it("does NOT render GoogleAnalytics when analytics consent is denied", () => {
+    mockConsent.state = { analytics: "denied", marketing: "denied" };
+    render(<Analytics />);
+    expect(screen.queryByTestId("ga4-mock")).toBeNull();
   });
 
-  describe("Given NEXT_PUBLIC_GA_ID is set", () => {
-    it("When rendered, Then GoogleAnalytics is included with that ID", async () => {
-      process.env.NEXT_PUBLIC_GA_ID = "G-TEST123";
-      const { getByTestId } = await renderAnalytics();
-      expect(getByTestId("ga").getAttribute("data-ga-id")).toBe("G-TEST123");
-    });
+  it("renders GoogleAnalytics when analytics consent is granted and GA_ID is set", () => {
+    mockConsent.state = { analytics: "granted", marketing: "denied" };
+    render(<Analytics />);
+    const el = screen.getByTestId("ga4-mock");
+    expect(el).toBeInTheDocument();
+    expect(el.getAttribute("data-ga-id")).toBe("G-TESTID");
   });
 
-  describe("Given NEXT_PUBLIC_META_PIXEL_ID is set", () => {
-    it("When rendered, Then the Meta Pixel script is emitted with that ID", async () => {
-      process.env.NEXT_PUBLIC_META_PIXEL_ID = "999";
-      const { getByTestId } = await renderAnalytics();
-      expect(getByTestId("script-meta-pixel").textContent).toContain("fbq('init', '999')");
-    });
+  it("does NOT render GoogleAnalytics when GA_ID env is unset, even with consent", () => {
+    vi.stubEnv("NEXT_PUBLIC_GA_ID", "");
+    mockConsent.state = { analytics: "granted", marketing: "granted" };
+    render(<Analytics />);
+    expect(screen.queryByTestId("ga4-mock")).toBeNull();
   });
 
-  describe("Given NEXT_PUBLIC_LINKEDIN_PARTNER_ID is set", () => {
-    it("When rendered, Then the LinkedIn Insight script is emitted with that partner ID", async () => {
-      process.env.NEXT_PUBLIC_LINKEDIN_PARTNER_ID = "777";
-      const { getByTestId } = await renderAnalytics();
-      expect(getByTestId("script-linkedin-insight").textContent).toContain(
-        '_linkedin_partner_id = "777"',
-      );
-    });
+  it("pushes Consent Mode v2 default to dataLayer on mount", () => {
+    mockConsent.state = { analytics: "denied", marketing: "denied" };
+    render(<Analytics />);
+    expect(Array.isArray(window.dataLayer)).toBe(true);
+    const consentDefaults = (window.dataLayer ?? []).filter(
+      (entry) =>
+        Array.isArray(entry) && entry[0] === "consent" && entry[1] === "default",
+    );
+    expect(consentDefaults.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("pushes a Consent Mode v2 update when consent is granted", () => {
+    mockConsent.state = { analytics: "granted", marketing: "denied" };
+    render(<Analytics />);
+    const updates = (window.dataLayer ?? []).filter(
+      (entry) =>
+        Array.isArray(entry) && entry[0] === "consent" && entry[1] === "update",
+    );
+    expect(updates.length).toBeGreaterThanOrEqual(1);
+    const last = updates[updates.length - 1] as unknown[];
+    expect(last[2]).toMatchObject({ analytics_storage: "granted" });
   });
 });

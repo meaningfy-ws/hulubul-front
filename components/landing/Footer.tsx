@@ -1,5 +1,6 @@
 import type { FooterSection } from "@/lib/types";
 import { Logo } from "./Logo";
+import { CookiesLink } from "./CookiesLink";
 
 /**
  * Bare anchors (`#signup`) only resolve on the landing page. Prefix `/` so
@@ -53,6 +54,9 @@ export function Footer({ data }: { data: FooterSection }) {
       <div className="footer-bottom">
         <div>{data.copyrightText}</div>
         {data.locationLine ? <div>{data.locationLine}</div> : null}
+        <div>
+          <CookiesLink />
+        </div>
       </div>
     </footer>
   );
