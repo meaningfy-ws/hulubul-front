@@ -31,8 +31,13 @@ export function NavCta({ ctaLabel, ctaHref }: NavCtaProps) {
     return <span className="nav-greeting">Bună, {firstName}</span>;
   }
 
+  // CMS stores the CTA target as `#signup`, which only resolves on the landing
+  // page. On other routes (e.g. /sondaj) a bare fragment is a no-op — prefix
+  // `/` so the click always navigates back to the landing anchor.
+  const href = ctaHref.startsWith("#") ? `/${ctaHref}` : ctaHref;
+
   return (
-    <a href={ctaHref} className="nav-cta">
+    <a href={href} className="nav-cta">
       {ctaLabel}
     </a>
   );

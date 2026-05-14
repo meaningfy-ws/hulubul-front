@@ -1,6 +1,6 @@
 import qs from "qs";
 import { buildLandingPopulate } from "./populate";
-import type { LandingPage } from "./types";
+import type { LandingPage, LegalPage } from "./types";
 import type { WaitlistPayload } from "./waitlist-schema";
 
 export class LandingPageNotPublishedError extends Error {
@@ -41,6 +41,25 @@ export async function getLandingPage(): Promise<LandingPage> {
   const json = (await res.json()) as { data: LandingPage | null };
   if (!json.data) throw new LandingPageNotPublishedError();
   return json.data;
+}
+
+export async function getLegalPage(
+  slug: LegalPage["slug"],
+): Promise<LegalPage | null> {
+  // Editorial source for legal copy (privacy, terms). Single-types per page,
+  // see design/spec-legal-pages.md for the Strapi schema this expects.
+  // Returns null when the content type or entry is missing so callers can
+  // render a static fallback while the backend ships the schema.
+  const res = await fetch(
+    `${strapiUrl()}/api/legal-${slug}?status=published`,
+    { headers: authHeaders(), next: { revalidate: 300 } },
+  );
+  if (res.status === 404) return null;
+  if (!res.ok) {
+    throw new Error(`Strapi /api/legal-${slug} failed: ${res.status}`);
+  }
+  const json = (await res.json()) as { data: LegalPage | null };
+  return json.data ?? null;
 }
 
 export async function submitWaitlist(payload: WaitlistPayload): Promise<void> {
