@@ -13,8 +13,11 @@ tracking can fire.
 
 ## 1. Goals
 
-1. **One hub** for client-side tags (Google Tag Manager). Adding a new
-   pixel is a UI change in the GTM container, not a code change.
+1. **A single client-side measurement layer.** v1 ships GA4 via gtag.js
+   (the canonical Google snippet, mounted by `<GoogleAnalytics>` from
+   `@next/third-parties`). When a second/third paid pixel is added we
+   migrate to a GTM container so adding a new pixel becomes a UI change
+   in GTM, not React code (see §3.1.1).
 2. **Server-side conversions** for the high-value events
    (`waitlist_submit`, `survey_submit`) so attribution survives ad
    blockers and iOS ITP.
@@ -32,25 +35,30 @@ tracking can fire.
 
 ```
 ┌──────────────────────────────────────────────────────────────────┐
-│  Browser                                                         │
+│  Browser — v1 (today)                                            │
 │  ┌──────────────────────────────────────────────────────────┐    │
 │  │  app/layout.tsx                                          │    │
 │  │    <ConsentProvider>                                     │    │
 │  │      <ConsentBanner />     ← vanilla-cookieconsent       │    │
-│  │      <Analytics />         ← reads consent, gates GTM    │    │
+│  │      <Analytics />         ← reads consent, gates GA4    │    │
 │  │      {children}                                          │    │
 │  └──────────────────────────────────────────────────────────┘    │
 │           │                                                      │
-│           ▼ (only if marketing consent === "granted")            │
+│           ▼ (only if analytics consent === "granted")            │
 │  ┌──────────────────────────────────────────────────────────┐    │
-│  │  Google Tag Manager container (GTM-XXXX)                 │    │
-│  │  Tags configured in GTM UI (no code):                    │    │
-│  │    ├─ GA4 Configuration                                  │    │
-│  │    ├─ GA4 events (page_view, scroll, click)              │    │
-│  │    ├─ Meta Pixel (PageView + custom)                     │    │
-│  │    ├─ TikTok Pixel (Pageview + custom)                   │    │
-│  │    └─ (future) LinkedIn Insight                          │    │
+│  │  GA4 via gtag.js  (G-3M58NGR6PX)                         │    │
+│  │  Mounted by <GoogleAnalytics> from @next/third-parties:  │    │
+│  │    ├─ page_view (auto, SPA-aware)                        │    │
+│  │    ├─ scroll (GA4 enhanced measurement)                  │    │
+│  │    ├─ cwv (Web Vitals reporter)                          │    │
+│  │    ├─ consent_grant / consent_update / consent_withdraw  │    │
+│  │    ├─ waitlist_submit                                    │    │
+│  │    └─ survey_submit                                      │    │
 │  └──────────────────────────────────────────────────────────┘    │
+│                                                                  │
+│  Future (when pixel count > 2 — see §3.1.1):                     │
+│    Replace <GoogleAnalytics> with <GoogleTagManager> and          │
+│    move GA4 + Meta Pixel + TikTok Pixel into the GTM UI.          │
 └─────┬────────────────────────────────────────────────────────────┘
       │
       │ form submit
@@ -60,17 +68,17 @@ tracking can fire.
 │    1. Validate body (Zod)                                        │
 │    2. Forward to Strapi                                          │
 │    3. Fire server-side conversions in parallel:                  │
-│         ├─ Meta CAPI                                             │
-│         ├─ TikTok Events API                                     │
-│         └─ GA4 Measurement Protocol                              │
+│         ├─ GA4 Measurement Protocol  (today, when secret set)    │
+│         ├─ Meta CAPI                  (when Meta is added)       │
+│         └─ TikTok Events API          (when TikTok is added)     │
 └──────┬─────────────────────────┬─────────────────────────────────┘
        │                         │
        ▼                         ▼
 ┌──────────────────┐   ┌────────────────────────────────────────────┐
 │  Strapi          │   │  External tracking endpoints                │
-│  - waitlist      │   │  graph.facebook.com, business-api.tiktok... │
-│  - survey-sender │   │                                              │
-│  - consent-record│   │                                              │
+│  - waitlist      │   │  google-analytics.com,                      │
+│  - survey-sender │   │  graph.facebook.com,                        │
+│  - consent-record│   │  business-api.tiktok.com                    │
 └──────────────────┘   └────────────────────────────────────────────┘
 ```
 
@@ -78,17 +86,53 @@ tracking can fire.
 
 ## 3. Library choices
 
-### 3.1 Tag hub — `@next/third-parties/google` (already installed)
+### 3.1 Tag layer — `@next/third-parties/google` with `<GoogleAnalytics>` (gtag.js)
 
-Already in repo via `@next/third-parties` (used today for
-`<GoogleAnalytics>`). After this spec ships, we replace
-`<GoogleAnalytics>` with `<GoogleTagManager>` from the same package.
+**v1 ships with direct GA4 via gtag.js.** Already in the repo via
+`@next/third-parties`; the existing `<Analytics>` component already
+renders the right snippet. Production GA4 measurement ID is
+**`G-3M58NGR6PX`** (set as `NEXT_PUBLIC_GA_ID`).
 
-- Official Next.js wrapper. Lazy-loaded, performance-tuned.
-- One env var (`NEXT_PUBLIC_GTM_ID`) and the rest is configured in the
-  GTM web UI — no React code changes per pixel.
-- Survives provider swaps (e.g. moving from GTM Web to a server-side
-  GTM later) with one config flip.
+The mounted snippet is exactly the canonical Google one:
+
+```html
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-3M58NGR6PX"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-3M58NGR6PX');
+</script>
+```
+/btw
+`<GoogleAnalytics gaId={NEXT_PUBLIC_GA_ID} />` from
+`@next/third-parties/google` emits exactly this — no manual `<Script>`
+needed.
+
+**Trade-off acknowledged:** gtag.js means every additional pixel (Meta,
+TikTok, LinkedIn) is hardcoded in the React tree, not configured in a
+GTM UI. This is deliberate for v1 — we only ship GA4 today, so the
+GTM-container overhead isn't justified. Migration path to GTM is in
+§3.1.1 below.
+
+#### 3.1.1 Migration path to GTM (deferred until pixel count > 2)
+
+When marketing wants to add Meta Pixel + TikTok Pixel + LinkedIn Insight
+in the same release, the rule of thumb flips. At that point:
+
+1. Create a GTM container (`GTM-XXXXXX`) and configure the GA4 tag
+   inside it instead of via gtag.
+2. Replace `<GoogleAnalytics>` with `<GoogleTagManager>` (same
+   `@next/third-parties/google` package).
+3. Move the existing `gtag('event', ...)` calls in
+   `lib/tracking/events.ts` to `dataLayer.push({event: ...})` —
+   **already what they do** because gtag pushes through dataLayer
+   under the hood. So app code is unchanged.
+4. All non-GA pixels are configured as GTM tags inside the container.
+
+The change is `<GoogleAnalytics>` → `<GoogleTagManager>` plus a one-time
+GTM container setup. Nothing in the consent layer or server-side
+conversions needs to change.
 
 ### 3.2 Consent banner — `vanilla-cookieconsent` v3.x
 
@@ -122,7 +166,7 @@ analytics must never block a real submission.
 | Klaro! | OSS alternative to vanilla-cookieconsent. Acceptable fallback if v-c-c ever stops being maintained. |
 | `react-cookie-consent` | No granular categories. Insufficient for GDPR. |
 | Segment / RudderStack | Customer-data-pipeline proxy. Worth the cost only at scale (≥100k events/month) when destinations multiply. |
-| `analytics.js` (DavidWells) | Plugin abstraction over GA/Mixpanel/Segment. Useful for code-level event taxonomy that survives platform swaps. Adds a layer; revisit if we move beyond GTM. |
+| `analytics.js` (DavidWells) | Plugin abstraction over GA/Mixpanel/Segment. Useful for code-level event taxonomy that survives platform swaps. Adds a layer; revisit if we move beyond gtag/GTM. |
 | Roll-your-own banner | Doable per `design/spec-consent.md`. ~1 day of work. Choose only if `vanilla-cookieconsent` becomes a problem. |
 
 ---
@@ -135,7 +179,7 @@ analytics must never block a real submission.
 |---|---|---|---|
 | **Necessary** | granted (forced) | no | Strapi auth, CSRF, session cookies. Nothing tracker-side. |
 | **Analytics** | denied | yes | GA4, Lighthouse RUM, future PostHog. First-party-flavoured measurement. |
-| **Marketing** | denied | yes | Meta Pixel, TikTok Pixel, LinkedIn Insight, GTM marketing tags, retargeting. |
+| **Marketing** | denied | yes | Reserved for Meta Pixel, TikTok Pixel, LinkedIn Insight, retargeting. **Nothing in this category loads in v1** (no marketing pixels are configured). The category exists so the consent surface, the audit record, and Consent Mode v2's `ad_*` signals are correct from day one. |
 
 The banner shows three checkboxes plus an "Accept all" / "Reject
 non-essential" pair of buttons, equal prominence — no dark pattern.
@@ -196,8 +240,9 @@ source of truth.
 4. `ConsentProvider`:
    - Updates localStorage.
    - POSTs a new `consent-record` with `event: "update"`.
-   - Reloads the page after a 200ms delay so any GTM-loaded scripts
-     drop out cleanly. (In-place teardown of GTM is fragile.)
+   - Reloads the page after a 200ms delay so any tracker scripts
+     loaded by gtag (or, post-migration, by GTM) drop out cleanly.
+     In-place teardown is fragile across all of these.
 
 A "Withdraw all" button in the modal sets all categories to denied,
 posts `event: "withdraw"`, and reloads.
@@ -205,64 +250,88 @@ posts `event: "withdraw"`, and reloads.
 ### 4.6 Google Consent Mode v2
 
 Required by Google for any GA4 / Google Ads tag from March 2024
-onward. Pushed to the GTM `dataLayer` whenever consent changes:
+onward. With gtag.js (v1 setup), the consent state is communicated via
+`gtag('consent', ...)`:
 
 ```ts
-window.dataLayer.push({
-  event: "consent_update",
+// Default — pushed BEFORE the GA4 snippet loads, in an inline <head>
+// script emitted by ConsentProvider's bootstrap. "Denied" across the
+// board means a partial load (e.g. user closes the page mid-banner)
+// stays compliant.
+gtag("consent", "default", {
+  ad_storage: "denied",
+  ad_user_data: "denied",
+  ad_personalization: "denied",
+  analytics_storage: "denied",
+  wait_for_update: 500, // give the banner up to 500ms to land
+});
+
+// Update — fired whenever the user saves preferences:
+gtag("consent", "update", {
   ad_storage: state.marketing === "granted" ? "granted" : "denied",
-  analytics_storage: state.analytics === "granted" ? "granted" : "denied",
   ad_user_data: state.marketing === "granted" ? "granted" : "denied",
   ad_personalization: state.marketing === "granted" ? "granted" : "denied",
+  analytics_storage: state.analytics === "granted" ? "granted" : "denied",
 });
 ```
 
-Default state pushed **before** GTM loads (in the inline
-`<head>` script that vanilla-cookieconsent emits) is "denied"
-across the board, so even partial loads stay compliant.
+When we eventually migrate to GTM (§3.1.1), the same calls work — gtag
+writes into `dataLayer` under the hood, and GTM picks them up natively.
+No app-code change.
 
 ---
 
-## 5. Tag plan inside GTM
+## 5. Tag plan
 
-GTM is the **only** tracker we hardcode in React. Everything else lives
-in the GTM container, configured via the GTM UI by whoever owns
-marketing.
+### 5.1 v1 — GA4 only, via gtag
 
-### 5.1 Initial tag set
+GA4 is the only client-side tracker for v1. The events configured are:
 
-| Tag | Trigger | Consent gate |
+| Event | Source | Consent gate |
 |---|---|---|
-| GA4 Configuration | All pages | analytics |
-| GA4 — `page_view` | Built-in | analytics |
-| GA4 — `scroll` (50%, 75%, 90%) | Scroll trigger | analytics |
-| GA4 — `cwv` (LCP/INP/CLS) | Custom event from Web Vitals reporter | analytics |
-| GA4 — `consent_grant` / `consent_update` / `consent_withdraw` | Banner events | analytics |
-| GA4 — `waitlist_submit` | Custom event after form success | analytics |
-| GA4 — `survey_submit` | Custom event after form success | analytics |
-| Meta Pixel base | All pages | marketing |
-| Meta Pixel — `Lead` | Custom event after waitlist success | marketing |
-| TikTok Pixel base | All pages | marketing |
-| TikTok Pixel — `CompleteRegistration` | Custom event after waitlist success | marketing |
+| `page_view` | gtag built-in (auto on every route change in the App Router via `<GoogleAnalytics>` SPA helper) | analytics |
+| `scroll` | gtag enhanced measurement (toggle in GA4 admin) | analytics |
+| `cwv` | Custom event from the Web Vitals reporter (LCP / INP / CLS / TTFB / FCP) | analytics |
+| `consent_grant` / `consent_update` / `consent_withdraw` | Custom events from the consent banner | analytics |
+| `waitlist_submit` | Custom event after form success — `role`, `source` parameters | analytics |
+| `survey_submit` | Custom event after form success — `role`, `source` parameters | analytics |
 
-### 5.2 Custom events from React
+Meta Pixel, TikTok Pixel, and LinkedIn Insight are **not in v1**. When
+they land, the migration to GTM (§3.1.1) is the recommended moment.
 
-Two helpers in `lib/tracking/events.ts`:
+### 5.2 Custom events from React — `lib/tracking/events.ts`
 
 ```ts
+declare global {
+  interface Window {
+    // Overloaded: gtag('event', name, params) for app events,
+    // gtag('consent', 'default'|'update', signals) for Consent Mode v2,
+    // gtag('config', id, params) for the GA4 init call.
+    gtag?: (...args: unknown[]) => void;
+    dataLayer?: unknown[];
+  }
+}
+
+export function trackEvent(name: string, params: Record<string, unknown> = {}) {
+  // gtag is the canonical entry point; it pushes through dataLayer under
+  // the hood, so when we migrate to GTM nothing here changes.
+  if (typeof window !== "undefined" && typeof window.gtag === "function") {
+    window.gtag("event", name, params);
+  }
+}
+
 export function trackWaitlistSubmit(role: WaitlistRole, source: string) {
-  window.dataLayer?.push({ event: "waitlist_submit", role, source });
+  trackEvent("waitlist_submit", { role, source });
 }
 
 export function trackSurveySubmit(role: SurveyRole, source: string) {
-  window.dataLayer?.push({ event: "survey_submit", role, source });
+  trackEvent("survey_submit", { role, source });
 }
 ```
 
-These are called from the form components after a successful POST.
-Pushing to `dataLayer` is no-op when GTM isn't loaded (consent denied)
-— the array exists from a stub in `<ConsentProvider>`, fanning into
-nothing.
+These are called from the form components after a successful POST. The
+gtag call is a no-op when GA4 isn't loaded (consent denied or env var
+unset) — the function guard fails gracefully.
 
 ---
 
@@ -320,13 +389,16 @@ category. Otherwise the IP is omitted.
 
 ### 6.5 Deduplication
 
-GA4 / Meta / TikTok all support a `event_id` field used to deduplicate
+GA4 / Meta / TikTok all support an `event_id` field used to deduplicate
 the server-side event with its browser-side twin. The Next.js route
 handler generates a UUID per submission and:
-- Returns it in the response so the form can echo it to GTM.
+- Returns it in the response so the form can echo it via gtag (later
+  via GTM if/when the migration in §3.1.1 happens).
 - Includes it in the server-side payload.
 
-GTM tags include the `event_id` in their data; the platforms dedupe.
+The browser event (`gtag('event', 'waitlist_submit', { event_id })`)
+and the server event (sent via Measurement Protocol with the same
+`event_id`) dedupe at the platform side.
 
 ---
 
@@ -391,23 +463,24 @@ once the collection lands — the POST just starts succeeding.
 
 ## 8. Environment variables
 
-| Var | Owner | Where it's read | Required? |
-|---|---|---|---|
-| `NEXT_PUBLIC_GTM_ID` | Marketing | `<Analytics>` | Yes (prod) |
-| `NEXT_PUBLIC_GA_ID` | Marketing | (only if GTM not used) | No — prefer GTM |
-| `NEXT_PUBLIC_META_PIXEL_ID` | Marketing | (only if not in GTM) | No — prefer GTM |
-| `META_CAPI_PIXEL_ID` | Marketing | `lib/server-events/meta.ts` | For server-side |
-| `META_CAPI_ACCESS_TOKEN` | Marketing | `lib/server-events/meta.ts` | For server-side |
-| `TIKTOK_PIXEL_ID` | Marketing | `lib/server-events/tiktok.ts` | For server-side |
-| `TIKTOK_EVENTS_TOKEN` | Marketing | `lib/server-events/tiktok.ts` | For server-side |
-| `GA4_MEASUREMENT_ID` | Marketing | `lib/server-events/ga4.ts` | For server-side |
-| `GA4_API_SECRET` | Marketing | `lib/server-events/ga4.ts` | For server-side |
-| `GOOGLE_SITE_VERIFICATION` | Marketing | root metadata | Optional |
-| `BING_SITE_VERIFICATION` | Marketing | root metadata | Optional |
+| Var | Owner | Where it's read | Required? | Production value |
+|---|---|---|---|---|
+| `NEXT_PUBLIC_GA_ID` | Marketing | `<Analytics>` (browser GA4 via gtag) | **Yes (prod)** | `G-3M58NGR6PX` |
+| `NEXT_PUBLIC_GTM_ID` | Marketing | `<Analytics>` (only after migration to GTM, §3.1.1) | No — defer | not set yet |
+| `META_CAPI_PIXEL_ID` | Marketing | `lib/server-events/meta.ts` | When server-side conversions ship | — |
+| `META_CAPI_ACCESS_TOKEN` | Marketing | `lib/server-events/meta.ts` | Same | — |
+| `TIKTOK_PIXEL_ID` | Marketing | `lib/server-events/tiktok.ts` | Same | — |
+| `TIKTOK_EVENTS_TOKEN` | Marketing | `lib/server-events/tiktok.ts` | Same | — |
+| `GA4_MEASUREMENT_ID` | Marketing | `lib/server-events/ga4.ts` | Same | `G-3M58NGR6PX` |
+| `GA4_API_SECRET` | Marketing | `lib/server-events/ga4.ts` | Same | (provision in GA4 admin → Data Streams → Measurement Protocol API secrets) |
+| `GOOGLE_SITE_VERIFICATION` | Marketing | root metadata | Optional | — |
+| `BING_SITE_VERIFICATION` | Marketing | root metadata | Optional | — |
 
-Local dev: leave all of these unset → no tracker fires. CI: set in the
-preview-env config but pointed at a separate GTM container so previews
-don't pollute prod analytics.
+Local dev: leave all of these unset → no tracker fires. CI / preview
+deploys: set `NEXT_PUBLIC_GA_ID` to a **separate GA4 property** (not
+production) so PR previews don't pollute prod analytics. After the
+migration to GTM (§3.1.1), the same rule applies to `NEXT_PUBLIC_GTM_ID`
+(separate container per environment).
 
 ---
 
@@ -424,28 +497,34 @@ don't pollute prod analytics.
 
 ## 10. Acceptance
 
-1. First-time visitor sees the banner; **no GTM/GA/pixel script is
-   loaded** in the page until they consent.
+1. First-time visitor sees the banner; **no analytics or marketing
+   script is loaded** in the page until they consent. (In v1: no
+   `gtag/js` request fires; in the post-GTM future: no `gtm.js`
+   request fires.)
 2. "Reject non-essential" is a one-click action; nothing tracker-side
    loads thereafter.
-3. "Accept all" loads GTM; GA4 fires; Meta/TikTok pixels fire from
-   inside GTM; Consent Mode v2 dataLayer push matches `granted` for
-   both `ad_storage` and `analytics_storage`.
+3. "Accept all" loads gtag.js (GA4 via `<GoogleAnalytics>`);
+   `gtag('consent', 'update', ...)` fires with `granted` for both
+   `ad_storage` and `analytics_storage`; GA4 reports a `page_view` in
+   the GA4 DebugView within 10 s.
 4. After consent, refreshing the page does not re-show the banner.
 5. Clicking "Cookies" in the footer re-opens the preferences modal
    pre-populated with current state.
-6. Withdrawing consent reloads the page; tracker scripts are absent
-   from the DOM after reload.
+6. Withdrawing consent reloads the page; the gtag.js script is absent
+   from the DOM after reload, and `gtag('consent', 'default', ...)` shows
+   `denied` across all four signals before any further events fire.
 7. Each consent action results in a Strapi `consent-record` row with
    the right `event` value.
 8. A waitlist submission made after consent has its `consentRecord`
    relation populated (when the optional relation ships).
-9. A waitlist submission triggers server-side `Lead` events to Meta
-   CAPI / TikTok Events / GA4 MP, **gated by consent** category by
-   category.
-10. The browser-side `Lead` event (from GTM) and the server-side
-    `Lead` event share the same `event_id` and dedupe correctly in
-    Meta Events Manager.
+9. A waitlist submission triggers server-side conversion events,
+   **gated by consent** category by category. v1: GA4 Measurement
+   Protocol receives a `waitlist_submit` event when analytics consent
+   is granted. Future: Meta CAPI / TikTok Events receive `Lead` /
+   `CompleteRegistration` when marketing consent is granted.
+10. The browser-side `waitlist_submit` event (from gtag, later from
+    GTM) and the server-side event share the same `event_id` and
+    dedupe correctly in the relevant platform's events viewer.
 11. Bumping `version` in `lib/consent/version.ts` re-prompts every
     returning user on next visit.
 12. Lighthouse a11y score on the banner ≥ 95: no contrast issues,
