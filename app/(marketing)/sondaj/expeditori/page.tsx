@@ -7,6 +7,9 @@ export const metadata: Metadata = {
   title: "Sondaj pentru expeditori",
   description:
     "Împărtășește cum trimiți pachete și ce ți-ar economisi timp. Ne ajută să construim platforma cum trebuie.",
+  // Survey is a transient form, not a search target — keep it out of
+  // the index (also disallowed in robots.txt as defense in depth).
+  robots: { index: false, follow: false },
 };
 
 export default function SenderSurveyPage() {
