@@ -1,12 +1,20 @@
 export type Role = "expeditor" | "transportator" | "destinatar";
 
-export interface LegalPage {
-  slug: "confidentialitate" | "termeni";
+export type EditorialPageSlug =
+  | "confidentialitate"
+  | "termeni"
+  | "despre-proiect";
+
+export interface EditorialPage {
+  slug: EditorialPageSlug;
   title: string;
   lastUpdated: string;
   body: string;
   metaDescription?: string;
 }
+
+/** @deprecated Use EditorialPage. Kept so older imports still type-check. */
+export type LegalPage = EditorialPage;
 
 export interface StrapiMediaFormat {
   url: string;

@@ -7,12 +7,12 @@ import type { EditorialPage } from "@/lib/types";
 
 async function loadPage(): Promise<EditorialPage> {
   try {
-    const cms = await getEditorialPage("confidentialitate");
+    const cms = await getEditorialPage("despre-proiect");
     if (cms) return cms;
   } catch (error) {
-    console.error("[page/confidentialitate] CMS fetch failed:", error);
+    console.error("[page/despre-proiect] CMS fetch failed:", error);
   }
-  return EDITORIAL_FALLBACK.confidentialitate;
+  return EDITORIAL_FALLBACK["despre-proiect"];
 }
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -23,7 +23,7 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default async function PrivacyPage() {
+export default async function AboutPage() {
   const page = await loadPage();
   return (
     <main className="legal-page">

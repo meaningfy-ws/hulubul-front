@@ -1,18 +1,18 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getLegalPage } from "@/lib/strapi";
-import { LEGAL_FALLBACK } from "@/lib/legal-fallback";
+import { getEditorialPage } from "@/lib/strapi";
+import { EDITORIAL_FALLBACK } from "@/lib/editorial-fallback";
 import { MarkdownText } from "@/components/landing/MarkdownText";
-import type { LegalPage } from "@/lib/types";
+import type { EditorialPage } from "@/lib/types";
 
-async function loadPage(): Promise<LegalPage> {
+async function loadPage(): Promise<EditorialPage> {
   try {
-    const cms = await getLegalPage("termeni");
+    const cms = await getEditorialPage("termeni");
     if (cms) return cms;
   } catch (error) {
-    console.error("[legal/termeni] CMS fetch failed:", error);
+    console.error("[page/termeni] CMS fetch failed:", error);
   }
-  return LEGAL_FALLBACK.termeni;
+  return EDITORIAL_FALLBACK.termeni;
 }
 
 export async function generateMetadata(): Promise<Metadata> {

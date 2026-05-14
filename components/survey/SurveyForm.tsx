@@ -19,6 +19,7 @@ import type {
   TrustSignal,
 } from "@/lib/survey-schema";
 import { readRemembered } from "@/lib/remember-me";
+import { humanizeFormError } from "@/lib/form-errors";
 import {
   contactedCountLabels,
   howFindLabels,
@@ -183,9 +184,7 @@ export function SurveyForm() {
     } catch (error) {
       setStatus("error");
       setErrorMessage(
-        error instanceof Error
-          ? error.message
-          : "A apărut o eroare. Încearcă din nou.",
+        humanizeFormError(error, "A apărut o eroare. Încearcă din nou."),
       );
     }
   }
@@ -347,7 +346,7 @@ function SurveyBody(props: any) {
               const id = `s-pkg-${o.value}`;
               const checked = s.packageTypes.includes(o.value);
               return (
-                <div key={o.value} className="checkbox-option">
+                <label key={o.value} className="checkbox-option" htmlFor={id}>
                   <input
                     id={id}
                     type="checkbox"
@@ -356,8 +355,8 @@ function SurveyBody(props: any) {
                       x.setPackageTypes(toggleIn(s.packageTypes, o.value))
                     }
                   />
-                  <label htmlFor={id}>{o.label}</label>
-                </div>
+                  <span>{o.label}</span>
+                </label>
               );
             })}
           </div>
@@ -383,7 +382,7 @@ function SurveyBody(props: any) {
               const id = `s-find-${o.value}`;
               const checked = s.howFindTransporter.includes(o.value);
               return (
-                <div key={o.value} className="checkbox-option">
+                <label key={o.value} className="checkbox-option" htmlFor={id}>
                   <input
                     id={id}
                     type="checkbox"
@@ -394,8 +393,8 @@ function SurveyBody(props: any) {
                       )
                     }
                   />
-                  <label htmlFor={id}>{o.label}</label>
-                </div>
+                  <span>{o.label}</span>
+                </label>
               );
             })}
           </div>
@@ -500,7 +499,7 @@ function SurveyBody(props: any) {
               const id = `s-pain-${o.value}`;
               const checked = s.painPointsStructured.includes(o.value);
               return (
-                <div key={o.value} className="checkbox-option">
+                <label key={o.value} className="checkbox-option" htmlFor={id}>
                   <input
                     id={id}
                     type="checkbox"
@@ -511,8 +510,8 @@ function SurveyBody(props: any) {
                       )
                     }
                   />
-                  <label htmlFor={id}>{o.label}</label>
-                </div>
+                  <span>{o.label}</span>
+                </label>
               );
             })}
           </div>
@@ -536,7 +535,7 @@ function SurveyBody(props: any) {
               const id = `s-iss-${o.value}`;
               const checked = s.issuesExperienced.includes(o.value);
               return (
-                <div key={o.value} className="checkbox-option">
+                <label key={o.value} className="checkbox-option" htmlFor={id}>
                   <input
                     id={id}
                     type="checkbox"
@@ -547,8 +546,8 @@ function SurveyBody(props: any) {
                       )
                     }
                   />
-                  <label htmlFor={id}>{o.label}</label>
-                </div>
+                  <span>{o.label}</span>
+                </label>
               );
             })}
           </div>
@@ -565,7 +564,7 @@ function SurveyBody(props: any) {
               const id = `s-ts-${o.value}`;
               const checked = s.trustSignals.includes(o.value);
               return (
-                <div key={o.value} className="checkbox-option">
+                <label key={o.value} className="checkbox-option" htmlFor={id}>
                   <input
                     id={id}
                     type="checkbox"
@@ -574,8 +573,8 @@ function SurveyBody(props: any) {
                       x.setTrustSignals(toggleIn(s.trustSignals, o.value))
                     }
                   />
-                  <label htmlFor={id}>{o.label}</label>
-                </div>
+                  <span>{o.label}</span>
+                </label>
               );
             })}
           </div>
@@ -620,30 +619,32 @@ function SurveyBody(props: any) {
       <section className="survey-section">
         <h2 className="serif survey-section-title">La final</h2>
         <div className="form-group">
-          <div className="checkbox-option survey-single-check">
+          <label
+            className="checkbox-option survey-single-check"
+            htmlFor="s-ship-soon"
+          >
             <input
               id="s-ship-soon"
               type="checkbox"
               checked={s.willShipSoon}
               onChange={(e) => x.setWillShipSoon(e.target.checked)}
             />
-            <label htmlFor="s-ship-soon">
-              Voi trimite un pachet în următoarele 2–4 săptămâni
-            </label>
-          </div>
+            <span>Voi trimite un pachet în următoarele 2–4 săptămâni</span>
+          </label>
         </div>
         <div className="form-group">
-          <div className="checkbox-option survey-single-check">
+          <label
+            className="checkbox-option survey-single-check"
+            htmlFor="s-callback"
+          >
             <input
               id="s-callback"
               type="checkbox"
               checked={s.wantsCallback}
               onChange={(e) => x.setWantsCallback(e.target.checked)}
             />
-            <label htmlFor="s-callback">
-              Sună-mă / scrie-mi cu opțiuni concrete dacă există
-            </label>
-          </div>
+            <span>Sună-mă / scrie-mi cu opțiuni concrete dacă există</span>
+          </label>
           {s.wantsCallback ? (
             <input
               type="tel"
