@@ -1,9 +1,14 @@
 import { z } from "zod";
+import { surveyRoleEnum } from "./roles";
+import type { SurveyRole } from "./roles";
 
 // ---- Enums (mirror backend exactly) ----
 
-export const roleEnum = z.enum(["expeditor", "transportator", "ambele"]);
-export type Role = z.infer<typeof roleEnum>;
+// Re-exported under the historical names. The canonical definition lives in
+// `lib/roles.ts`. Sender-survey roles are intentionally a different subset
+// from waitlist roles; see lib/roles.ts.
+export const roleEnum = surveyRoleEnum;
+export type Role = SurveyRole;
 
 export const sourceEnum = z.enum([
   "waitlist_followup",

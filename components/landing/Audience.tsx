@@ -1,4 +1,5 @@
 import type { AudienceSection } from "@/lib/types";
+import { isRole } from "@/lib/roles";
 import { Reveal } from "./Reveal";
 import { SplitTitle } from "./SplitTitle";
 
@@ -8,6 +9,11 @@ import { SplitTitle } from "./SplitTitle";
 // (and the anchor jump can fail). We rewrite anchor-only hrefs to
 // `/?role=X#signup` so the role query reaches `useSearchParams()`.
 function buildCardHref(linkHref: string, role: string): string {
+  // L6 defence: if the CMS sends an unrecognised role string, fall back to the
+  // raw href so we never compose `?role=evil-value` into a navigation. Today
+  // the field is typed `Role` end-to-end, but a future CMS schema change must
+  // not turn into an open redirect.
+  if (!isRole(role)) return linkHref || "/";
   if (linkHref.startsWith("#")) {
     const fragment = linkHref.slice(1);
     return `/?role=${role}#${fragment}`;
