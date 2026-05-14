@@ -1,5 +1,13 @@
 export type Role = "expeditor" | "transportator" | "destinatar";
 
+export interface LegalPage {
+  slug: "confidentialitate" | "termeni";
+  title: string;
+  lastUpdated: string;
+  body: string;
+  metaDescription?: string;
+}
+
 export interface StrapiMediaFormat {
   url: string;
   width: number;
