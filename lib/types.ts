@@ -6,7 +6,8 @@ export type Role = WaitlistRole;
 export type EditorialPageSlug =
   | "confidentialitate"
   | "termeni"
-  | "despre-proiect";
+  | "despre-proiect"
+  | "pentru-transportatori";
 
 export interface EditorialPage {
   slug: EditorialPageSlug;
