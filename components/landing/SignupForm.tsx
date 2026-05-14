@@ -17,6 +17,17 @@ import {
 import { captureUtmFromUrl, readStoredUtm } from "@/lib/utm";
 import { GDPR_CONSENT_VERSION } from "@/lib/gdpr-consent";
 import { requestLocation, type LocationGranted } from "@/lib/geolocation";
+import { humanizeFormError } from "@/lib/form-errors";
+
+// Defensive fallback: stale links shared in the wild can have the malformed
+// shape `/#signup?role=X` (query embedded in the fragment). Parse it so the
+// role still lands in the form even though `useSearchParams()` returns nothing.
+function parseRoleFromFragment(hash: string): string | null {
+  const qIndex = hash.indexOf("?");
+  if (qIndex < 0) return null;
+  const params = new URLSearchParams(hash.slice(qIndex + 1));
+  return params.get("role");
+}
 
 interface LocationState {
   consent: "granted" | "denied" | "not_asked";
@@ -71,6 +82,23 @@ export function SignupForm({ data }: { data: SignupSection }) {
   );
 
   const [role, setRole] = useState<Role>(initialRole);
+
+  useEffect(() => {
+    // Hydration step: if the URL is the malformed legacy shape
+    // `/#signup?role=X`, useSearchParams won't see the role — recover it from
+    // the fragment and scroll the form into view. Safe to run after the
+    // server-rendered initial role lands.
+    if (typeof window === "undefined") return;
+    const hash = window.location.hash;
+    if (!hash || !hash.includes("?")) return;
+    const fragmentRole = parseRoleFromFragment(hash);
+    if (fragmentRole) {
+      setRole(parseRole(fragmentRole, defaultRole));
+    }
+    if (hash.startsWith("#signup")) {
+      document.getElementById("signup")?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [defaultRole]);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
@@ -187,9 +215,10 @@ export function SignupForm({ data }: { data: SignupSection }) {
     } catch (error) {
       setStatus("error");
       setErrorMessage(
-        error instanceof Error
-          ? error.message
-          : "A apărut o eroare. Încearcă din nou, te rog.",
+        humanizeFormError(
+          error,
+          "A apărut o eroare. Încearcă din nou, te rog.",
+        ),
       );
     }
   }

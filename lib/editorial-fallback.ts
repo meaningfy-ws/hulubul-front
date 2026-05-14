@@ -1,18 +1,26 @@
-import type { LegalPage } from "./types";
+import type { EditorialPage } from "./types";
 
-// Fallback legal copy used until the Strapi `legal-confidentialitate` /
-// `legal-termeni` single-types are populated (see design/spec-legal-pages.md).
-// When the backend ships the content types and editors publish entries, the
-// CMS values win automatically and this file becomes dead code.
+// Build-time fallback for editorial pages (legal + about) used until the
+// matching Strapi `page-{slug}` single-types are populated. See
+// design/spec-legal-pages.md. When the backend ships the content types and
+// editors publish entries, the CMS values win automatically and this file
+// becomes dead code.
+//
+// Note: contact@hulubul.com is intentionally absent from this copy because
+// the mailbox isn't live yet (May 2026). When mail is set up, both this file
+// and the Strapi entries can reintroduce the address.
 
-export const LEGAL_FALLBACK: Record<LegalPage["slug"], LegalPage> = {
+export const EDITORIAL_FALLBACK: Record<
+  EditorialPage["slug"],
+  EditorialPage
+> = {
   confidentialitate: {
     slug: "confidentialitate",
     title: "Politica de confidențialitate",
     lastUpdated: "23 aprilie 2026",
     metaDescription:
       "Ce date colectăm, de ce, și cum le poți gestiona pe hulubul.com.",
-    body: `Această pagină descrie ce date colectăm pe hulubul.com, de ce, unde se păstrează, și cum le poți gestiona. Dacă ai întrebări, scrie-ne la [contact@hulubul.com](mailto:contact@hulubul.com).
+    body: `Această pagină descrie ce date colectăm pe hulubul.com, de ce, unde se păstrează, și cum le poți gestiona.
 
 ## Ce reținem pe dispozitivul tău
 
@@ -35,7 +43,7 @@ hulubul.com nu folosește cookie-uri pentru tracking. Singurele date păstrate p
 
 ## Drepturile tale
 
-Conform GDPR, ai dreptul să ne ceri să-ți accesăm, corectăm sau ștergem datele. Trimite-ne un email la [contact@hulubul.com](mailto:contact@hulubul.com).
+Conform GDPR, ai dreptul să ne ceri să-ți accesăm, corectăm sau ștergem datele. Adresa de contact va fi anunțată la lansare.
 
 *Acest text este un proiect inițial, supus revizuirii juridice înainte de lansarea oficială. Conținutul poate evolua; dacă există schimbări materiale, te vom anunța.*`,
   },
@@ -64,10 +72,39 @@ Textele, imaginile și materialele de pe hulubul.com sunt proprietatea autorilor
 
 Pe măsură ce serviciul prinde formă, vom publica versiuni complete ale termenilor — inclusiv reguli pentru utilizarea platformei, responsabilitățile transportatorilor, mecanismele de garanție și gestionarea litigiilor. Te vom anunța la schimbări materiale.
 
-## Contact
-
-Pentru întrebări sau clarificări, scrie-ne la [contact@hulubul.com](mailto:contact@hulubul.com).
-
 *Acest text este un proiect inițial, supus revizuirii juridice înainte de lansarea oficială.*`,
+  },
+
+  "despre-proiect": {
+    slug: "despre-proiect",
+    title: "Despre proiect",
+    lastUpdated: "14 mai 2026",
+    metaDescription:
+      "Despre hulubul.com — de ce construim platforma și cum o gândim împreună cu diaspora moldovenească.",
+    body: `hulubul.com pornește de la o problemă pe care o cunoaștem cu toții: trimiterea de pachete între diaspora moldovenească și Republica Moldova depinde, în prezent, de grupuri Facebook, recomandări și mesaje pe WhatsApp. Funcționează — dar pierzi timp și nu ai garanții.
+
+## Ce încercăm să facem
+
+Vrem o platformă unde:
+
+- **Expeditorii** găsesc rapid o cursă potrivită pentru pachetul lor, cu rute, date și transportator clar afișate.
+- **Transportatorii** primesc cereri relevante, fără să caute prin grupuri, și își păstrează relația directă cu clienții.
+- **Destinatarii** știu când sosește pachetul și cu cine vorbesc dacă apare ceva.
+
+Credem că o platformă utilă se construiește împreună cu cei care o folosesc — de aceea pornim cu o listă de așteptare și un sondaj scurt pentru expeditori.
+
+## Unde suntem acum
+
+Suntem la început. Pagina pe care o vezi este versiunea inițială:
+
+- Colectăm înscrieri pe lista de așteptare, ca să anunțăm primii utilizatori la lansare.
+- Rulăm un sondaj cu expeditori, ca să modelăm corect prima versiune a serviciului.
+- Discutăm individual cu transportatori care vor să fie printre primii pe platformă.
+
+## Cine suntem
+
+Suntem o echipă mică, distribuită între Luxembourg și Chișinău. Construim cu grijă, pas cu pas, fără promisiuni mari și fără reclame zgomotoase. Dacă vrei să afli mai multe sau să contribui, înscrie-te pe lista de așteptare — ținem legătura.
+
+*Această pagină va fi actualizată pe măsură ce proiectul evoluează.*`,
   },
 };

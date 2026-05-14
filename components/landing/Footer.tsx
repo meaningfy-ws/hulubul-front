@@ -9,6 +9,9 @@ const FOOTER_HREF_OVERRIDES: Record<string, string> = {
   "lista de așteptare": "/#signup",
   "confidențialitate": "/confidentialitate",
   "termeni": "/termeni",
+  "termeni și condiții": "/termeni",
+  "despre proiect": "/despre-proiect",
+  "despre": "/despre-proiect",
 };
 
 function resolveFooterHref(label: string, href: string): string {
