@@ -59,6 +59,9 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: Architecture (dependency-cruiser)
+        run: npm run check:deps
+
       - name: Test
         run: npm test
 
