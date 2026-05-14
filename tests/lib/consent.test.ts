@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   CURRENT_CONSENT_VERSION,
   CONSENT_STORAGE_KEY,
+  __resetConsentCache,
   initialState,
   needsBanner,
   readConsent,
@@ -11,6 +12,10 @@ import {
 
 beforeEach(() => {
   window.localStorage.clear();
+  // The store caches its snapshot to satisfy React's
+  // useSyncExternalStore reference-stability requirement. Tests that
+  // mutate localStorage directly need the cache cleared between cases.
+  __resetConsentCache();
   vi.useFakeTimers();
   vi.setSystemTime(new Date("2027-01-15T10:00:00Z"));
 });

@@ -10,21 +10,37 @@ type Listener = (state: ConsentState) => void;
 
 const listeners = new Set<Listener>();
 
+// React's `useSyncExternalStore` requires `getSnapshot` and
+// `getServerSnapshot` to return the SAME reference between calls when
+// nothing has changed — otherwise the hook detects a "store mutation"
+// every render and infinite-loops.
+//
+// We hold a frozen default singleton + a cached client snapshot that
+// only refreshes when `writeConsent` runs. The snapshot is invalidated
+// at module scope (subscribers fire after the cache update).
+
+const FROZEN_INITIAL_STATE: ConsentState = Object.freeze({
+  necessary: true as const,
+  analytics: "denied",
+  marketing: "denied",
+  version: CURRENT_CONSENT_VERSION,
+  choseAt: null,
+}) as ConsentState;
+
+let cachedSnapshot: ConsentState | null = null;
+
 /**
  * The default state for a visitor who hasn't yet made a choice on the
  * current banner version. All non-essential categories are denied —
  * required by GDPR (consent must be opt-in, not opt-out) and by
  * Google Consent Mode v2 (default state must be sent before any
  * tracker fires).
+ *
+ * Returns the same frozen reference every call — required for
+ * `useSyncExternalStore`'s server snapshot.
  */
 export function initialState(): ConsentState {
-  return {
-    necessary: true,
-    analytics: "denied",
-    marketing: "denied",
-    version: CURRENT_CONSENT_VERSION,
-    choseAt: null,
-  };
+  return FROZEN_INITIAL_STATE;
 }
 
 function isValidStored(record: unknown): record is ConsentState {
@@ -49,6 +65,21 @@ function isValidStored(record: unknown): record is ConsentState {
  * server and on the client (no hydration mismatch).
  */
 export function readConsent(): ConsentState {
+  if (cachedSnapshot) return cachedSnapshot;
+  cachedSnapshot = computeFromStorage();
+  return cachedSnapshot;
+}
+
+/**
+ * Test-only: reset the in-module snapshot cache so a test that mutates
+ * localStorage directly observes the new value on the next
+ * `readConsent`. Production code never calls this.
+ */
+export function __resetConsentCache(): void {
+  cachedSnapshot = null;
+}
+
+function computeFromStorage(): ConsentState {
   if (typeof window === "undefined") return initialState();
   const raw = window.localStorage.getItem(CONSENT_STORAGE_KEY);
   if (!raw) return initialState();
@@ -83,6 +114,10 @@ export function writeConsent(choice: ConsentChoice): ConsentState {
     version: CURRENT_CONSENT_VERSION,
     choseAt: new Date().toISOString(),
   };
+  // Update the cached snapshot first so the next `readConsent()` (e.g.
+  // from `useSyncExternalStore` triggered by the listener loop below)
+  // returns the new reference.
+  cachedSnapshot = next;
   if (typeof window !== "undefined") {
     try {
       window.localStorage.setItem(CONSENT_STORAGE_KEY, JSON.stringify(next));
