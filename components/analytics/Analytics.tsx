@@ -1,84 +1,51 @@
-import Script from "next/script";
+"use client";
+
+import { useEffect, useRef } from "react";
 import { GoogleAnalytics } from "@next/third-parties/google";
+import { useConsent } from "@/components/consent/ConsentProvider";
+import {
+  pushConsentDefault,
+  pushConsentUpdate,
+} from "@/lib/consent/gtag-bridge";
 
 /**
- * Renders the third-party analytics scripts (GA4, Meta Pixel, LinkedIn Insight Tag).
+ * Mounts the GA4 snippet via @next/third-parties — but only when:
+ *   - `NEXT_PUBLIC_GA_ID` is set (production-ready), AND
+ *   - the user has granted analytics consent.
  *
- * Each script is gated on its env var being set — so production stays dark until the IDs
- * are configured. Once `design/spec-consent.md` ships, every script will additionally be
- * gated on the matching consent category. Until then, set IDs only on environments where
- * tracking is acceptable (staging) and leave them unset in production.
+ * Local dev: leave `NEXT_PUBLIC_GA_ID` unset and nothing tracker-side
+ * loads, regardless of banner state.
+ *
+ * Consent Mode v2 plumbing:
+ *   - The default state ("everything denied") is pushed once on mount,
+ *     before the GA4 snippet is requested. This satisfies Google's
+ *     requirement that a `default` exist before any `update`.
+ *   - When consent changes (banner save / withdraw), an `update` is
+ *     pushed. GA4 reconciles buffered hits accordingly.
+ *
+ * The Meta Pixel and LinkedIn Insight helpers were dropped from this
+ * file. They'll come back via GTM (see tracking spec §3.1.1).
  */
 export function Analytics() {
+  const { state } = useConsent();
   const gaId = process.env.NEXT_PUBLIC_GA_ID;
-  const metaPixelId = process.env.NEXT_PUBLIC_META_PIXEL_ID;
-  const linkedInPartnerId = process.env.NEXT_PUBLIC_LINKEDIN_PARTNER_ID;
+  const allowGa = state.analytics === "granted" && Boolean(gaId);
+  const defaultPushedRef = useRef(false);
 
-  return (
-    <>
-      {gaId ? <GoogleAnalytics gaId={gaId} /> : null}
-      {metaPixelId ? <MetaPixel pixelId={metaPixelId} /> : null}
-      {linkedInPartnerId ? <LinkedInInsight partnerId={linkedInPartnerId} /> : null}
-    </>
-  );
-}
+  useEffect(() => {
+    if (!defaultPushedRef.current) {
+      pushConsentDefault();
+      defaultPushedRef.current = true;
+    }
+  }, []);
 
-function MetaPixel({ pixelId }: { pixelId: string }) {
-  return (
-    <>
-      <Script id="meta-pixel" strategy="afterInteractive">
-        {`!function(f,b,e,v,n,t,s)
-          {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-          n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-          if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-          n.queue=[];t=b.createElement(e);t.async=!0;
-          t.src=v;s=b.getElementsByTagName(e)[0];
-          s.parentNode.insertBefore(t,s)}(window, document,'script',
-          'https://connect.facebook.net/en_US/fbevents.js');
-          fbq('init', '${pixelId}');
-          fbq('track', 'PageView');`}
-      </Script>
-      <noscript>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          height="1"
-          width="1"
-          style={{ display: "none" }}
-          src={`https://www.facebook.com/tr?id=${pixelId}&ev=PageView&noscript=1`}
-          alt=""
-        />
-      </noscript>
-    </>
-  );
-}
+  useEffect(() => {
+    pushConsentUpdate({
+      analytics: state.analytics,
+      marketing: state.marketing,
+    });
+  }, [state.analytics, state.marketing]);
 
-function LinkedInInsight({ partnerId }: { partnerId: string }) {
-  return (
-    <>
-      <Script id="linkedin-insight" strategy="afterInteractive">
-        {`_linkedin_partner_id = "${partnerId}";
-          window._linkedin_data_partner_ids = window._linkedin_data_partner_ids || [];
-          window._linkedin_data_partner_ids.push(_linkedin_partner_id);
-          (function(l) {
-            if (!l){window.lintrk = function(a,b){window.lintrk.q.push([a,b])};
-            window.lintrk.q=[]}
-            var s = document.getElementsByTagName("script")[0];
-            var b = document.createElement("script");
-            b.type = "text/javascript";b.async = true;
-            b.src = "https://snap.licdn.com/li.lms-analytics/insight.min.js";
-            s.parentNode.insertBefore(b, s);
-          })(window.lintrk);`}
-      </Script>
-      <noscript>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          height="1"
-          width="1"
-          style={{ display: "none" }}
-          alt=""
-          src={`https://px.ads.linkedin.com/collect/?pid=${partnerId}&fmt=gif`}
-        />
-      </noscript>
-    </>
-  );
+  if (!allowGa) return null;
+  return <GoogleAnalytics gaId={gaId!} />;
 }
