@@ -28,7 +28,9 @@ describe("POST /api/survey", () => {
       }),
     );
     expect(res.status).toBe(201);
-    expect(await res.json()).toEqual({ ok: true });
+    const body = (await res.json()) as { ok: boolean; event_id: string };
+    expect(body.ok).toBe(true);
+    expect(typeof body.event_id).toBe("string");
   });
 
   it("returns 400 when Zod rejects the body (missing source)", async () => {

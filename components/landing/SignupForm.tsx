@@ -20,6 +20,8 @@ import { GDPR_CONSENT_VERSION } from "@/lib/gdpr-consent";
 import { requestLocation, type LocationGranted } from "@/lib/geolocation";
 import { humanizeFormError } from "@/lib/form-errors";
 import { FORM_STATUS, type FormStatus } from "@/lib/form-status";
+import { trackWaitlistSubmit } from "@/lib/tracking/events";
+import { useConsent } from "@/components/consent/ConsentProvider";
 
 // Defensive fallback: stale links shared in the wild can have the malformed
 // shape `/#signup?role=X` (query embedded in the fragment). Parse it so the
@@ -73,6 +75,7 @@ const parseRole = (value: string | null, fallback: Role): Role =>
 
 export function SignupForm({ data }: { data: SignupSection }) {
   const searchParams = useSearchParams();
+  const consentCtx = useConsent();
   const defaultRole = (data.roleDefault as Role) ?? "expeditor";
   const initialRole = useMemo(
     () => parseRole(searchParams?.get("role") ?? null, defaultRole),
@@ -188,16 +191,24 @@ export function SignupForm({ data }: { data: SignupSection }) {
     const utm = readStoredUtm();
     if (utm && Object.keys(utm).length > 0) payload.utm = utm;
 
+    // Tracker-cookie consent passed to the route handler so it can
+    // decide whether to dispatch server-side conversions. Optional.
+    payload.consent = {
+      analytics: consentCtx.state.analytics,
+      marketing: consentCtx.state.marketing,
+      recordId: consentCtx.state.recordId,
+    };
+
     try {
       const res = await fetch("/api/waitlist", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
+      const json = (await res.json().catch(() => null)) as
+        | { error?: string; event_id?: string }
+        | null;
       if (!res.ok) {
-        const json = (await res.json().catch(() => null)) as
-          | { error?: string }
-          | null;
         throw new Error(json?.error ?? `Request failed (${res.status})`);
       }
       if (remember) {
@@ -208,6 +219,12 @@ export function SignupForm({ data }: { data: SignupSection }) {
         });
       } else {
         clearRememberedIdentity();
+      }
+      // Tracking event — gated downstream by analytics consent in <Analytics>.
+      // event_id is echoed by the route handler so the browser-side and
+      // (eventual) server-side conversion events dedupe at the platform.
+      if (json?.event_id) {
+        trackWaitlistSubmit(role, "landing", json.event_id);
       }
       setStatus(FORM_STATUS.Success);
     } catch (error) {

@@ -22,6 +22,8 @@ import { readRemembered } from "@/lib/remember-me";
 import { humanizeFormError } from "@/lib/form-errors";
 import { FORM_STATUS, type FormStatus } from "@/lib/form-status";
 import { SURVEY_ROLES } from "@/lib/roles";
+import { trackSurveySubmit } from "@/lib/tracking/events";
+import { useConsent } from "@/components/consent/ConsentProvider";
 import {
   contactedCountLabels,
   howFindLabels,
@@ -54,6 +56,7 @@ function toggleIn<T>(list: T[], value: T): T[] {
 
 export function SurveyForm() {
   const searchParams = useSearchParams();
+  const consentCtx = useConsent();
 
   // Identity
   const [name, setName] = useState("");
@@ -166,6 +169,11 @@ export function SurveyForm() {
       ...(wantsCallback && callbackPhone.trim()
         ? { callbackPhone: callbackPhone.trim() }
         : {}),
+      consent: {
+        analytics: consentCtx.state.analytics,
+        marketing: consentCtx.state.marketing,
+        recordId: consentCtx.state.recordId,
+      },
     };
 
     try {
@@ -174,14 +182,17 @@ export function SurveyForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
+      const json = (await res.json().catch(() => null)) as
+        | { error?: string; event_id?: string }
+        | null;
       if (!res.ok) {
-        const json = (await res.json().catch(() => null)) as
-          | { error?: string }
-          | null;
         throw new Error(json?.error ?? `Request failed (${res.status})`);
       }
       if (typeof window !== "undefined") {
         window.sessionStorage.removeItem(SOURCE_FLAG_KEY);
+      }
+      if (json?.event_id) {
+        trackSurveySubmit(role, source, json.event_id);
       }
       setStatus(FORM_STATUS.Success);
     } catch (error) {

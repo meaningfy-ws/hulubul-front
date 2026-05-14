@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { waitlistSchema } from "@/lib/waitlist-schema";
 import { submitWaitlist } from "@/lib/strapi";
+import {
+  dispatchConversion,
+  generateEventId,
+} from "@/lib/server-events/dispatcher";
 
 export const runtime = "nodejs";
 
@@ -71,9 +75,12 @@ export async function POST(request: Request) {
     location = resolveIpLocation(request);
   }
 
-  // Strip the `client` hint — its content was merged into `device`.
+  // Strip the `client` hint and the `consent` (server-side only) — they
+  // weren't part of the Strapi schema. Strapi receives just the
+  // submission fields.
   const enriched: Record<string, unknown> = { ...data, device, location };
   delete enriched.client;
+  delete enriched.consent;
 
   try {
     await submitWaitlist(
@@ -87,5 +94,26 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: message }, { status: 502 });
   }
 
-  return NextResponse.json({ ok: true }, { status: 201 });
+  // Generate the dedupe key. Returned to the client so the browser-side
+  // gtag('event') can carry the same event_id, allowing GA4 to collapse
+  // the two events into one conversion.
+  const eventId = generateEventId();
+
+  // Server-side dispatch — fire-and-forget, never blocks the response.
+  // dispatchConversion respects consent: only fires GA4 MP when
+  // analytics consent is granted.
+  await dispatchConversion(
+    {
+      eventName: "waitlist_submit",
+      eventId,
+      clientId: data.consent?.recordId ?? eventId,
+      params: { role: data.role, source: data.source ?? "landing" },
+    },
+    data.consent ?? { analytics: "denied", marketing: "denied" },
+  );
+
+  return NextResponse.json(
+    { ok: true, event_id: eventId },
+    { status: 201 },
+  );
 }
