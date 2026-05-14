@@ -1,0 +1,34 @@
+{
+  "@type": "Service",
+  "name": "hulubul.com — finding a trusted carrier for your parcel",
+  "serviceType": "Trusted-carrier directory for cross-border parcels",
+  "description": "For people in the Moldovan diaspora who want to send a parcel home — or for someone in the Republic of Moldova expecting one — hulubul.com is the place to find a trustworthy person who happens to be running the right route on the right date. Browse carriers' published schedules, read the reputation built from real past trips, and contact them directly via WhatsApp or phone. The platform itself does not handle the parcel, the payment, or the conversation between you and the carrier; it makes the right person easy to find and steps out of the way. Free of charge during the pilot phase; no commission on the underlying transport agreement.",
+  "provider": {
+    "@type": "Organization",
+    "name": "hulubul.com",
+    "url": "https://hulubul.com"
+  },
+  "areaServed": [
+    { "@type": "Country", "name": "Moldova" },
+    { "@type": "Place", "name": "European Union" }
+  ],
+  "audience": [
+    {
+      "@type": "Audience",
+      "audienceType": "Senders — Moldovan diaspora wanting to send parcels home",
+      "geographicArea": { "@type": "Place", "name": "European Union" }
+    },
+    {
+      "@type": "Audience",
+      "audienceType": "Recipients — people in the Republic of Moldova expecting parcels",
+      "geographicArea": { "@type": "Country", "name": "Moldova" }
+    }
+  ],
+  "termsOfService": "https://hulubul.com/termeni",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "EUR",
+    "availability": "https://schema.org/PreOrder"
+  }
+}
