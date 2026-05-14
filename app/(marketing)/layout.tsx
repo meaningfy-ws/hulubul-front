@@ -1,4 +1,5 @@
 import { getLandingPage } from "@/lib/strapi";
+import { logger } from "@/lib/logger";
 import { Nav } from "@/components/landing/Nav";
 import { Footer } from "@/components/landing/Footer";
 import type { NavComponent, FooterSection } from "@/lib/types";
@@ -11,7 +12,7 @@ async function fetchChrome(): Promise<{
     const page = await getLandingPage();
     return { nav: page.nav, footer: page.footer };
   } catch (error) {
-    console.error("[layout] chrome fetch failed:", error);
+    logger.error("layout", "chrome fetch failed", error);
     return null;
   }
 }
