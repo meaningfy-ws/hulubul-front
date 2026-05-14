@@ -42,17 +42,27 @@ export function buildBannerConfig(
         equalWeightButtons: true,
       },
     },
+    // Analytics + marketing are pre-checked in the preferences modal.
+    // The user still has to click "Accept" (or "Save preferences") for
+    // any tracker to actually load — `enabled: true` only sets the
+    // initial checkbox state, not the consent decision.
+    //
+    // ⚠️ COMPLIANCE NOTE: pre-ticked consent boxes were invalidated for
+    // EU users by CJEU Planet49 (2019). EU DPAs treat pre-ticked +
+    // still-click-Save as equivalent to opt-out. The Hulubul team
+    // chose this UX deliberately, accepting the legal risk. Revert
+    // both `enabled` flags to `false` to restore opt-in defaults.
     categories: {
       necessary: {
         enabled: true,
         readOnly: true,
       },
       analytics: {
-        enabled: false,
+        enabled: true,
         readOnly: false,
       },
       marketing: {
-        enabled: false,
+        enabled: true,
         readOnly: false,
       },
     },

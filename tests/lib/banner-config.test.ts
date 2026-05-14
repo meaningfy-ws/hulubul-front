@@ -11,13 +11,16 @@ describe("buildBannerConfig", () => {
     expect(keys.sort()).toEqual(["analytics", "marketing", "necessary"]);
   });
 
-  it("marks necessary as enabled and read-only, others as opt-in", () => {
+  it("marks all categories as pre-checked but only necessary as read-only", () => {
+    // Pre-checked analytics + marketing is a deliberate UX choice (see
+    // the COMPLIANCE NOTE in banner-config.ts). User can still untick
+    // before clicking Save. Necessary remains read-only.
     const cats = config.categories!;
     expect(cats.necessary?.enabled).toBe(true);
     expect(cats.necessary?.readOnly).toBe(true);
-    expect(cats.analytics?.enabled).toBeFalsy();
+    expect(cats.analytics?.enabled).toBe(true);
     expect(cats.analytics?.readOnly).toBeFalsy();
-    expect(cats.marketing?.enabled).toBeFalsy();
+    expect(cats.marketing?.enabled).toBe(true);
     expect(cats.marketing?.readOnly).toBeFalsy();
   });
 
