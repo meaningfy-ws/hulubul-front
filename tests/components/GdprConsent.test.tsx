@@ -41,10 +41,10 @@ describe("Feature: GDPR consent checkbox", () => {
   });
 
   describe("Given the consent label", () => {
-    it("When rendered, Then it links to /privacy in a new tab", () => {
+    it("When rendered, Then it links to /confidentialitate in a new tab", () => {
       render(<GdprConsent onChange={() => {}} />);
       const link = screen.getByRole("link", { name: /politica de confidențialitate/i });
-      expect(link).toHaveAttribute("href", "/privacy");
+      expect(link).toHaveAttribute("href", "/confidentialitate");
       expect(link).toHaveAttribute("target", "_blank");
     });
   });

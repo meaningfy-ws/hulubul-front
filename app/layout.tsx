@@ -69,10 +69,9 @@ export const metadata: Metadata = {
       "max-video-preview": -1,
     },
   },
-  icons: {
-    icon: "/favicon.ico",
-    apple: "/apple-touch-icon.png",
-  },
+  // No favicon assets shipped yet — re-enable once the designer
+  // delivers /favicon.ico and /apple-touch-icon.png in public/.
+  // icons: { icon: "/favicon.ico", apple: "/apple-touch-icon.png" },
   verification: {
     google: process.env.GOOGLE_SITE_VERIFICATION || undefined,
     other: process.env.BING_SITE_VERIFICATION
