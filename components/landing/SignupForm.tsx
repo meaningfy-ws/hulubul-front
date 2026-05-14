@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import type { Role, SignupSection } from "@/lib/types";
+import type { SignupSection } from "@/lib/types";
+import { WAITLIST_ROLES, parseRoleIn, type WaitlistRole as Role } from "@/lib/roles";
 import {
   clearRememberedIdentity,
   readRemembered,
@@ -18,6 +19,7 @@ import { captureUtmFromUrl, readStoredUtm } from "@/lib/utm";
 import { GDPR_CONSENT_VERSION } from "@/lib/gdpr-consent";
 import { requestLocation, type LocationGranted } from "@/lib/geolocation";
 import { humanizeFormError } from "@/lib/form-errors";
+import { FORM_STATUS, type FormStatus } from "@/lib/form-status";
 
 // Defensive fallback: stale links shared in the wild can have the malformed
 // shape `/#signup?role=X` (query embedded in the fragment). Parse it so the
@@ -64,14 +66,10 @@ function resolveRoleOptions(
   });
 }
 
-type Status = "idle" | "submitting" | "success" | "error";
+type Status = FormStatus;
 
-const ROLES: readonly Role[] = ["expeditor", "transportator", "destinatar"] as const;
-
-function parseRole(value: string | null, fallback: Role): Role {
-  if (value && (ROLES as readonly string[]).includes(value)) return value as Role;
-  return fallback;
-}
+const parseRole = (value: string | null, fallback: Role): Role =>
+  parseRoleIn(value, WAITLIST_ROLES, fallback);
 
 export function SignupForm({ data }: { data: SignupSection }) {
   const searchParams = useSearchParams();
@@ -114,7 +112,7 @@ export function SignupForm({ data }: { data: SignupSection }) {
     consentAt: null,
     version: GDPR_CONSENT_VERSION,
   });
-  const [status, setStatus] = useState<Status>("idle");
+  const [status, setStatus] = useState<Status>(FORM_STATUS.Idle);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
@@ -153,7 +151,7 @@ export function SignupForm({ data }: { data: SignupSection }) {
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!consent.consent) return;
-    setStatus("submitting");
+    setStatus(FORM_STATUS.Submitting);
     setErrorMessage(null);
 
     const trimmedName = name.trim();
@@ -211,9 +209,9 @@ export function SignupForm({ data }: { data: SignupSection }) {
       } else {
         clearRememberedIdentity();
       }
-      setStatus("success");
+      setStatus(FORM_STATUS.Success);
     } catch (error) {
-      setStatus("error");
+      setStatus(FORM_STATUS.Error);
       setErrorMessage(
         humanizeFormError(
           error,
@@ -223,7 +221,7 @@ export function SignupForm({ data }: { data: SignupSection }) {
     }
   }
 
-  if (status === "success") {
+  if (status === FORM_STATUS.Success) {
     function goToSurvey() {
       if (typeof window !== "undefined") {
         window.sessionStorage.setItem("hulubul:from-waitlist", "1");
@@ -252,7 +250,7 @@ export function SignupForm({ data }: { data: SignupSection }) {
     );
   }
 
-  const submitDisabled = status === "submitting" || !consent.consent;
+  const submitDisabled = status === FORM_STATUS.Submitting || !consent.consent;
 
   return (
     <form onSubmit={onSubmit} noValidate>
@@ -372,14 +370,14 @@ export function SignupForm({ data }: { data: SignupSection }) {
         className="form-submit"
         disabled={submitDisabled}
       >
-        {status === "submitting" ? "Se înscrie..." : data.submitLabel}
+        {status === FORM_STATUS.Submitting ? "Se înscrie..." : data.submitLabel}
       </button>
 
       {data.privacyNote ? (
         <p className="form-footer">{data.privacyNote}</p>
       ) : null}
 
-      {status === "error" && errorMessage ? (
+      {status === FORM_STATUS.Error && errorMessage ? (
         <p className="form-error" role="alert">
           {errorMessage}
         </p>
