@@ -17,10 +17,10 @@ beforeEach(() => {
 });
 
 describe("submitSurvey", () => {
-  it("POSTs { data: payload } to /api/survey-responses", async () => {
+  it("POSTs { data: payload } to /api/survey-senders", async () => {
     let seenBody: unknown = null;
     server.use(
-      http.post(`${TEST_STRAPI_URL}/api/survey-responses`, async ({ request }) => {
+      http.post(`${TEST_STRAPI_URL}/api/survey-senders`, async ({ request }) => {
         seenBody = await request.json();
         return HttpResponse.json({ data: { id: 1, documentId: "d" } }, { status: 201 });
       }),
@@ -32,7 +32,7 @@ describe("submitSurvey", () => {
   it("sends the Authorization header", async () => {
     let seenAuth: string | null = null;
     server.use(
-      http.post(`${TEST_STRAPI_URL}/api/survey-responses`, ({ request }) => {
+      http.post(`${TEST_STRAPI_URL}/api/survey-senders`, ({ request }) => {
         seenAuth = request.headers.get("authorization");
         return HttpResponse.json({ data: { id: 1, documentId: "d" } }, { status: 201 });
       }),
@@ -43,7 +43,7 @@ describe("submitSurvey", () => {
 
   it("throws on Strapi 401", async () => {
     server.use(
-      http.post(`${TEST_STRAPI_URL}/api/survey-responses`, () =>
+      http.post(`${TEST_STRAPI_URL}/api/survey-senders`, () =>
         HttpResponse.json({ error: { status: 401 } }, { status: 401 }),
       ),
     );
@@ -52,7 +52,7 @@ describe("submitSurvey", () => {
 
   it("throws on Strapi 403", async () => {
     server.use(
-      http.post(`${TEST_STRAPI_URL}/api/survey-responses`, () =>
+      http.post(`${TEST_STRAPI_URL}/api/survey-senders`, () =>
         HttpResponse.json({ error: { status: 403 } }, { status: 403 }),
       ),
     );
@@ -61,7 +61,7 @@ describe("submitSurvey", () => {
 
   it("throws on Strapi 5xx", async () => {
     server.use(
-      http.post(`${TEST_STRAPI_URL}/api/survey-responses`, () =>
+      http.post(`${TEST_STRAPI_URL}/api/survey-senders`, () =>
         HttpResponse.json({ error: { status: 500 } }, { status: 500 }),
       ),
     );

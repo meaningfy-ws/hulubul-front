@@ -61,7 +61,7 @@ describe("POST /api/survey", () => {
 
   it("returns 502 when Strapi refuses (403)", async () => {
     server.use(
-      http.post(`${TEST_STRAPI_URL}/api/survey-responses`, () =>
+      http.post(`${TEST_STRAPI_URL}/api/survey-senders`, () =>
         HttpResponse.json({ error: { status: 403 } }, { status: 403 }),
       ),
     );
