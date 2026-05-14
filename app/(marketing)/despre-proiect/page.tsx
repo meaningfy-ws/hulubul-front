@@ -1,42 +1,10 @@
-import type { Metadata } from "next";
-import Link from "next/link";
-import { getEditorialPage } from "@/lib/strapi";
-import { EDITORIAL_FALLBACK } from "@/lib/editorial-fallback";
-import { MarkdownText } from "@/components/landing/MarkdownText";
-import type { EditorialPage } from "@/lib/types";
+import {
+  EditorialPageView,
+  makeEditorialMetadata,
+} from "@/components/editorial/EditorialPageView";
 
-async function loadPage(): Promise<EditorialPage> {
-  try {
-    const cms = await getEditorialPage("despre-proiect");
-    if (cms) return cms;
-  } catch (error) {
-    console.error("[page/despre-proiect] CMS fetch failed:", error);
-  }
-  return EDITORIAL_FALLBACK["despre-proiect"];
-}
+export const generateMetadata = makeEditorialMetadata("despre-proiect");
 
-export async function generateMetadata(): Promise<Metadata> {
-  const page = await loadPage();
-  return {
-    title: page.title,
-    description: page.metaDescription,
-  };
-}
-
-export default async function AboutPage() {
-  const page = await loadPage();
-  return (
-    <main className="legal-page">
-      <article>
-        <h1 className="serif">{page.title}</h1>
-        <p className="legal-meta">Ultima actualizare: {page.lastUpdated}.</p>
-
-        <MarkdownText>{page.body}</MarkdownText>
-
-        <p>
-          <Link href="/">← Înapoi la pagina principală</Link>
-        </p>
-      </article>
-    </main>
-  );
+export default function AboutPage() {
+  return <EditorialPageView slug="despre-proiect" />;
 }

@@ -20,6 +20,8 @@ import type {
 } from "@/lib/survey-schema";
 import { readRemembered } from "@/lib/remember-me";
 import { humanizeFormError } from "@/lib/form-errors";
+import { FORM_STATUS, type FormStatus } from "@/lib/form-status";
+import { SURVEY_ROLES } from "@/lib/roles";
 import {
   contactedCountLabels,
   howFindLabels,
@@ -35,13 +37,14 @@ import {
 } from "./labels";
 import { SelectionCriteriaPicker } from "./SelectionCriteriaPicker";
 
-const ROLES: readonly Role[] = ["expeditor", "transportator", "ambele"] as const;
 const SOURCE_FLAG_KEY = "hulubul:from-waitlist";
 
-type Status = "idle" | "submitting" | "success" | "error";
+type Status = FormStatus;
 
 function parseRole(value: string | null): Role | null {
-  if (value && (ROLES as readonly string[]).includes(value)) return value as Role;
+  if (value && (SURVEY_ROLES as readonly string[]).includes(value)) {
+    return value as Role;
+  }
   return null;
 }
 
@@ -95,7 +98,7 @@ export function SurveyForm() {
   const [wantsCallback, setWantsCallback] = useState(false);
   const [callbackPhone, setCallbackPhone] = useState("");
 
-  const [status, setStatus] = useState<Status>("idle");
+  const [status, setStatus] = useState<Status>(FORM_STATUS.Idle);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // On mount: pre-fill identity in priority order URL → remember-me → empty.
@@ -120,7 +123,7 @@ export function SurveyForm() {
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setStatus("submitting");
+    setStatus(FORM_STATUS.Submitting);
     setErrorMessage(null);
 
     const payload: SurveyPayload = {
@@ -180,16 +183,16 @@ export function SurveyForm() {
       if (typeof window !== "undefined") {
         window.sessionStorage.removeItem(SOURCE_FLAG_KEY);
       }
-      setStatus("success");
+      setStatus(FORM_STATUS.Success);
     } catch (error) {
-      setStatus("error");
+      setStatus(FORM_STATUS.Error);
       setErrorMessage(
         humanizeFormError(error, "A apărut o eroare. Încearcă din nou."),
       );
     }
   }
 
-  if (status === "success") {
+  if (status === FORM_STATUS.Success) {
     return (
       <div className="form-success" role="status">
         <div className="success-icon" aria-hidden="true">
@@ -660,8 +663,8 @@ function SurveyBody(props: any) {
 
       {errorMessage ? <p className="form-error" role="alert">{errorMessage}</p> : null}
 
-      <button type="submit" className="form-submit" disabled={status === "submitting"}>
-        {status === "submitting" ? "Se trimite..." : "Trimite răspunsurile"}
+      <button type="submit" className="form-submit" disabled={status === FORM_STATUS.Submitting}>
+        {status === FORM_STATUS.Submitting ? "Se trimite..." : "Trimite răspunsurile"}
       </button>
     </form>
   );

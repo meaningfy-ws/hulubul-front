@@ -1,23 +1,12 @@
 import type { FooterSection } from "@/lib/types";
 import { Logo } from "./Logo";
 
-// Safety net for CMS-driven footer links: when an editor leaves `href` as the
-// empty fragment "#" (the Strapi default), or uses `#signup` which only works
-// on the landing page, we resolve the target by label so the link always goes
-// somewhere sensible. The CMS value still wins when it points at a real path.
-const FOOTER_HREF_OVERRIDES: Record<string, string> = {
-  "lista de așteptare": "/#signup",
-  "confidențialitate": "/confidentialitate",
-  "termeni": "/termeni",
-  "termeni și condiții": "/termeni",
-  "despre proiect": "/despre-proiect",
-  "despre": "/despre-proiect",
-};
-
-function resolveFooterHref(label: string, href: string): string {
-  const key = label.trim().toLowerCase();
-  const override = FOOTER_HREF_OVERRIDES[key];
-  if (override) return override;
+/**
+ * Bare anchors (`#signup`) only resolve on the landing page. Prefix `/` so
+ * they keep working on `/sondaj`, `/confidentialitate`, etc. CMS values
+ * are otherwise trusted verbatim — editorial corrections happen in Strapi.
+ */
+function normaliseHref(href: string): string {
   if (href.startsWith("#") && href.length > 1) return `/${href}`;
   return href;
 }
@@ -41,7 +30,7 @@ export function Footer({ data }: { data: FooterSection }) {
               {column.links.map((link) => (
                 <a
                   key={link.id}
-                  href={resolveFooterHref(link.label, link.href)}
+                  href={normaliseHref(link.href)}
                   target={link.external ? "_blank" : undefined}
                   rel={link.external ? "noopener noreferrer" : undefined}
                 >

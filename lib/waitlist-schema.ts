@@ -1,7 +1,11 @@
 import { z } from "zod";
+import { waitlistRoleEnum } from "./roles";
+import type { WaitlistRole } from "./roles";
 
-export const Role = z.enum(["expeditor", "transportator", "destinatar"]);
-export type Role = z.infer<typeof Role>;
+// Re-exported under the historical names so existing imports keep working.
+// The canonical definition lives in `lib/roles.ts`.
+export const Role = waitlistRoleEnum;
+export type Role = WaitlistRole;
 
 const City = z.string().trim().min(1).max(120);
 

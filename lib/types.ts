@@ -1,4 +1,7 @@
-export type Role = "expeditor" | "transportator" | "destinatar";
+// `Role` re-exported here so `import type { Role } from "@/lib/types"` keeps
+// working. The canonical definition is the waitlist subset in `lib/roles.ts`.
+import type { WaitlistRole } from "./roles";
+export type Role = WaitlistRole;
 
 export type EditorialPageSlug =
   | "confidentialitate"

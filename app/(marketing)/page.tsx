@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { getLandingPage, LandingPageNotPublishedError } from "@/lib/strapi";
+import { logger } from "@/lib/logger";
 import { Hero } from "@/components/landing/Hero";
 import { Problem } from "@/components/landing/Problem";
 import { HowItWorks } from "@/components/landing/HowItWorks";
@@ -19,7 +20,7 @@ async function tryGetLandingPage() {
       return { page: null, empty: "not-published" as const };
     }
     // Never fail the render over a transient backend issue; ISR will retry in 300s.
-    console.error("[hulubul-front] getLandingPage failed:", error);
+    logger.error("hulubul-front", "getLandingPage failed", error);
     return { page: null, empty: "backend-unavailable" as const };
   }
 }

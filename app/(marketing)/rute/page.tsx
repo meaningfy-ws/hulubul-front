@@ -4,18 +4,13 @@ import { RoutesPublic } from "@/components/routes/RoutesPublic";
 export const metadata = { title: "Rute de transport — Hulubul" };
 
 export default async function RutePage() {
+  // Always fetch both, never throw — Strapi being unreachable or empty is
+  // fine; RoutesPublic renders its own empty state (with an empty map) so
+  // visitors see the page chrome and admins see the platform exists.
   const [routes, transporters] = await Promise.all([
     getRoutes({ status: "approved" }).catch(() => []),
     getTransporters().catch(() => []),
   ]);
-
-  if (routes.length === 0) {
-    return (
-      <main style={{ padding: "40px", textAlign: "center", color: "#6b7280" }}>
-        <p>Rutele nu pot fi încărcate momentan.</p>
-      </main>
-    );
-  }
 
   return (
     <main>

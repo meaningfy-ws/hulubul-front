@@ -14,7 +14,7 @@ export const handlers = [
       { status: 200 },
     );
   }),
-  http.post(`${TEST_STRAPI_URL}/api/survey-responses`, async ({ request }) => {
+  http.post(`${TEST_STRAPI_URL}/api/survey-senders`, async ({ request }) => {
     const body = (await request.json()) as { data?: Record<string, unknown> };
     return HttpResponse.json(
       { data: { id: 1, documentId: "def", ...(body.data ?? {}) }, meta: {} },
