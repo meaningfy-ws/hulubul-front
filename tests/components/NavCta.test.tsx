@@ -11,7 +11,16 @@ describe("<NavCta>", () => {
   it("renders the fallback CTA link when no remembered identity exists", () => {
     render(<NavCta ctaLabel="Mă înscriu" ctaHref="#signup" />);
     const link = screen.getByRole("link", { name: "Mă înscriu" });
-    expect(link).toHaveAttribute("href", "#signup");
+    // Bare anchors get prefixed with `/` so the CTA also works on routes
+    // other than the landing page (e.g. /sondaj) where `#signup` is a no-op.
+    expect(link).toHaveAttribute("href", "/#signup");
+  });
+
+  it("passes through absolute hrefs unchanged", () => {
+    render(<NavCta ctaLabel="Mă înscriu" ctaHref="/#signup" />);
+    expect(
+      screen.getByRole("link", { name: "Mă înscriu" }),
+    ).toHaveAttribute("href", "/#signup");
   });
 
   it("replaces the CTA with a greeting after the remembered identity loads", async () => {
