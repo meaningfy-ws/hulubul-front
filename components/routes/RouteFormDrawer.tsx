@@ -155,13 +155,14 @@ export function RouteFormDrawer({ open, route, onClose, onSave }: Props) {
         </div>
 
         <div style={{ marginBottom: "16px" }}>
-          <label style={{ display: "block", fontWeight: 600, fontSize: "0.875rem", marginBottom: "4px" }}>
+          <label htmlFor="route-cities" style={{ display: "block", fontWeight: 600, fontSize: "0.875rem", marginBottom: "4px" }}>
             Orașe * <span style={{ fontWeight: 400, color: "#6b7280" }}>(primul = plecare, ultimul = destinație)</span>
           </label>
           <CityTagInput
             value={cities}
             onChange={setCities}
             placeholder="Adaugă un oraș…"
+            inputId="route-cities"
           />
           {errors.cities && (
             <p role="alert" style={{ color: "#ef4444", fontSize: "0.75rem", margin: "4px 0 0" }}>

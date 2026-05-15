@@ -27,6 +27,11 @@ interface Props {
   disabled?: boolean;
   originDestinationLabels?: boolean;
   maxCities?: number;
+  /**
+   * DOM id for the primary text input, so a `<label htmlFor>` can bind
+   * to a real labelable element (not a wrapper div).
+   */
+  inputId?: string;
 }
 
 export function CityTagInput({
@@ -36,6 +41,7 @@ export function CityTagInput({
   disabled,
   originDestinationLabels = true,
   maxCities = 10,
+  inputId,
 }: Props) {
   const [inputText, setInputText] = useState("");
   const [suggestions, setSuggestions] = useState<GeocodeSuggestion[]>([]);
@@ -278,6 +284,7 @@ export function CityTagInput({
             ))}
             {insertIndex == null && (
               <input
+                id={inputId}
                 ref={inputRef}
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}

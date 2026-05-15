@@ -384,3 +384,23 @@ describe("Feature: CLIENT_VALIDATION surfaces the specific field message", () =>
     });
   });
 });
+
+describe("Feature: accessible label associations", () => {
+  it("the city field's <label for> points at a real input (not a div)", async () => {
+    mockFetchOk();
+    render(<SignupForm data={signup} />);
+    const label = document.querySelector('label[for="waitlist-cities"]');
+    expect(label).not.toBeNull();
+    const target = document.getElementById("waitlist-cities");
+    expect(target).not.toBeNull();
+    expect(target!.tagName).toBe("INPUT");
+  });
+
+  it("the role radio group exposes an accessible name (fieldset/legend)", async () => {
+    mockFetchOk();
+    render(<SignupForm data={signup} />);
+    expect(
+      screen.getByRole("group", { name: signup.roleLabel }),
+    ).toBeInTheDocument();
+  });
+});

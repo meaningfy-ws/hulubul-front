@@ -39,9 +39,12 @@ export function CitiesQuestion({ role, value, onChange }: Props) {
         {copy.label}
         <span className="hint">{copy.hint}</span>
       </label>
-      <div id="waitlist-cities">
-        <CityTagInput value={value} onChange={onChange} originDestinationLabels={true} />
-      </div>
+      <CityTagInput
+        value={value}
+        onChange={onChange}
+        originDestinationLabels={true}
+        inputId="waitlist-cities"
+      />
     </div>
   );
 }
