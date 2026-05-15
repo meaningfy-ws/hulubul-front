@@ -365,9 +365,9 @@ export function SignupForm({ data }: { data: SignupSection }) {
         />
       </div>
 
-      <div className="form-group">
-        <label>{data.roleLabel}</label>
-        <div className="radio-group" role="radiogroup">
+      <fieldset className="form-group role-fieldset">
+        <legend>{data.roleLabel}</legend>
+        <div className="radio-group">
           {resolveRoleOptions(data.roleOptions).map((option) => {
             const id = `waitlist-role-${option.value}`;
             return (
@@ -390,7 +390,7 @@ export function SignupForm({ data }: { data: SignupSection }) {
             );
           })}
         </div>
-      </div>
+      </fieldset>
 
       <CitiesQuestion role={role} value={cities} onChange={setCities} />
 
