@@ -2,10 +2,13 @@ This si the NextJS fronend repository for the Hulubul.com project.
 
 Operate on best practices around frontend development, and refer to the NextJS documentation for any specific questions about how to implement features or troubleshoot issues. Consider that the backend is based on Strapi v5 and the frontend communicates with it via REST API calls, so any changes to the backend data models or API endpoints may require corresponding updates in the frontend code.
 
+Never implement anything in the backend repo — if you find yourself needing to change something in the backend, stop and ask for help. We want to keep a clean separation between backend and frontend code, and I can help you figure out how to implement your feature or fix your bug within the frontend without touching the backend. Always write specs for backend specs, when you need them done.
+
+
 <!-- gitnexus:start -->
 # GitNexus — Code Intelligence
 
-This project is indexed by GitNexus as **hulubul-front** (672 symbols, 1562 relationships, 42 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
+This project is indexed by GitNexus as **hulubul-front** (705 symbols, 1628 relationships, 44 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
 
 > If any GitNexus tool warns the index is stale, run `npx gitnexus analyze` in terminal first.
 
