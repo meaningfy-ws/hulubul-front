@@ -11,6 +11,17 @@ import type { BlocksContent } from "@strapi/blocks-react-renderer";
 import type { LandingPage, EditorialPage } from "./types";
 import type { WaitlistPayload } from "./waitlist-schema";
 import { formatRoDate } from "./dates";
+import { DEFAULT_LOCALE_CODE, type Locale } from "./locale";
+
+/**
+ * Strapi has no automatic locale fallback. We omit the `locale` param
+ * for the default locale (ro) so the request — and its cache key — stays
+ * byte-identical to the pre-i18n behaviour; only non-default locales add
+ * `&locale=<code>` and fall back to ro when the entry isn't translated.
+ */
+function localeQuery(locale: Locale): Record<string, string> {
+  return locale === DEFAULT_LOCALE_CODE ? {} : { locale };
+}
 
 export class LandingPageNotPublishedError extends Error {
   constructor() {
@@ -21,24 +32,38 @@ export class LandingPageNotPublishedError extends Error {
   }
 }
 
-export async function getLandingPage(): Promise<LandingPage> {
+export async function getLandingPage(
+  locale: Locale = DEFAULT_LOCALE_CODE,
+): Promise<LandingPage> {
   const query = qs.stringify(
-    { populate: buildLandingPopulate(), status: "published" },
+    {
+      populate: buildLandingPopulate(),
+      status: "published",
+      ...localeQuery(locale),
+    },
     { encodeValuesOnly: true },
   );
   const path = `/api/landing-page?${query}`;
   const res = await strapiFetch(path, { mode: "static" });
 
-  if (res.status === 404) throw new LandingPageNotPublishedError();
-  if (!res.ok) throwStrapiError(path, res);
+  if (res.status === 404 || res.ok === false) {
+    // Non-default locale not translated yet → serve ro rather than blank.
+    if (locale !== DEFAULT_LOCALE_CODE) return getLandingPage(DEFAULT_LOCALE_CODE);
+    if (res.status === 404) throw new LandingPageNotPublishedError();
+    throwStrapiError(path, res);
+  }
 
   const json = (await res.json()) as { data: LandingPage | null };
-  if (!json.data) throw new LandingPageNotPublishedError();
+  if (!json.data) {
+    if (locale !== DEFAULT_LOCALE_CODE) return getLandingPage(DEFAULT_LOCALE_CODE);
+    throw new LandingPageNotPublishedError();
+  }
   return json.data;
 }
 
 export async function getEditorialPage(
   slug: EditorialPage["slug"],
+  locale: Locale = DEFAULT_LOCALE_CODE,
 ): Promise<EditorialPage | null> {
   // Editorial source for static pages (legal + about). One Strapi single-type
   // per slug, named `page-{slug}` (e.g. page-confidentialitate, page-termeni,
@@ -48,19 +73,30 @@ export async function getEditorialPage(
   // Components are NOT populated by default in Strapi 5 — without this the
   // `seo` component is absent from the response and metadata breaks.
   const query = qs.stringify(
-    { status: "published", populate: { seo: { populate: ["shareImage"] } } },
+    {
+      status: "published",
+      populate: { seo: { populate: ["shareImage"] } },
+      ...localeQuery(locale),
+    },
     { encodeValuesOnly: true },
   );
   const path = `/api/page-${slug}?${query}`;
+  // Non-default locale not translated → fall back to ro (Strapi won't).
+  const orRoFallback = async (
+    result: EditorialPage | null,
+  ): Promise<EditorialPage | null> =>
+    result === null && locale !== DEFAULT_LOCALE_CODE
+      ? getEditorialPage(slug, DEFAULT_LOCALE_CODE)
+      : result;
   try {
     const res = await strapiFetch(path, { mode: "static" });
-    if (res.status === 404) return null;
+    if (res.status === 404) return orRoFallback(null);
     if (!res.ok) throwStrapiError(path, res);
     const json = (await res.json()) as { data: StrapiEditorialEntry | null };
-    if (!json.data) return null;
+    if (!json.data) return orRoFallback(null);
     return mapEditorialEntry(slug, json.data);
   } catch (e) {
-    if (isStrapiNotFound(e)) return null;
+    if (isStrapiNotFound(e)) return orRoFallback(null);
     throw e;
   }
 }
