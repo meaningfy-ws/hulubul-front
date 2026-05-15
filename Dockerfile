@@ -13,6 +13,13 @@ WORKDIR /app
 ARG NEXT_PUBLIC_STRAPI_URL
 ENV NEXT_PUBLIC_STRAPI_URL=${NEXT_PUBLIC_STRAPI_URL}
 
+# Deployed-commit signature for the footer. next.config.ts reads BUILD_SHA
+# and inlines it as NEXT_PUBLIC_BUILD_SHA at build time. The ops deploy
+# already receives the commit as `sha`; it just needs to forward it as
+# `--build-arg BUILD_SHA=<sha>`. Unset → footer omits the line.
+ARG BUILD_SHA
+ENV BUILD_SHA=${BUILD_SHA}
+
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 

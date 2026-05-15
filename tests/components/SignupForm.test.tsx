@@ -306,3 +306,40 @@ describe("Feature: survey CTA on success", () => {
     });
   });
 });
+
+describe("Feature: structured error envelope (duplicate email)", () => {
+  describe("Given the server returns a 409 ALREADY_REGISTERED envelope", () => {
+    it("When the user submits, Then the server message is shown and the error is reported to the console", async () => {
+      const group = vi.spyOn(console, "group").mockImplementation(() => {});
+      vi.spyOn(console, "error").mockImplementation(() => {});
+      vi.spyOn(console, "groupEnd").mockImplementation(() => {});
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            ok: false,
+            error: {
+              code: "ALREADY_REGISTERED",
+              message:
+                "Ești deja înscris cu acest email pe 27/04/2026. Te anunțăm noi imediat ce avem vești — mulțumim pentru răbdare!",
+              upstreamStatus: 400,
+              requestId: "req-dup",
+            },
+          }),
+          { status: 409 },
+        ),
+      );
+      const user = userEvent.setup();
+      render(<SignupForm data={signup} />);
+      await fillIdentity(user);
+      await addCity(user, "Lux");
+      await tickConsent(user);
+      await user.click(screen.getByRole("button", { name: signup.submitLabel }));
+
+      const alert = await screen.findByRole("alert");
+      expect(alert).toHaveTextContent("27/04/2026");
+      expect(alert).toHaveTextContent(/răbdare/i);
+      expect(group).toHaveBeenCalled();
+      vi.restoreAllMocks();
+    });
+  });
+});

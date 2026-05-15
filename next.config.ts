@@ -36,9 +36,21 @@ const securityHeaders = [
   { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(self)" },
 ];
 
+// Deployed-commit signature. Resolved at build time from whatever the
+// build environment exposes; inlined as NEXT_PUBLIC_* so the footer can
+// show it client-side. We self-host (Docker on our own server), so the
+// ops deploy passes the commit as BUILD_SHA; GITHUB_SHA is the CI
+// fallback. Empty string when unavailable (local dev) — footer omits it.
+const buildSha =
+  process.env.NEXT_PUBLIC_BUILD_SHA ??
+  process.env.BUILD_SHA ??
+  process.env.GITHUB_SHA ??
+  "";
+
 const config: NextConfig = {
   output: "standalone",
   reactStrictMode: true,
+  env: { NEXT_PUBLIC_BUILD_SHA: buildSha },
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "*.strapiapp.com" },

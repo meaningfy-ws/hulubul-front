@@ -3,6 +3,7 @@ import { POST } from "@/app/api/waitlist/route";
 
 vi.mock("@/lib/strapi", () => ({
   submitWaitlist: vi.fn().mockResolvedValue(undefined),
+  findWaitlistByEmail: vi.fn().mockResolvedValue(null),
 }));
 
 import { submitWaitlist } from "@/lib/strapi";

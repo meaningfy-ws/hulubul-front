@@ -1,12 +1,69 @@
 import { NextResponse } from "next/server";
 import { waitlistSchema } from "@/lib/waitlist-schema";
-import { submitWaitlist } from "@/lib/strapi";
+import { submitWaitlist, findWaitlistByEmail } from "@/lib/strapi";
 import {
   dispatchConversion,
   generateEventId,
 } from "@/lib/server-events/dispatcher";
+import { isStrapiError } from "@/lib/strapi-client";
+import {
+  ErrorCode,
+  codeForUpstreamStatus,
+  httpStatusForCode,
+} from "@/lib/errors/codes";
+import { messageForCode } from "@/lib/errors/messages";
+import { maskEmail } from "@/lib/errors/mask";
+import { logger } from "@/lib/logger";
 
 export const runtime = "nodejs";
+
+/** Classifies any thrown failure into a taxonomy code + real upstream status. */
+function classify(error: unknown): {
+  code: ErrorCode;
+  upstreamStatus?: number;
+} {
+  if (isStrapiError(error)) {
+    return {
+      code: codeForUpstreamStatus(error.status),
+      upstreamStatus: error.status,
+    };
+  }
+  // `fetch()` itself failing (DNS/connection/timeout) → backend down.
+  if (
+    error instanceof TypeError ||
+    (error instanceof Error &&
+      /failed to fetch|networkerror|network request failed|fetch failed/i.test(
+        error.message,
+      ))
+  ) {
+    return { code: ErrorCode.UpstreamDown, upstreamStatus: 0 };
+  }
+  return { code: ErrorCode.Unknown };
+}
+
+/** Builds the structured error response + correlated x-request-id header. */
+function errorResponse(
+  code: ErrorCode,
+  requestId: string,
+  opts: { upstreamStatus?: number; registeredAt?: string; details?: unknown } = {},
+): NextResponse {
+  return NextResponse.json(
+    {
+      ok: false,
+      error: {
+        code,
+        message: messageForCode(code, { registeredAt: opts.registeredAt }),
+        upstreamStatus: opts.upstreamStatus,
+        requestId,
+        details: opts.details,
+      },
+    },
+    {
+      status: httpStatusForCode(code),
+      headers: { "x-request-id": requestId },
+    },
+  );
+}
 
 interface DeviceSignature {
   userAgent: string;
@@ -51,20 +108,21 @@ function resolveIpLocation(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const requestId = crypto.randomUUID();
+
   let json: unknown;
   try {
     json = await request.json();
   } catch {
-    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    return errorResponse(ErrorCode.ClientValidation, requestId);
   }
 
   const parsed = waitlistSchema.safeParse(json);
   if (!parsed.success) {
     const firstIssue = parsed.error.issues[0];
-    return NextResponse.json(
-      { error: firstIssue?.message ?? "Validare nereușită" },
-      { status: 400 },
-    );
+    return errorResponse(ErrorCode.ClientValidation, requestId, {
+      details: firstIssue?.message ?? "Validare nereușită",
+    });
   }
 
   const data = parsed.data;
@@ -82,16 +140,48 @@ export async function POST(request: Request) {
   delete enriched.client;
   delete enriched.consent;
 
+  // Soft dedupe: if this email already exists, tell the user (with the
+  // original date) instead of creating a duplicate row. A failure in the
+  // lookup itself is treated like any other upstream failure — we do NOT
+  // fall through to insert (that would risk the duplicate we're avoiding).
+  try {
+    const existing = await findWaitlistByEmail(data.email);
+    if (existing) {
+      logger.info(
+        "api/waitlist",
+        `dedupe hit reqId=${requestId} email=${maskEmail(data.email)} registeredAt=${existing.registeredAt}`,
+      );
+      return errorResponse(ErrorCode.AlreadyRegistered, requestId, {
+        registeredAt: existing.registeredAt,
+      });
+    }
+  } catch (error) {
+    const { code, upstreamStatus } = classify(error);
+    logger.error(
+      "api/waitlist",
+      `dedupe lookup failed reqId=${requestId} code=${code} upstream=${upstreamStatus} email=${maskEmail(data.email)}`,
+      error,
+    );
+    return errorResponse(code, requestId, { upstreamStatus });
+  }
+
   try {
     await submitWaitlist(
       enriched as unknown as Parameters<typeof submitWaitlist>[0],
     );
   } catch (error) {
-    const message =
-      error instanceof Error
+    const { code, upstreamStatus } = classify(error);
+    const upstreamMessage = isStrapiError(error)
+      ? error.upstreamMessage
+      : error instanceof Error
         ? error.message
-        : "Nu am putut trimite formularul. Încearcă din nou.";
-    return NextResponse.json({ error: message }, { status: 502 });
+        : undefined;
+    logger.error(
+      "api/waitlist",
+      `submit failed reqId=${requestId} code=${code} upstream=${upstreamStatus} email=${maskEmail(data.email)} strapi=${JSON.stringify(upstreamMessage)}`,
+      error,
+    );
+    return errorResponse(code, requestId, { upstreamStatus });
   }
 
   // Generate the dedupe key. Returned to the client so the browser-side

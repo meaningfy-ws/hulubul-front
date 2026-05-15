@@ -1266,6 +1266,13 @@ label.checkbox-option > span {
   font-size: 14px;
   border-radius: 2px;
 }
+/* Non-failure outcomes (already registered, rate-limited): informative,
+   not alarming — calmer palette than the red error state. */
+.form-error--info {
+  background: rgba(44, 110, 200, 0.08);
+  border-color: #2c6ec8;
+  color: #2c6ec8;
+}
 .form-success {
   text-align: center;
   padding: 48px 20px;
@@ -1463,6 +1470,13 @@ footer.site-footer::before {
   font-size: 13px;
   color: rgba(245, 239, 228, 0.5);
   font-style: italic;
+}
+.build-sig {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-style: normal;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  opacity: 0.6;
 }
 
 /* ================ REVEAL ================ */
