@@ -1,7 +1,8 @@
 import { getRoutes, getTransporters } from "@/lib/routes-api";
 import { RoutesPublic } from "@/components/routes/RoutesPublic";
+import { pageTitle } from "@/lib/seo";
 
-export const metadata = { title: "Rute de transport — Hulubul" };
+export const metadata = { title: pageTitle("Rute de transport — Hulubul") };
 
 export default async function RutePage() {
   // Always fetch both, never throw — Strapi being unreachable or empty is

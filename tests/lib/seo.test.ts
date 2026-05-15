@@ -6,6 +6,7 @@ import {
   getMetadataBase,
   makeCanonical,
   makeOgImage,
+  pageTitle,
 } from "@/lib/seo";
 
 beforeEach(() => {
@@ -65,6 +66,37 @@ describe("makeOgImage", () => {
     expect(makeOgImage("Termeni", "ediția 2026")).toBe(
       "https://hulubul.com/og?title=Termeni&subtitle=edi%C8%9Bia+2026",
     );
+  });
+});
+
+describe("pageTitle (brand de-duplication)", () => {
+  it("bypasses the template when the title already carries the brand (the live bug)", () => {
+    expect(pageTitle("hulubul.com — Trimite un colet acasă")).toEqual({
+      absolute: "hulubul.com — Trimite un colet acasă",
+    });
+  });
+
+  it("treats the bare 'Hulubul' word as the brand too (case-insensitive)", () => {
+    expect(pageTitle("Rute de transport — Hulubul")).toEqual({
+      absolute: "Rute de transport — Hulubul",
+    });
+    expect(pageTitle("Despre HULUBUL")).toEqual({ absolute: "Despre HULUBUL" });
+  });
+
+  it("returns a plain string (template adds ' — hulubul.com') when unbranded", () => {
+    expect(pageTitle("Politica de confidențialitate")).toBe(
+      "Politica de confidențialitate",
+    );
+  });
+
+  it("falls back to the bare brand for empty/missing input — never blank, never doubled", () => {
+    expect(pageTitle("")).toEqual({ absolute: SITE_NAME });
+    expect(pageTitle("   ")).toEqual({ absolute: SITE_NAME });
+    expect(pageTitle(undefined)).toEqual({ absolute: SITE_NAME });
+  });
+
+  it("trims surrounding whitespace", () => {
+    expect(pageTitle("  Politica  ")).toBe("Politica");
   });
 });
 

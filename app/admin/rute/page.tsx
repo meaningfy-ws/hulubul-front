@@ -1,8 +1,9 @@
 import { getRoutes, getTransporters } from "@/lib/routes-api";
 import { RoutesAdmin } from "@/components/routes/RoutesAdmin";
+import { pageTitle } from "@/lib/seo";
 
 export const metadata = {
-  title: "Administrare rute — Hulubul",
+  title: pageTitle("Administrare rute — Hulubul"),
   // Admin surface — never indexed.
   robots: { index: false, follow: false },
 };

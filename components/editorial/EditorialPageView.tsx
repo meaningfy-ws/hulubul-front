@@ -5,7 +5,7 @@ import { EDITORIAL_FALLBACK } from "@/lib/editorial-fallback";
 import { MarkdownText } from "@/components/landing/MarkdownText";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { logger } from "@/lib/logger";
-import { makeCanonical } from "@/lib/seo";
+import { makeCanonical, pageTitle } from "@/lib/seo";
 import {
   buildBreadcrumbList,
   buildGraph,
@@ -40,7 +40,7 @@ export function makeEditorialMetadata(slug: EditorialPageSlug) {
     const page = await loadPage(slug);
     const canonical = makeCanonical(`/${slug}`);
     return {
-      title: page.title,
+      title: pageTitle(page.title),
       description: page.metaDescription,
       alternates: { canonical },
       openGraph: {
