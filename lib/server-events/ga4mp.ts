@@ -1,4 +1,5 @@
 import { logger } from "@/lib/logger";
+import { PRODUCTION_GA_ID } from "@/lib/tracking/config";
 
 /**
  * Server-side dispatcher for the GA4 Measurement Protocol.
@@ -29,13 +30,19 @@ export interface Ga4MpEvent {
 const GA4_MP_ENDPOINT = "https://www.google-analytics.com/mp/collect";
 
 export async function dispatchGa4Mp(event: Ga4MpEvent): Promise<boolean> {
-  const measurementId = process.env.GA4_MEASUREMENT_ID;
+  // Measurement ID falls back to the bundled production constant — same
+  // value as the browser-side GA ID, not a secret. The api_secret
+  // however IS a secret and must come from env.
+  const measurementId =
+    process.env.GA4_MEASUREMENT_ID && process.env.GA4_MEASUREMENT_ID.length > 0
+      ? process.env.GA4_MEASUREMENT_ID
+      : PRODUCTION_GA_ID;
   const apiSecret = process.env.GA4_API_SECRET;
-  if (!measurementId || !apiSecret) {
-    // Silent skip when not configured. Local dev + early production
-    // before the secret is provisioned land here. The browser-side
-    // event still flows when consent is granted; the server-side
-    // dedupe is just unavailable.
+  if (!apiSecret) {
+    // Silent skip when no secret is configured. Local dev + early
+    // production before the secret is provisioned land here. The
+    // browser-side event still flows when consent is granted; the
+    // server-side dedupe is just unavailable until the secret is set.
     return false;
   }
 

@@ -36,7 +36,7 @@ export function GdprConsent({ onChange }: Props) {
       />
       <label htmlFor="waitlist-gdpr">
         Sunt de acord cu{" "}
-        <Link href="/privacy" target="_blank" rel="noopener">
+        <Link href="/confidentialitate" target="_blank" rel="noopener">
           politica de confidențialitate
         </Link>{" "}
         și cu prelucrarea datelor mele pentru anunțul de lansare Hulubul.
