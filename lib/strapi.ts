@@ -97,23 +97,58 @@ function mapEditorialEntry(
 
 const WAITLIST_PATH = "/api/waitlist-submissions";
 
+export interface RegistrationIdentity {
+  email: string;
+  role: string;
+  cities: string[];
+}
+
+/** Trim + lowercase + dedupe + sort → comparable city set. */
+function normCities(cities: unknown): string[] {
+  if (!Array.isArray(cities)) return [];
+  const cleaned = cities
+    .map((c) =>
+      typeof c === "object" && c !== null
+        ? String((c as { name?: unknown }).name ?? "")
+        : String(c),
+    )
+    .map((c) => c.trim().toLowerCase())
+    .filter((c) => c.length > 0);
+  return [...new Set(cleaned)].sort();
+}
+
+function sameCitySet(a: string[], b: string[]): boolean {
+  return a.length === b.length && a.every((v, i) => v === b[i]);
+}
+
 /**
- * Soft-dedupe lookup: does a waitlist row already exist for this email?
- * Matched case-insensitively (`$eqi`) on a trimmed/lowercased email so
- * `A@x.com` and `a@x.com` count as the same person — without rewriting
- * the stored address. Returns the original registration date so the UI
- * can say "you registered on DD/MM/YYYY".
+ * Soft-dedupe: a registration is a *true duplicate* only when the same
+ * email re-registers with the **same role AND the same set of cities**.
+ *
+ * Changing the role or the cities is a legitimately new registration —
+ * e.g. a parent with one child in Italy and one in France using a single
+ * email address (per product decision, May 2026). So we never block on
+ * email alone; we block only the exact repeat.
+ *
+ * Matched case-insensitively (`$eqi`) on a trimmed/lowercased email;
+ * cities are compared order- and case-insensitively. Returns the matching
+ * row's registration date so the UI can say "you already registered…".
+ *
+ * Assumes `cities` is a scalar/JSON attribute on the content type (it is —
+ * the route forwards the payload's `string[]`). If the backend ever stores
+ * it as a component/relation it won't come back via `fields` and dedupe
+ * fails *open* (allows the submit) — acceptable for a soft check.
  */
-export async function findWaitlistByEmail(
-  email: string,
+export async function findDuplicateRegistration(
+  id: RegistrationIdentity,
 ): Promise<{ registeredAt: string } | null> {
-  const normalized = email.trim().toLowerCase();
+  const normalized = id.email.trim().toLowerCase();
   const query = qs.stringify(
     {
       filters: { email: { $eqi: normalized } },
-      fields: ["createdAt"],
+      fields: ["createdAt", "role", "cities"],
       sort: ["createdAt:asc"],
-      pagination: { pageSize: 1 },
+      pagination: { pageSize: 50 },
     },
     { encodeValuesOnly: true },
   );
@@ -121,10 +156,20 @@ export async function findWaitlistByEmail(
   const res = await strapiFetch(path, { mode: "fresh" });
   if (!res.ok) throw await parseStrapiError(path, res);
   const json = (await res.json()) as {
-    data: Array<{ createdAt?: string }>;
+    data: Array<{ createdAt?: string; role?: string; cities?: unknown }>;
   };
-  const first = json.data?.[0];
-  return first?.createdAt ? { registeredAt: first.createdAt } : null;
+
+  const wantCities = normCities(id.cities);
+  for (const row of json.data ?? []) {
+    if (
+      row.createdAt &&
+      row.role === id.role &&
+      sameCitySet(normCities(row.cities), wantCities)
+    ) {
+      return { registeredAt: row.createdAt };
+    }
+  }
+  return null;
 }
 
 export async function submitWaitlist(payload: WaitlistPayload): Promise<void> {
