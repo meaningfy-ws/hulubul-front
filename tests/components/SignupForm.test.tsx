@@ -343,3 +343,44 @@ describe("Feature: structured error envelope (duplicate email)", () => {
     });
   });
 });
+
+describe("Feature: CLIENT_VALIDATION surfaces the specific field message", () => {
+  describe("Given the server rejects with a per-field validation issue", () => {
+    it("When the user submits, Then the alert shows the precise message, not the generic one", async () => {
+      vi.spyOn(console, "group").mockImplementation(() => {});
+      vi.spyOn(console, "error").mockImplementation(() => {});
+      vi.spyOn(console, "groupEnd").mockImplementation(() => {});
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            ok: false,
+            error: {
+              code: "CLIENT_VALIDATION",
+              message: "Verifică câmpurile formularului și încearcă din nou.",
+              requestId: "req-val",
+              details: {
+                issues: [
+                  { field: "cities", message: "Adaugă cel puțin un oraș." },
+                ],
+              },
+            },
+          }),
+          { status: 400 },
+        ),
+      );
+      const user = userEvent.setup();
+      render(<SignupForm data={signup} />);
+      await fillIdentity(user);
+      await addCity(user, "Lux");
+      await tickConsent(user);
+      await user.click(screen.getByRole("button", { name: signup.submitLabel }));
+
+      const alert = await screen.findByRole("alert");
+      expect(alert).toHaveTextContent("Adaugă cel puțin un oraș.");
+      expect(alert).not.toHaveTextContent(
+        "Verifică câmpurile formularului și încearcă din nou.",
+      );
+      vi.restoreAllMocks();
+    });
+  });
+});

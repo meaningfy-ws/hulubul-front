@@ -114,13 +114,22 @@ describe("waitlist route — structured error contract", () => {
     expect(submit).not.toHaveBeenCalled();
   });
 
-  it("invalid payload → 400 CLIENT_VALIDATION envelope (not the old {error} shape)", async () => {
-    const { cities: _omit, ...rest } = validBody();
-    const res = await POST(makeReq(rest));
+  it("invalid payload → 400 CLIENT_VALIDATION with per-field issues in details", async () => {
+    // The real user scenario: no city chip added → cities: [] (the
+    // form sends an empty array, not an omitted key).
+    const res = await POST(makeReq({ ...validBody(), cities: [] }));
     expect(res.status).toBe(400);
     const body = await res.json();
     expect(body.ok).toBe(false);
     expect(body.error.code).toBe("CLIENT_VALIDATION");
+    const issues = body.error.details.issues as {
+      field: string;
+      message: string;
+    }[];
+    expect(Array.isArray(issues)).toBe(true);
+    const cityIssue = issues.find((i) => i.field === "cities");
+    expect(cityIssue).toBeDefined();
+    expect(cityIssue!.message).toMatch(/oraș/i); // "Adaugă cel puțin un oraș."
     expect(submit).not.toHaveBeenCalled();
   });
 });

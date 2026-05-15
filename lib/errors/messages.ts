@@ -13,6 +13,33 @@ export interface MessageContext {
   registeredAt?: string;
 }
 
+/** One field-level validation problem (CLIENT_VALIDATION `details`). */
+export interface ValidationIssue {
+  field: string;
+  message: string;
+}
+
+/**
+ * Turns the structured `CLIENT_VALIDATION` details into a single,
+ * user-readable Romanian sentence (the Zod messages are already human).
+ * Returns null when there's nothing usable so callers fall back to the
+ * generic copy. Pure.
+ */
+export function validationMessage(details: unknown): string | null {
+  if (!details || typeof details !== "object") return null;
+  const issues = (details as { issues?: unknown }).issues;
+  if (!Array.isArray(issues) || issues.length === 0) return null;
+  const messages = issues
+    .map((i) =>
+      i && typeof (i as ValidationIssue).message === "string"
+        ? (i as ValidationIssue).message.trim()
+        : "",
+    )
+    .filter((m) => m.length > 0);
+  if (messages.length === 0) return null;
+  return [...new Set(messages)].join(" ");
+}
+
 /** Formats an ISO date as DD/MM/YYYY, or null if it isn't a valid date. */
 function formatRoDate(iso: string | undefined): string | null {
   if (!iso) return null;

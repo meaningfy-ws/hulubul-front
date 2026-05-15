@@ -21,6 +21,7 @@ import { requestLocation, type LocationGranted } from "@/lib/geolocation";
 import { humanizeFormError } from "@/lib/form-errors";
 import { parseErrorResponse, reportClientError } from "@/lib/errors/report";
 import { ErrorCode } from "@/lib/errors/codes";
+import { validationMessage } from "@/lib/errors/messages";
 import { FORM_STATUS, type FormStatus } from "@/lib/form-status";
 import { trackWaitlistSubmit } from "@/lib/tracking/events";
 import { useConsent } from "@/components/consent/ConsentProvider";
@@ -227,7 +228,14 @@ export function SignupForm({ data }: { data: SignupSection }) {
               ? "info"
               : "error",
           );
-          setErrorMessage(structured.message);
+          // For validation failures, show exactly which fields are wrong
+          // (the server sends per-field Romanian messages) instead of the
+          // generic "check the form" copy.
+          const specific =
+            structured.code === ErrorCode.ClientValidation
+              ? validationMessage(structured.details)
+              : null;
+          setErrorMessage(specific ?? structured.message);
           return;
         }
         throw new Error(json?.error ?? `Request failed (${res.status})`);
