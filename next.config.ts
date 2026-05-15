@@ -38,12 +38,12 @@ const securityHeaders = [
 
 // Deployed-commit signature. Resolved at build time from whatever the
 // build environment exposes; inlined as NEXT_PUBLIC_* so the footer can
-// show it client-side. Empty string when no CI sha is available (local
-// dev / unconfigured build) — the footer then omits the line.
+// show it client-side. We self-host (Docker on our own server), so the
+// ops deploy passes the commit as BUILD_SHA; GITHUB_SHA is the CI
+// fallback. Empty string when unavailable (local dev) — footer omits it.
 const buildSha =
   process.env.NEXT_PUBLIC_BUILD_SHA ??
   process.env.BUILD_SHA ??
-  process.env.VERCEL_GIT_COMMIT_SHA ??
   process.env.GITHUB_SHA ??
   "";
 

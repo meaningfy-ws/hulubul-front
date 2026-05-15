@@ -2,9 +2,9 @@
  * Deployed-commit signature, for lack of a real version scheme yet.
  *
  * `NEXT_PUBLIC_BUILD_SHA` is resolved at build time in `next.config.ts`
- * from whatever the build environment exposes (GitHub Actions
- * `GITHUB_SHA`, a `BUILD_SHA`/`VERCEL_GIT_COMMIT_SHA`, …). It must be
- * `NEXT_PUBLIC_` so the value is inlined into the client bundle.
+ * from what our self-hosted build exposes: `BUILD_SHA` (passed by the
+ * ops deploy as a Docker build-arg) or `GITHUB_SHA` (CI fallback). It
+ * must be `NEXT_PUBLIC_` so the value is inlined into the client bundle.
  *
  * The ops deploy (`infrastructure-stacks/deploy-hulubul.yml`) already
  * receives the commit as the `sha` input — passing it into the build as
