@@ -18,19 +18,17 @@ afterEach(() => {
   vi.unstubAllEnvs();
 });
 
-async function renderEditorial(slug: "confidentialitate" | "termeni" | "despre-proiect") {
-  // EditorialPageView is async (server component). Resolve to its element.
+async function renderEditorial(
+  slug: "confidentialitate" | "termeni" | "despre-proiect",
+) {
   render(await EditorialPageView({ slug }));
 }
 
 describe("<EditorialPageView>", () => {
-  it("renders the fallback copy when Strapi returns 404", async () => {
+  it("renders the markdown fallback when Strapi returns 404", async () => {
     server.use(
       http.get(`${TEST_STRAPI_URL}/api/page-confidentialitate`, () =>
-        HttpResponse.json(
-          { error: { status: 404 } },
-          { status: 404 },
-        ),
+        HttpResponse.json({ error: { status: 404 } }, { status: 404 }),
       ),
     );
     await renderEditorial("confidentialitate");
@@ -42,15 +40,20 @@ describe("<EditorialPageView>", () => {
     ).toBeInTheDocument();
   });
 
-  it("renders the CMS copy when present, preferring it over the fallback", async () => {
+  it("renders CMS blocks body + formatted date, preferring CMS over fallback", async () => {
     server.use(
       http.get(`${TEST_STRAPI_URL}/api/page-termeni`, () =>
         HttpResponse.json({
           data: {
-            slug: "termeni",
             title: "CMS-driven title",
-            lastUpdated: "1 ianuarie 2027",
-            body: "CMS body",
+            lastUpdated: "2027-01-01",
+            body: [
+              {
+                type: "paragraph",
+                children: [{ type: "text", text: "Corp din CMS blocks" }],
+              },
+            ],
+            seo: { metaTitle: "X", metaDescription: "Y" },
           },
         }),
       ),
@@ -59,10 +62,11 @@ describe("<EditorialPageView>", () => {
     expect(
       screen.getByRole("heading", { level: 1, name: "CMS-driven title" }),
     ).toBeInTheDocument();
+    expect(screen.getByText("Corp din CMS blocks")).toBeInTheDocument();
     expect(screen.getByText(/1 ianuarie 2027/)).toBeInTheDocument();
   });
 
-  it("falls back when the CMS errors out (does not crash the page)", async () => {
+  it("falls back when the CMS errors out (page never crashes)", async () => {
     server.use(
       http.get(`${TEST_STRAPI_URL}/api/page-despre-proiect`, () =>
         HttpResponse.json({ error: { status: 500 } }, { status: 500 }),
@@ -79,20 +83,32 @@ describe("<EditorialPageView>", () => {
 });
 
 describe("makeEditorialMetadata", () => {
-  it("produces a generateMetadata function bound to the slug", async () => {
+  it("uses CMS seo when present (metaTitle/metaDescription)", async () => {
     server.use(
-      http.get(`${TEST_STRAPI_URL}/api/page-confidentialitate`, () =>
-        HttpResponse.json(
-          { error: { status: 404 } },
-          { status: 404 },
-        ),
+      http.get(`${TEST_STRAPI_URL}/api/page-termeni`, () =>
+        HttpResponse.json({
+          data: {
+            title: "Plain title",
+            lastUpdated: "2027-01-01",
+            body: [],
+            seo: { metaTitle: "SEO Title", metaDescription: "SEO desc" },
+          },
+        }),
       ),
     );
-    const generate = makeEditorialMetadata("confidentialitate");
-    const meta = await generate();
-    expect(meta.title).toBe(EDITORIAL_FALLBACK.confidentialitate.title);
+    const meta = await makeEditorialMetadata("termeni")();
+    expect(meta.description).toBe("SEO desc");
+  });
+
+  it("falls back to fallback copy's seo on 404", async () => {
+    server.use(
+      http.get(`${TEST_STRAPI_URL}/api/page-confidentialitate`, () =>
+        HttpResponse.json({ error: { status: 404 } }, { status: 404 }),
+      ),
+    );
+    const meta = await makeEditorialMetadata("confidentialitate")();
     expect(meta.description).toBe(
-      EDITORIAL_FALLBACK.confidentialitate.metaDescription,
+      EDITORIAL_FALLBACK.confidentialitate.seo.metaDescription,
     );
   });
 });

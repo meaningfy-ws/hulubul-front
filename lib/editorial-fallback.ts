@@ -1,10 +1,10 @@
 import type { EditorialPage } from "./types";
 
-// Build-time fallback for editorial pages (legal + about) used until the
-// matching Strapi `page-{slug}` single-types are populated. See
-// design/spec-legal-pages.md. When the backend ships the content types and
-// editors publish entries, the CMS values win automatically and this file
-// becomes dead code.
+// Build-time fallback for editorial pages (legal + about). Now a *last
+// resort* only: the CMS (`page-{slug}` single types) is authoritative. If
+// the Strapi fetch 404s or errors, these Markdown copies keep the legal /
+// about pages online. `body.format: "markdown"` so EditorialPageView
+// renders them with MarkdownText, while CMS entries render as blocks.
 //
 // Note: contact@hulubul.com is intentionally absent from this copy because
 // the mailbox isn't live yet (May 2026). When mail is set up, both this file
@@ -18,9 +18,13 @@ export const EDITORIAL_FALLBACK: Record<
     slug: "confidentialitate",
     title: "Politica de confidențialitate",
     lastUpdated: "23 aprilie 2026",
-    metaDescription:
-      "Ce date colectăm, de ce, și cum le poți gestiona pe hulubul.com.",
-    body: `Această pagină descrie ce date colectăm pe hulubul.com, de ce, unde se păstrează, și cum le poți gestiona.
+    seo: {
+      metaDescription:
+        "Ce date colectăm, de ce, și cum le poți gestiona pe hulubul.com.",
+    },
+    body: {
+      format: "markdown",
+      markdown: `Această pagină descrie ce date colectăm pe hulubul.com, de ce, unde se păstrează, și cum le poți gestiona.
 
 ## Ce reținem pe dispozitivul tău
 
@@ -46,15 +50,20 @@ hulubul.com nu folosește cookie-uri pentru tracking. Singurele date păstrate p
 Conform GDPR, ai dreptul să ne ceri să-ți accesăm, corectăm sau ștergem datele. Adresa de contact va fi anunțată la lansare.
 
 *Acest text este un proiect inițial, supus revizuirii juridice înainte de lansarea oficială. Conținutul poate evolua; dacă există schimbări materiale, te vom anunța.*`,
+    },
   },
 
   termeni: {
     slug: "termeni",
     title: "Termeni și condiții",
     lastUpdated: "14 mai 2026",
-    metaDescription:
-      "Termenii de utilizare ai platformei hulubul.com — proiect inițial, supus revizuirii.",
-    body: `hulubul.com este în prezent o pagină de prezentare și o listă de așteptare. Aceasta este o versiune inițială a termenilor, publicată ca să poți avea un punct de referință până când lansăm versiunea completă a serviciului.
+    seo: {
+      metaDescription:
+        "Termenii de utilizare ai platformei hulubul.com — proiect inițial, supus revizuirii.",
+    },
+    body: {
+      format: "markdown",
+      markdown: `hulubul.com este în prezent o pagină de prezentare și o listă de așteptare. Aceasta este o versiune inițială a termenilor, publicată ca să poți avea un punct de referință până când lansăm versiunea completă a serviciului.
 
 ## Despre platformă
 
@@ -73,15 +82,20 @@ Textele, imaginile și materialele de pe hulubul.com sunt proprietatea autorilor
 Pe măsură ce serviciul prinde formă, vom publica versiuni complete ale termenilor — inclusiv reguli pentru utilizarea platformei, responsabilitățile transportatorilor, mecanismele de garanție și gestionarea litigiilor. Te vom anunța la schimbări materiale.
 
 *Acest text este un proiect inițial, supus revizuirii juridice înainte de lansarea oficială.*`,
+    },
   },
 
   "despre-proiect": {
     slug: "despre-proiect",
     title: "Despre proiect",
     lastUpdated: "14 mai 2026",
-    metaDescription:
-      "Despre hulubul.com — de ce construim platforma și cum o gândim împreună cu diaspora moldovenească.",
-    body: `hulubul.com pornește de la o problemă pe care o cunoaștem cu toții: trimiterea de pachete între diaspora moldovenească și Republica Moldova depinde, în prezent, de grupuri Facebook, recomandări și mesaje pe WhatsApp. Funcționează — dar pierzi timp și nu ai garanții.
+    seo: {
+      metaDescription:
+        "Despre hulubul.com — de ce construim platforma și cum o gândim împreună cu diaspora moldovenească.",
+    },
+    body: {
+      format: "markdown",
+      markdown: `hulubul.com pornește de la o problemă pe care o cunoaștem cu toții: trimiterea de pachete între diaspora moldovenească și Republica Moldova depinde, în prezent, de grupuri Facebook, recomandări și mesaje pe WhatsApp. Funcționează — dar pierzi timp și nu ai garanții.
 
 ## Ce încercăm să facem
 
@@ -106,15 +120,20 @@ Suntem la început. Pagina pe care o vezi este versiunea inițială:
 Suntem o echipă mică, distribuită între Luxembourg și Chișinău. Construim cu grijă, pas cu pas, fără promisiuni mari și fără reclame zgomotoase. Dacă vrei să afli mai multe sau să contribui, înscrie-te pe lista de așteptare — ținem legătura.
 
 *Această pagină va fi actualizată pe măsură ce proiectul evoluează.*`,
+    },
   },
 
   "pentru-transportatori": {
     slug: "pentru-transportatori",
     title: "Pentru transportatori",
     lastUpdated: "14 mai 2026",
-    metaDescription:
-      "Cum te ajută hulubul.com să găsești clienți noi, să-ți organizezi comunicarea și să-ți construiești o reputație clară pe rutele Moldova–Europa.",
-    body: `Faci curse regulate între diaspora moldovenească și Republica Moldova? hulubul.com este construit ca să-ți facă munca mai ușoară — nu să se intercaleze între tine și clienții tăi.
+    seo: {
+      metaDescription:
+        "Cum te ajută hulubul.com să găsești clienți noi, să-ți organizezi comunicarea și să-ți construiești o reputație clară pe rutele Moldova–Europa.",
+    },
+    body: {
+      format: "markdown",
+      markdown: `Faci curse regulate între diaspora moldovenească și Republica Moldova? hulubul.com este construit ca să-ți facă munca mai ușoară — nu să se intercaleze între tine și clienții tăi.
 
 ## Ce îți aducem
 
@@ -140,5 +159,6 @@ Suntem la început și verificăm manual fiecare transportator înainte să apar
 Nu cerem comisioane, nu schimbăm cum lucrezi cu clienții tăi. Vrem doar să-ți aducem mai multă cerere relevantă, mai puțin haos administrativ, și o platformă care te reprezintă corect.
 
 *Această pagină va fi actualizată pe măsură ce conturăm setul de funcții împreună cu primii transportatori înscriși.*`,
+    },
   },
 };

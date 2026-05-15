@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { getEditorialPage } from "@/lib/strapi";
 import { EDITORIAL_FALLBACK } from "@/lib/editorial-fallback";
+import { BlocksRenderer } from "@strapi/blocks-react-renderer";
 import { MarkdownText } from "@/components/landing/MarkdownText";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { logger } from "@/lib/logger";
@@ -39,18 +40,22 @@ export function makeEditorialMetadata(slug: EditorialPageSlug) {
   return async function generateMetadata(): Promise<Metadata> {
     const page = await loadPage(slug);
     const canonical = makeCanonical(`/${slug}`);
+    // CMS `seo.metaTitle` is authoritative when set; otherwise the page
+    // title. pageTitle() still guarantees no double-branding either way.
+    const ogTitle = page.seo.metaTitle ?? page.title;
+    const description = page.seo.metaDescription;
     return {
-      title: pageTitle(page.title),
-      description: page.metaDescription,
+      title: pageTitle(ogTitle),
+      description,
       alternates: { canonical },
       openGraph: {
-        title: page.title,
-        description: page.metaDescription,
+        title: ogTitle,
+        description,
         url: canonical,
       },
       twitter: {
-        title: page.title,
-        description: page.metaDescription,
+        title: ogTitle,
+        description,
       },
     };
   };
@@ -91,7 +96,11 @@ export async function EditorialPageView({
         <h1 className="serif">{page.title}</h1>
         <p className="legal-meta">Ultima actualizare: {page.lastUpdated}.</p>
 
-        <MarkdownText>{page.body}</MarkdownText>
+        {page.body.format === "blocks" ? (
+          <BlocksRenderer content={page.body.blocks} />
+        ) : (
+          <MarkdownText>{page.body.markdown}</MarkdownText>
+        )}
 
         <p>
           <Link href="/">← Înapoi la pagina principală</Link>
