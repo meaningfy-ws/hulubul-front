@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { waitlistSchema } from "@/lib/waitlist-schema";
-import { submitWaitlist, findWaitlistByEmail } from "@/lib/strapi";
+import { submitWaitlist, findDuplicateRegistration } from "@/lib/strapi";
 import {
   dispatchConversion,
   generateEventId,
@@ -140,12 +140,18 @@ export async function POST(request: Request) {
   delete enriched.client;
   delete enriched.consent;
 
-  // Soft dedupe: if this email already exists, tell the user (with the
-  // original date) instead of creating a duplicate row. A failure in the
-  // lookup itself is treated like any other upstream failure — we do NOT
-  // fall through to insert (that would risk the duplicate we're avoiding).
+  // Soft dedupe: block only an EXACT repeat (same email + role + cities).
+  // A different role or different cities is a legitimate new registration
+  // (e.g. one parent, kids in Italy and France, one email). On an exact
+  // repeat we tell the user it was already registered on that date and to
+  // be patient — nothing more. A failure in the lookup itself is treated
+  // like any other upstream failure — we do NOT fall through to insert.
   try {
-    const existing = await findWaitlistByEmail(data.email);
+    const existing = await findDuplicateRegistration({
+      email: data.email,
+      role: data.role,
+      cities: data.cities,
+    });
     if (existing) {
       logger.info(
         "api/waitlist",

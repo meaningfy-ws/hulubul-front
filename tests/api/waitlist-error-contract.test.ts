@@ -7,18 +7,18 @@ import {
 
 vi.mock("@/lib/strapi", () => ({
   submitWaitlist: vi.fn().mockResolvedValue(undefined),
-  findWaitlistByEmail: vi.fn().mockResolvedValue(null),
+  findDuplicateRegistration: vi.fn().mockResolvedValue(null),
 }));
 vi.mock("@/lib/server-events/dispatcher", () => ({
   dispatchConversion: vi.fn().mockResolvedValue(undefined),
   generateEventId: vi.fn(() => "evt-fixed"),
 }));
 
-import { submitWaitlist, findWaitlistByEmail } from "@/lib/strapi";
+import { submitWaitlist, findDuplicateRegistration } from "@/lib/strapi";
 import { dispatchConversion } from "@/lib/server-events/dispatcher";
 
 const submit = submitWaitlist as ReturnType<typeof vi.fn>;
-const findByEmail = findWaitlistByEmail as ReturnType<typeof vi.fn>;
+const findByEmail = findDuplicateRegistration as ReturnType<typeof vi.fn>;
 const dispatch = dispatchConversion as ReturnType<typeof vi.fn>;
 
 const validBody = () => ({
@@ -66,6 +66,20 @@ describe("waitlist route — structured error contract", () => {
     expect(res.headers.get("x-request-id")).toBe(body.error.requestId);
     expect(submit).not.toHaveBeenCalled();
     expect(dispatch).not.toHaveBeenCalled();
+  });
+
+  it("same email but NOT an exact duplicate (different role/cities) → registers normally", async () => {
+    // findDuplicateRegistration already encodes the role/cities rule; from
+    // the route's view a non-duplicate simply resolves null → it submits.
+    findByEmail.mockResolvedValue(null);
+    const res = await POST(makeReq({ ...validBody(), cities: ["Paris"] }));
+    expect(res.status).toBe(201);
+    expect(submit).toHaveBeenCalledOnce();
+    expect(findByEmail).toHaveBeenCalledWith({
+      email: "ion@example.com",
+      role: "expeditor",
+      cities: ["Paris"],
+    });
   });
 
   it("Strapi 400 validation → 422 UPSTREAM_VALIDATION carrying the real upstream status", async () => {
