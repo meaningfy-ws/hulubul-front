@@ -16,7 +16,7 @@ export const PRODUCTION_SITE_URL = "https://hulubul.com";
  * Public contact mailbox. Single source of truth — update here when the
  * address changes (see note in lib/editorial-fallback.ts about go-live).
  */
-export const CONTACT_EMAIL = "contact@hulubul.com";
+export const CONTACT_EMAIL = "hi@meaningfy.ws";
 
 export const DEFAULT_SITE_DESCRIPTION =
   "Platforma care conectează diaspora moldovenească cu transportatorii care trec prin orașul tău săptămâna asta.";
