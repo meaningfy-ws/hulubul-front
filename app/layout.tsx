@@ -5,6 +5,7 @@ import { Analytics } from "@/components/analytics/Analytics";
 import { WebVitalsReporter } from "@/components/analytics/WebVitalsReporter";
 import { ConsentProvider } from "@/components/consent/ConsentProvider";
 import { ConsentBanner } from "@/components/consent/ConsentBanner";
+import { ConsentDefaultsScript } from "@/components/consent/ConsentDefaultsScript";
 import { JsonLd } from "@/components/seo/JsonLd";
 import {
   DEFAULT_LOCALE,
@@ -92,6 +93,13 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body>
+        {/*
+          ConsentDefaultsScript MUST come first — it uses
+          strategy="beforeInteractive" so the Google Consent Mode v2
+          default ("everything denied") lands in dataLayer before
+          gtag.js parses. Required by the Advanced-mode consent docs.
+        */}
+        <ConsentDefaultsScript />
         <JsonLd
           data={buildGraph([
             loadJsonLdSnippet("organization"),
