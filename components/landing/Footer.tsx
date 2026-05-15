@@ -1,4 +1,5 @@
 import type { FooterSection } from "@/lib/types";
+import { buildSignature } from "@/lib/build-info";
 import { Logo } from "./Logo";
 import { CookiesLink } from "./CookiesLink";
 
@@ -13,6 +14,7 @@ function normaliseHref(href: string): string {
 }
 
 export function Footer({ data }: { data: FooterSection }) {
+  const sig = buildSignature();
   return (
     <footer className="site-footer">
       <div className="footer-inner">
@@ -57,6 +59,15 @@ export function Footer({ data }: { data: FooterSection }) {
         <div>
           <CookiesLink />
         </div>
+        {sig ? (
+          <div
+            className="build-sig"
+            title="Versiunea aplicației (commit)"
+            aria-label={`Versiune build ${sig}`}
+          >
+            build {sig}
+          </div>
+        ) : null}
       </div>
     </footer>
   );

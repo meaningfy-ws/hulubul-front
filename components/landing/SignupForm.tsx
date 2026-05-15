@@ -19,6 +19,8 @@ import { captureUtmFromUrl, readStoredUtm } from "@/lib/utm";
 import { GDPR_CONSENT_VERSION } from "@/lib/gdpr-consent";
 import { requestLocation, type LocationGranted } from "@/lib/geolocation";
 import { humanizeFormError } from "@/lib/form-errors";
+import { parseErrorResponse, reportClientError } from "@/lib/errors/report";
+import { ErrorCode } from "@/lib/errors/codes";
 import { FORM_STATUS, type FormStatus } from "@/lib/form-status";
 import { trackWaitlistSubmit } from "@/lib/tracking/events";
 import { useConsent } from "@/components/consent/ConsentProvider";
@@ -117,6 +119,9 @@ export function SignupForm({ data }: { data: SignupSection }) {
   });
   const [status, setStatus] = useState<Status>(FORM_STATUS.Idle);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  // "info" for non-failure outcomes the user can't fix by retrying
+  // (already registered, rate-limited) — rendered calmly, not as a red error.
+  const [errorTone, setErrorTone] = useState<"error" | "info">("error");
 
   useEffect(() => {
     const remembered = readRemembered();
@@ -209,6 +214,22 @@ export function SignupForm({ data }: { data: SignupSection }) {
         | { error?: string; event_id?: string }
         | null;
       if (!res.ok) {
+        const structured = parseErrorResponse(json);
+        if (structured) {
+          reportClientError("form/waitlist", structured, {
+            email: trimmedEmail,
+            endpoint: "/api/waitlist",
+          });
+          setStatus(FORM_STATUS.Error);
+          setErrorTone(
+            structured.code === ErrorCode.AlreadyRegistered ||
+              structured.code === ErrorCode.RateLimited
+              ? "info"
+              : "error",
+          );
+          setErrorMessage(structured.message);
+          return;
+        }
         throw new Error(json?.error ?? `Request failed (${res.status})`);
       }
       if (remember) {
@@ -229,6 +250,7 @@ export function SignupForm({ data }: { data: SignupSection }) {
       setStatus(FORM_STATUS.Success);
     } catch (error) {
       setStatus(FORM_STATUS.Error);
+      setErrorTone("error");
       setErrorMessage(
         humanizeFormError(
           error,
@@ -395,7 +417,12 @@ export function SignupForm({ data }: { data: SignupSection }) {
       ) : null}
 
       {status === FORM_STATUS.Error && errorMessage ? (
-        <p className="form-error" role="alert">
+        <p
+          className={
+            errorTone === "info" ? "form-error form-error--info" : "form-error"
+          }
+          role="alert"
+        >
           {errorMessage}
         </p>
       ) : null}

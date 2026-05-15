@@ -2,6 +2,7 @@ import qs from "qs";
 import { buildLandingPopulate } from "./populate";
 import {
   isStrapiNotFound,
+  parseStrapiError,
   strapiFetch,
   StrapiNotFoundError,
   throwStrapiError,
@@ -55,17 +56,50 @@ export async function getEditorialPage(
   }
 }
 
+const WAITLIST_PATH = "/api/waitlist-submissions";
+
+/**
+ * Soft-dedupe lookup: does a waitlist row already exist for this email?
+ * Matched case-insensitively (`$eqi`) on a trimmed/lowercased email so
+ * `A@x.com` and `a@x.com` count as the same person — without rewriting
+ * the stored address. Returns the original registration date so the UI
+ * can say "you registered on DD/MM/YYYY".
+ */
+export async function findWaitlistByEmail(
+  email: string,
+): Promise<{ registeredAt: string } | null> {
+  const normalized = email.trim().toLowerCase();
+  const query = qs.stringify(
+    {
+      filters: { email: { $eqi: normalized } },
+      fields: ["createdAt"],
+      sort: ["createdAt:asc"],
+      pagination: { pageSize: 1 },
+    },
+    { encodeValuesOnly: true },
+  );
+  const path = `${WAITLIST_PATH}?${query}`;
+  const res = await strapiFetch(path, { mode: "fresh" });
+  if (!res.ok) throw await parseStrapiError(path, res);
+  const json = (await res.json()) as {
+    data: Array<{ createdAt?: string }>;
+  };
+  const first = json.data?.[0];
+  return first?.createdAt ? { registeredAt: first.createdAt } : null;
+}
+
 export async function submitWaitlist(payload: WaitlistPayload): Promise<void> {
   // Backend requires Bearer auth for waitlist-submissions create (public create
   // is disabled on Strapi Cloud). The token stays server-side because this
   // fetcher is only called from the /api/waitlist route handler.
-  const path = "/api/waitlist-submissions";
-  const res = await strapiFetch(path, {
+  const res = await strapiFetch(WAITLIST_PATH, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ data: payload }),
   });
-  if (!res.ok) throwStrapiError(path, res);
+  // parseStrapiError keeps Strapi's "why" (message + field details) instead
+  // of the body-blind throwStrapiError used elsewhere.
+  if (!res.ok) throw await parseStrapiError(WAITLIST_PATH, res);
 }
 
 // Re-export for callers that want the typed-error surface.

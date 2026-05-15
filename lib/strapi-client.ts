@@ -30,39 +30,78 @@ export function authHeaders(): Record<string, string> {
  * `isStrapiUpstreamError` discriminators rather than `instanceof` — the
  * latter can fail across server/client realm boundaries.
  */
+/** One field-level validation problem reported by Strapi. */
+export interface StrapiErrorDetail {
+  /** Dotted field path, e.g. "email". */
+  path?: string;
+  message: string;
+}
+
+export interface StrapiErrorOptions {
+  /** Strapi's own `error.message` (the human "why"), preserved for logs. */
+  upstreamMessage?: string;
+  /** Flattened `error.details.errors[]` from Strapi, if present. */
+  details?: StrapiErrorDetail[];
+}
+
+/**
+ * Base class for every error raised when talking to Strapi. Use the
+ * `isStrapiError`, `isStrapiNotFound`, `isStrapiAuthError`,
+ * `isStrapiUpstreamError` discriminators rather than `instanceof` — the
+ * latter can fail across server/client realm boundaries.
+ */
 export class StrapiError extends Error {
   readonly path: string;
   readonly status: number;
-  constructor(path: string, status: number, message: string) {
+  /** Strapi's own message body, kept so failures are diagnosable. */
+  readonly upstreamMessage?: string;
+  readonly details?: StrapiErrorDetail[];
+  constructor(
+    path: string,
+    status: number,
+    message: string,
+    opts: StrapiErrorOptions = {},
+  ) {
     super(message);
     this.name = "StrapiError";
     this.path = path;
     this.status = status;
+    this.upstreamMessage = opts.upstreamMessage;
+    this.details = opts.details;
   }
 }
 
 export class StrapiNotFoundError extends StrapiError {
-  constructor(path: string) {
-    super(path, 404, `Strapi ${path} not found (404).`);
+  constructor(path: string, opts: StrapiErrorOptions = {}) {
+    super(path, 404, `Strapi ${path} not found (404).`, opts);
     this.name = "StrapiNotFoundError";
   }
 }
 
 export class StrapiAuthError extends StrapiError {
-  constructor(path: string, status: number) {
+  constructor(path: string, status: number, opts: StrapiErrorOptions = {}) {
     super(
       path,
       status,
       `Strapi refused the request to ${path} (${status}). Verify STRAPI_API_TOKEN permissions.`,
+      opts,
     );
     this.name = "StrapiAuthError";
   }
 }
 
 export class StrapiUpstreamError extends StrapiError {
-  constructor(path: string, status: number) {
-    super(path, status, `Strapi ${path} failed: ${status}`);
+  constructor(path: string, status: number, opts: StrapiErrorOptions = {}) {
+    super(path, status, `Strapi ${path} failed: ${status}`, opts);
     this.name = "StrapiUpstreamError";
+  }
+}
+
+/** Strapi rejected the payload with HTTP 400 (schema/validation/unique). */
+export class StrapiValidationError extends StrapiError {
+  constructor(path: string, opts: StrapiErrorOptions = {}) {
+    super(path, 400, `Strapi ${path} rejected the payload (400).`, opts);
+    this.name = "StrapiValidationError";
   }
 }
 
@@ -71,6 +110,7 @@ const STRAPI_ERROR_NAMES = new Set<string>([
   "StrapiNotFoundError",
   "StrapiAuthError",
   "StrapiUpstreamError",
+  "StrapiValidationError",
 ]);
 
 export function isStrapiError(e: unknown): e is StrapiError {
@@ -87,6 +127,58 @@ export function isStrapiAuthError(e: unknown): e is StrapiAuthError {
 
 export function isStrapiUpstreamError(e: unknown): e is StrapiUpstreamError {
   return e instanceof Error && e.name === "StrapiUpstreamError";
+}
+
+export function isStrapiValidationError(
+  e: unknown,
+): e is StrapiValidationError {
+  return e instanceof Error && e.name === "StrapiValidationError";
+}
+
+/**
+ * Reads a non-OK Strapi `Response`, extracts its error envelope
+ * (`{ error: { message, details: { errors[] } } }`), and returns the
+ * matching typed error with Strapi's own message + field details attached.
+ *
+ * Unlike `throwStrapiError` (sync, body-blind, kept for existing callers),
+ * this preserves the "why" so a failure is one log line instead of an
+ * investigation. Never throws while parsing — a non-JSON body (e.g. an
+ * HTML 502 from a proxy) still yields a correctly-classified error.
+ */
+export async function parseStrapiError(
+  path: string,
+  res: Response,
+): Promise<StrapiError> {
+  let upstreamMessage: string | undefined;
+  let details: StrapiErrorDetail[] | undefined;
+  try {
+    const body = (await res.json()) as {
+      error?: {
+        message?: string;
+        details?: { errors?: Array<{ path?: unknown; message?: string }> };
+      };
+    };
+    if (typeof body?.error?.message === "string") {
+      upstreamMessage = body.error.message;
+    }
+    const errs = body?.error?.details?.errors;
+    if (Array.isArray(errs) && errs.length > 0) {
+      details = errs.map((e) => ({
+        path: Array.isArray(e.path) ? e.path.join(".") : undefined,
+        message: typeof e.message === "string" ? e.message : "",
+      }));
+    }
+  } catch {
+    // Non-JSON body — classify by status only.
+  }
+
+  const opts: StrapiErrorOptions = { upstreamMessage, details };
+  if (res.status === 404) return new StrapiNotFoundError(path, opts);
+  if (res.status === 401 || res.status === 403) {
+    return new StrapiAuthError(path, res.status, opts);
+  }
+  if (res.status === 400) return new StrapiValidationError(path, opts);
+  return new StrapiUpstreamError(path, res.status, opts);
 }
 
 // --- Fetch helper -----------------------------------------------------------
