@@ -92,6 +92,18 @@ export default function RootLayout({
       className={`${inter.variable} ${fraunces.variable}`}
       suppressHydrationWarning
     >
+      <head>
+        {/*
+          Preconnect to the Google Analytics origins so the TLS
+          handshake + DNS lookup happen in parallel with React
+          hydration, not sequentially after gtag.js requests them.
+          Saves ~50-100 ms on the first GA hit. If the user later
+          declines analytics, the unused connection is dropped by
+          the browser within seconds — net cost: nothing.
+        */}
+        <link rel="preconnect" href="https://www.googletagmanager.com" />
+        <link rel="preconnect" href="https://www.google-analytics.com" />
+      </head>
       <body>
         {/*
           ConsentDefaultsScript MUST come first — it uses
