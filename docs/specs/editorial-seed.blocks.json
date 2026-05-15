@@ -1,0 +1,721 @@
+[
+  {
+    "slug": "confidentialitate",
+    "locale": "ro",
+    "title": "Politica de confidențialitate",
+    "lastUpdated": "2026-04-23",
+    "seo": {
+      "metaTitle": "Politica de confidențialitate",
+      "metaDescription": "Ce date colectăm, de ce, și cum le poți gestiona pe hulubul.com."
+    },
+    "body": [
+      {
+        "type": "paragraph",
+        "children": [
+          {
+            "type": "text",
+            "text": "Această pagină descrie ce date colectăm pe hulubul.com, de ce, unde se păstrează, și cum le poți gestiona."
+          }
+        ]
+      },
+      {
+        "type": "heading",
+        "level": 2,
+        "children": [
+          {
+            "type": "text",
+            "text": "Ce reținem pe dispozitivul tău"
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "children": [
+          {
+            "type": "text",
+            "text": "Când completezi formularul de înscriere pe lista de așteptare și bifezi "
+          },
+          {
+            "type": "text",
+            "text": "„Reține-mă pe acest dispozitiv\"",
+            "italic": true
+          },
+          {
+            "type": "text",
+            "text": ", salvăm local pe browser-ul tău numele și contactul pe care le-ai introdus, ca să găsești formularul deja completat data viitoare. Atât."
+          }
+        ]
+      },
+      {
+        "type": "list",
+        "format": "unordered",
+        "children": [
+          {
+            "type": "list-item",
+            "children": [
+              {
+                "type": "text",
+                "text": "Ce stocăm:",
+                "bold": true
+              },
+              {
+                "type": "text",
+                "text": " numele tău și contactul (email sau număr de telefon), exact cum le-ai scris."
+              }
+            ]
+          },
+          {
+            "type": "list-item",
+            "children": [
+              {
+                "type": "text",
+                "text": "De ce:",
+                "bold": true
+              },
+              {
+                "type": "text",
+                "text": " doar ca să îți economisim timpul când revii pe site."
+              }
+            ]
+          },
+          {
+            "type": "list-item",
+            "children": [
+              {
+                "type": "text",
+                "text": "Unde:",
+                "bold": true
+              },
+              {
+                "type": "text",
+                "text": " în "
+              },
+              {
+                "type": "text",
+                "text": "localStorage",
+                "code": true
+              },
+              {
+                "type": "text",
+                "text": "-ul browserului tău, pe acest dispozitiv. Nu ajunge pe serverele noastre, nu ajunge la terți, nu intră în nicio bază de date."
+              }
+            ]
+          },
+          {
+            "type": "list-item",
+            "children": [
+              {
+                "type": "text",
+                "text": "Cât timp:",
+                "bold": true
+              },
+              {
+                "type": "text",
+                "text": " maxim 365 de zile de la ultima completare. După aceea, datele sunt șterse automat când deschizi pagina."
+              }
+            ]
+          },
+          {
+            "type": "list-item",
+            "children": [
+              {
+                "type": "text",
+                "text": "Cum ștergi manual:",
+                "bold": true
+              },
+              {
+                "type": "text",
+                "text": " apasă butonul "
+              },
+              {
+                "type": "text",
+                "text": "„Nu ești tu? Șterge.\"",
+                "italic": true
+              },
+              {
+                "type": "text",
+                "text": " de lângă câmpul de nume, sau folosește opțiunea „Clear site data\" din browser-ul tău pentru hulubul.com."
+              }
+            ]
+          },
+          {
+            "type": "list-item",
+            "children": [
+              {
+                "type": "text",
+                "text": "Este opțional:",
+                "bold": true
+              },
+              {
+                "type": "text",
+                "text": " funcționalitatea se activează doar dacă bifezi căsuța. Dacă nu o bifezi, nu salvăm nimic pe dispozitivul tău."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "heading",
+        "level": 2,
+        "children": [
+          {
+            "type": "text",
+            "text": "Formularul de înscriere"
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "children": [
+          {
+            "type": "text",
+            "text": "Când trimiți formularul, datele pe care le-ai introdus (nume, contact, rolul ales, opțional ruta de interes) ajung la noi, pe serverul backend, ca să te putem anunța la lansare. Nu le împărtășim cu terți și nu le folosim pentru altceva decât scopul declarat."
+          }
+        ]
+      },
+      {
+        "type": "heading",
+        "level": 2,
+        "children": [
+          {
+            "type": "text",
+            "text": "Cookie-uri"
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "children": [
+          {
+            "type": "text",
+            "text": "hulubul.com nu folosește cookie-uri pentru tracking. Singurele date păstrate pe dispozitivul tău sunt cele descrise mai sus, în "
+          },
+          {
+            "type": "text",
+            "text": "localStorage",
+            "code": true
+          },
+          {
+            "type": "text",
+            "text": ", doar cu acordul tău explicit."
+          }
+        ]
+      },
+      {
+        "type": "heading",
+        "level": 2,
+        "children": [
+          {
+            "type": "text",
+            "text": "Drepturile tale"
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "children": [
+          {
+            "type": "text",
+            "text": "Conform GDPR, ai dreptul să ne ceri să-ți accesăm, corectăm sau ștergem datele. Adresa de contact va fi anunțată la lansare."
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "children": [
+          {
+            "type": "text",
+            "text": "Acest text este un proiect inițial, supus revizuirii juridice înainte de lansarea oficială. Conținutul poate evolua; dacă există schimbări materiale, te vom anunța.",
+            "italic": true
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "termeni",
+    "locale": "ro",
+    "title": "Termeni și condiții",
+    "lastUpdated": "2026-05-14",
+    "seo": {
+      "metaTitle": "Termeni și condiții",
+      "metaDescription": "Termenii de utilizare ai platformei hulubul.com — proiect inițial, supus revizuirii."
+    },
+    "body": [
+      {
+        "type": "paragraph",
+        "children": [
+          {
+            "type": "text",
+            "text": "hulubul.com este în prezent o pagină de prezentare și o listă de așteptare. Aceasta este o versiune inițială a termenilor, publicată ca să poți avea un punct de referință până când lansăm versiunea completă a serviciului."
+          }
+        ]
+      },
+      {
+        "type": "heading",
+        "level": 2,
+        "children": [
+          {
+            "type": "text",
+            "text": "Despre platformă"
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "children": [
+          {
+            "type": "text",
+            "text": "hulubul.com își propune să conecteze expeditori, destinatari și transportatori care fac curse între diaspora moldovenească și Republica Moldova. La momentul publicării acestei pagini, platforma nu este încă activă — colectăm doar înscrieri pe lista de așteptare și răspunsuri la sondajul pentru expeditori."
+          }
+        ]
+      },
+      {
+        "type": "heading",
+        "level": 2,
+        "children": [
+          {
+            "type": "text",
+            "text": "Înscrierea pe lista de așteptare"
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "children": [
+          {
+            "type": "text",
+            "text": "Înscrierea este gratuită și nu creează nicio obligație. Datele tale sunt folosite doar pentru a te anunța la lansare și pentru a contura serviciul împreună. Detaliile despre ce date colectăm și cum le gestionăm sunt în pagina de "
+          },
+          {
+            "type": "link",
+            "url": "/confidentialitate",
+            "children": [
+              {
+                "type": "text",
+                "text": "confidențialitate"
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "text": "."
+          }
+        ]
+      },
+      {
+        "type": "heading",
+        "level": 2,
+        "children": [
+          {
+            "type": "text",
+            "text": "Conținutul site-ului"
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "children": [
+          {
+            "type": "text",
+            "text": "Textele, imaginile și materialele de pe hulubul.com sunt proprietatea autorilor lor. Le poți cita cu sursa atribuită. Nu reproduce conținut substanțial fără acord prealabil."
+          }
+        ]
+      },
+      {
+        "type": "heading",
+        "level": 2,
+        "children": [
+          {
+            "type": "text",
+            "text": "Modificări"
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "children": [
+          {
+            "type": "text",
+            "text": "Pe măsură ce serviciul prinde formă, vom publica versiuni complete ale termenilor — inclusiv reguli pentru utilizarea platformei, responsabilitățile transportatorilor, mecanismele de garanție și gestionarea litigiilor. Te vom anunța la schimbări materiale."
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "children": [
+          {
+            "type": "text",
+            "text": "Acest text este un proiect inițial, supus revizuirii juridice înainte de lansarea oficială.",
+            "italic": true
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "despre-proiect",
+    "locale": "ro",
+    "title": "Despre proiect",
+    "lastUpdated": "2026-05-14",
+    "seo": {
+      "metaTitle": "Despre proiect",
+      "metaDescription": "Despre hulubul.com — de ce construim platforma și cum o gândim împreună cu diaspora moldovenească."
+    },
+    "body": [
+      {
+        "type": "paragraph",
+        "children": [
+          {
+            "type": "text",
+            "text": "hulubul.com pornește de la o problemă pe care o cunoaștem cu toții: trimiterea de pachete între diaspora moldovenească și Republica Moldova depinde, în prezent, de grupuri Facebook, recomandări și mesaje pe WhatsApp. Funcționează — dar pierzi timp și nu ai garanții."
+          }
+        ]
+      },
+      {
+        "type": "heading",
+        "level": 2,
+        "children": [
+          {
+            "type": "text",
+            "text": "Ce încercăm să facem"
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "children": [
+          {
+            "type": "text",
+            "text": "Vrem o platformă unde:"
+          }
+        ]
+      },
+      {
+        "type": "list",
+        "format": "unordered",
+        "children": [
+          {
+            "type": "list-item",
+            "children": [
+              {
+                "type": "text",
+                "text": "Expeditorii",
+                "bold": true
+              },
+              {
+                "type": "text",
+                "text": " găsesc rapid o cursă potrivită pentru pachetul lor, cu rute, date și transportator clar afișate."
+              }
+            ]
+          },
+          {
+            "type": "list-item",
+            "children": [
+              {
+                "type": "text",
+                "text": "Transportatorii",
+                "bold": true
+              },
+              {
+                "type": "text",
+                "text": " primesc cereri relevante, fără să caute prin grupuri, și își păstrează relația directă cu clienții."
+              }
+            ]
+          },
+          {
+            "type": "list-item",
+            "children": [
+              {
+                "type": "text",
+                "text": "Destinatarii",
+                "bold": true
+              },
+              {
+                "type": "text",
+                "text": " știu când sosește pachetul și cu cine vorbesc dacă apare ceva."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "children": [
+          {
+            "type": "text",
+            "text": "Credem că o platformă utilă se construiește împreună cu cei care o folosesc — de aceea pornim cu o listă de așteptare și un sondaj scurt pentru expeditori."
+          }
+        ]
+      },
+      {
+        "type": "heading",
+        "level": 2,
+        "children": [
+          {
+            "type": "text",
+            "text": "Unde suntem acum"
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "children": [
+          {
+            "type": "text",
+            "text": "Suntem la început. Pagina pe care o vezi este versiunea inițială:"
+          }
+        ]
+      },
+      {
+        "type": "list",
+        "format": "unordered",
+        "children": [
+          {
+            "type": "list-item",
+            "children": [
+              {
+                "type": "text",
+                "text": "Colectăm înscrieri pe lista de așteptare, ca să anunțăm primii utilizatori la lansare."
+              }
+            ]
+          },
+          {
+            "type": "list-item",
+            "children": [
+              {
+                "type": "text",
+                "text": "Rulăm un sondaj cu expeditori, ca să modelăm corect prima versiune a serviciului."
+              }
+            ]
+          },
+          {
+            "type": "list-item",
+            "children": [
+              {
+                "type": "text",
+                "text": "Discutăm individual cu transportatori care vor să fie printre primii pe platformă."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "heading",
+        "level": 2,
+        "children": [
+          {
+            "type": "text",
+            "text": "Cine suntem"
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "children": [
+          {
+            "type": "text",
+            "text": "Suntem o echipă mică, distribuită între Luxembourg și Chișinău. Construim cu grijă, pas cu pas, fără promisiuni mari și fără reclame zgomotoase. Dacă vrei să afli mai multe sau să contribui, înscrie-te pe lista de așteptare — ținem legătura."
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "children": [
+          {
+            "type": "text",
+            "text": "Această pagină va fi actualizată pe măsură ce proiectul evoluează.",
+            "italic": true
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "pentru-transportatori",
+    "locale": "ro",
+    "title": "Pentru transportatori",
+    "lastUpdated": "2026-05-14",
+    "seo": {
+      "metaTitle": "Pentru transportatori",
+      "metaDescription": "Cum te ajută hulubul.com să găsești clienți noi, să-ți organizezi comunicarea și să-ți construiești o reputație clară pe rutele Moldova–Europa."
+    },
+    "body": [
+      {
+        "type": "paragraph",
+        "children": [
+          {
+            "type": "text",
+            "text": "Faci curse regulate între diaspora moldovenească și Republica Moldova? hulubul.com este construit ca să-ți facă munca mai ușoară — nu să se intercaleze între tine și clienții tăi."
+          }
+        ]
+      },
+      {
+        "type": "heading",
+        "level": 2,
+        "children": [
+          {
+            "type": "text",
+            "text": "Ce îți aducem"
+          }
+        ]
+      },
+      {
+        "type": "heading",
+        "level": 3,
+        "children": [
+          {
+            "type": "text",
+            "text": "Clienți noi, fără să cauți tu prin grupuri"
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "children": [
+          {
+            "type": "text",
+            "text": "Expeditorii vin pe platformă cu o cerere clară: ruta, datele, ce trimit. Tu vezi cererile relevante pentru rutele pe care deja le faci. Fără mesaje pierdute prin chat-uri, fără negocieri dezordonate."
+          }
+        ]
+      },
+      {
+        "type": "heading",
+        "level": 3,
+        "children": [
+          {
+            "type": "text",
+            "text": "Vezi unde sunt clienții pe rutele tale"
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "children": [
+          {
+            "type": "text",
+            "text": "Hărțuim datele despre cereri — orașe de plecare și de sosire, zile preferate, frecvență. Pe măsură ce platforma crește, înțelegi mai bine pe ce rute există constant cerere și unde poți crește capacitatea."
+          }
+        ]
+      },
+      {
+        "type": "heading",
+        "level": 3,
+        "children": [
+          {
+            "type": "text",
+            "text": "Comunicare coordonată, fără să pierzi controlul"
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "children": [
+          {
+            "type": "text",
+            "text": "Tu rămâi singura persoană care vorbește cu expeditorul. Noi nu ne băgăm în negociere, nu luăm comision din tranzacție. Doar punem la dispoziție un singur loc unde mesajele și confirmările sunt ordonate — în loc de șapte grupuri WhatsApp."
+          }
+        ]
+      },
+      {
+        "type": "heading",
+        "level": 3,
+        "children": [
+          {
+            "type": "text",
+            "text": "Reputație construită din curse reale"
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "children": [
+          {
+            "type": "text",
+            "text": "Fiecare cursă livrată corect contribuie la profilul tău public: rute deservite, frecvență, recenzii directe de la expeditori. Nu sistem de stele plătite — reputație bazată pe ce livrezi efectiv. Înseamnă că și clienții noi pot decide rapid dacă lucrezi pentru ei."
+          }
+        ]
+      },
+      {
+        "type": "heading",
+        "level": 3,
+        "children": [
+          {
+            "type": "text",
+            "text": "Ușor de găsit"
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "children": [
+          {
+            "type": "text",
+            "text": "Apariție clară pe hartă, filtrare după rută, după zile de plecare, după ce transporți. Când cineva caută o cursă pe ruta ta, te găsește în câteva secunde — cu numărul tău de WhatsApp, cu programul tău, cu istoricul tău."
+          }
+        ]
+      },
+      {
+        "type": "heading",
+        "level": 2,
+        "children": [
+          {
+            "type": "text",
+            "text": "Cum începem"
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "children": [
+          {
+            "type": "text",
+            "text": "Suntem la început și verificăm manual fiecare transportator înainte să apară pe platformă. Dacă vrei să fii printre primii și să modelăm împreună ce funcții îți sunt cele mai utile, scrie-ți datele pe "
+          },
+          {
+            "type": "link",
+            "url": "/#signup",
+            "children": [
+              {
+                "type": "text",
+                "text": "lista de așteptare"
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "text": " — alegem rolul "
+          },
+          {
+            "type": "text",
+            "text": "„Sunt transportator\"",
+            "italic": true
+          },
+          {
+            "type": "text",
+            "text": " și te contactăm direct pentru o discuție scurtă."
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "children": [
+          {
+            "type": "text",
+            "text": "Nu cerem comisioane, nu schimbăm cum lucrezi cu clienții tăi. Vrem doar să-ți aducem mai multă cerere relevantă, mai puțin haos administrativ, și o platformă care te reprezintă corect."
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "children": [
+          {
+            "type": "text",
+            "text": "Această pagină va fi actualizată pe măsură ce conturăm setul de funcții împreună cu primii transportatori înscriși.",
+            "italic": true
+          }
+        ]
+      }
+    ]
+  }
+]
