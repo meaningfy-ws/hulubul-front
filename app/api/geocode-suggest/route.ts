@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import type { GeocodeSuggestion } from "@/lib/routes-types";
+import { CONTACT_EMAIL, SITE_NAME } from "@/lib/seo";
 
 function geoConfig() {
   return {
@@ -34,7 +35,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const { serviceUrl, token, bbox } = geoConfig();
   const url = `${serviceUrl}/api/?q=${encodeURIComponent(q)}&limit=${limit}&lang=en&bbox=${bbox}`;
   const headers: Record<string, string> = {
-    "User-Agent": "hulubul.com/1.0 (contact@hulubul.com)",
+    "User-Agent": `${SITE_NAME}/1.0 (${CONTACT_EMAIL})`,
   };
   if (token) headers["Authorization"] = `Bearer ${token}`;
 

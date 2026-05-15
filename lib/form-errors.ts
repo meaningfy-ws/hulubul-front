@@ -1,4 +1,5 @@
 import { isStrapiUpstreamError, isStrapiAuthError } from "./strapi-client";
+import { CONTACT_EMAIL } from "./seo";
 
 /**
  * Translates an arbitrary error from a form submission into a Romanian,
@@ -26,7 +27,7 @@ export function humanizeFormError(
   const network =
     "Conexiunea la server nu funcționează. Verifică internetul și încearcă din nou.";
   const upstream =
-    "Serverul nu poate prelucra cererea acum. Încearcă din nou peste câteva minute. Dacă persistă, scrie-ne la contact@hulubul.com.";
+    `Serverul nu poate prelucra cererea acum. Încearcă din nou peste câteva minute. Dacă persistă, scrie-ne la ${CONTACT_EMAIL}.`;
 
   if (isStrapiUpstreamError(error) || isStrapiAuthError(error)) return upstream;
   if (error instanceof TypeError) return network;
