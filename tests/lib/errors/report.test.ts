@@ -64,6 +64,21 @@ describe("reportClientError", () => {
     expect(dump).not.toContain("ion@example.com");
   });
 
+  it("puts validation issue messages in the group header", () => {
+    const group = vi.spyOn(console, "group").mockImplementation(() => {});
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.spyOn(console, "groupEnd").mockImplementation(() => {});
+    reportClientError("form/waitlist", {
+      code: ErrorCode.ClientValidation,
+      message: "Verifică câmpurile formularului și încearcă din nou.",
+      requestId: "r1",
+      details: {
+        issues: [{ field: "cities", message: "Adaugă cel puțin un oraș." }],
+      },
+    });
+    expect(group.mock.calls[0]![0]).toContain("Adaugă cel puțin un oraș.");
+  });
+
   it("does not throw when console.group is unavailable", () => {
     const original = console.group;
     // @ts-expect-error — simulating a console without group()

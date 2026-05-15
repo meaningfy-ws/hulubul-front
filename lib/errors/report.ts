@@ -56,9 +56,22 @@ export function reportClientError(
     timestamp: new Date().toISOString(),
     details: err.details,
   };
+  // Surface validation specifics in the header so the reason is visible
+  // without expanding the logged object.
+  const issues = (
+    err.details as { issues?: { message?: string }[] } | undefined
+  )?.issues;
+  const detailHint =
+    Array.isArray(issues) && issues.length > 0
+      ? ` — ${issues
+          .map((i) => i?.message)
+          .filter(Boolean)
+          .join("; ")}`
+      : "";
   try {
     const hasGroup = typeof console.group === "function";
-    if (hasGroup) console.group(`[${scope}] ${err.code} — ${err.message}`);
+    if (hasGroup)
+      console.group(`[${scope}] ${err.code} — ${err.message}${detailHint}`);
     console.error(`[${scope}] submit failed`, summary);
     if (hasGroup && typeof console.groupEnd === "function") {
       console.groupEnd();

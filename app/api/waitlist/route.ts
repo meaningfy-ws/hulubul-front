@@ -114,14 +114,23 @@ export async function POST(request: Request) {
   try {
     json = await request.json();
   } catch {
-    return errorResponse(ErrorCode.ClientValidation, requestId);
+    return errorResponse(ErrorCode.ClientValidation, requestId, {
+      details: {
+        issues: [{ field: "(payload)", message: "Cerere invalidă." }],
+      },
+    });
   }
 
   const parsed = waitlistSchema.safeParse(json);
   if (!parsed.success) {
-    const firstIssue = parsed.error.issues[0];
+    // Every issue with its field path, so the client can tell the user
+    // exactly what's missing instead of a generic "check the form".
+    const issues = parsed.error.issues.map((iss) => ({
+      field: iss.path.join(".") || "(payload)",
+      message: iss.message,
+    }));
     return errorResponse(ErrorCode.ClientValidation, requestId, {
-      details: firstIssue?.message ?? "Validare nereușită",
+      details: { issues },
     });
   }
 
