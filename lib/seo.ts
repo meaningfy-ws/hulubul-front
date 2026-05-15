@@ -23,6 +23,29 @@ export const DEFAULT_SITE_DESCRIPTION =
 
 export const DEFAULT_LOCALE = "ro_RO";
 
+// "hulubul.com" or the bare word "hulubul", anywhere, case-insensitive.
+const BRAND_PATTERN = /\bhulubul(\.com)?\b/i;
+
+/**
+ * Normalises a page/CMS title for the Next.js Metadata API so the root
+ * `title.template` (`%s — hulubul.com`) never double-brands.
+ *
+ * - Already contains the brand (e.g. CMS "hulubul.com — …", or a static
+ *   "… — Hulubul") → return `{ absolute }` so Next skips the template.
+ * - No brand → return the plain string so the template appends the brand.
+ * - Empty/missing → the bare brand (never a blank or doubled title).
+ *
+ * Robust regardless of what editors type in Strapi `seo.metaTitle`.
+ */
+export function pageTitle(
+  raw: string | null | undefined,
+): string | { absolute: string } {
+  const t = (raw ?? "").trim();
+  if (t === "") return { absolute: SITE_NAME };
+  if (BRAND_PATTERN.test(t)) return { absolute: t };
+  return t;
+}
+
 /**
  * Returns the base URL the app is served from. Reads
  * `NEXT_PUBLIC_SITE_URL` and falls back to the production URL — so

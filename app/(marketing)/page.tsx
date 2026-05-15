@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { getLandingPage, LandingPageNotPublishedError } from "@/lib/strapi";
 import { logger } from "@/lib/logger";
-import { makeCanonical } from "@/lib/seo";
+import { makeCanonical, pageTitle } from "@/lib/seo";
 import {
   buildFaqPage,
   buildGraph,
@@ -38,7 +38,10 @@ export async function generateMetadata(): Promise<Metadata> {
 
   const { seo } = page;
   return {
-    title: seo.metaTitle,
+    // pageTitle de-dupes the brand so the root title.template doesn't
+    // render "hulubul.com — … — hulubul.com" when the CMS metaTitle
+    // already leads with the brand.
+    title: pageTitle(seo.metaTitle),
     description: seo.metaDescription,
     alternates: { canonical: makeCanonical("/") },
     openGraph: {
