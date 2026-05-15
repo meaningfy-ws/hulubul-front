@@ -7,8 +7,10 @@ import {
   StrapiNotFoundError,
   throwStrapiError,
 } from "./strapi-client";
+import type { BlocksContent } from "@strapi/blocks-react-renderer";
 import type { LandingPage, EditorialPage } from "./types";
 import type { WaitlistPayload } from "./waitlist-schema";
+import { formatRoDate } from "./dates";
 
 export class LandingPageNotPublishedError extends Error {
   constructor() {
@@ -43,17 +45,54 @@ export async function getEditorialPage(
   // page-despre-proiect). See design/spec-editorial-pages.md.
   // Returns null when the content type or entry is missing so callers can
   // render the build-time fallback while the backend ships the schema.
-  const path = `/api/page-${slug}?status=published`;
+  // Components are NOT populated by default in Strapi 5 — without this the
+  // `seo` component is absent from the response and metadata breaks.
+  const query = qs.stringify(
+    { status: "published", populate: { seo: { populate: ["shareImage"] } } },
+    { encodeValuesOnly: true },
+  );
+  const path = `/api/page-${slug}?${query}`;
   try {
     const res = await strapiFetch(path, { mode: "static" });
     if (res.status === 404) return null;
     if (!res.ok) throwStrapiError(path, res);
-    const json = (await res.json()) as { data: EditorialPage | null };
-    return json.data ?? null;
+    const json = (await res.json()) as { data: StrapiEditorialEntry | null };
+    if (!json.data) return null;
+    return mapEditorialEntry(slug, json.data);
   } catch (e) {
     if (isStrapiNotFound(e)) return null;
     throw e;
   }
+}
+
+interface StrapiEditorialEntry {
+  title: string;
+  lastUpdated?: string;
+  body: BlocksContent;
+  seo?: {
+    metaTitle?: string;
+    metaDescription?: string;
+    shareImage?: unknown;
+  } | null;
+}
+
+/** Strapi 5 blocks + seo entry → the unified, render-ready EditorialPage. */
+function mapEditorialEntry(
+  slug: EditorialPage["slug"],
+  entry: StrapiEditorialEntry,
+): EditorialPage {
+  return {
+    slug,
+    title: entry.title,
+    lastUpdated: formatRoDate(entry.lastUpdated),
+    body: { format: "blocks", blocks: entry.body },
+    seo: {
+      metaTitle: entry.seo?.metaTitle,
+      metaDescription: entry.seo?.metaDescription,
+      shareImage:
+        (entry.seo?.shareImage as EditorialPage["seo"]["shareImage"]) ?? null,
+    },
+  };
 }
 
 const WAITLIST_PATH = "/api/waitlist-submissions";

@@ -1,5 +1,6 @@
 // `Role` re-exported here so `import type { Role } from "@/lib/types"` keeps
 // working. The canonical definition is the waitlist subset in `lib/roles.ts`.
+import type { BlocksContent } from "@strapi/blocks-react-renderer";
 import type { WaitlistRole } from "./roles";
 export type Role = WaitlistRole;
 
@@ -9,12 +10,30 @@ export type EditorialPageSlug =
   | "despre-proiect"
   | "pentru-transportatori";
 
+/**
+ * Dual-source body. The CMS sends Strapi 5 rich-text `blocks`; the
+ * build-time fallback (`lib/editorial-fallback.ts`) stays Markdown so
+ * legal/about text survives a Strapi outage without re-keying. The
+ * renderer switches on `format`.
+ */
+export type EditorialBody =
+  | { format: "blocks"; blocks: BlocksContent }
+  | { format: "markdown"; markdown: string };
+
+/** Editorial SEO — the CMS `shared.seo` component (all fields optional). */
+export interface EditorialSeo {
+  metaTitle?: string;
+  metaDescription?: string;
+  shareImage?: StrapiMedia | null;
+}
+
 export interface EditorialPage {
   slug: EditorialPageSlug;
   title: string;
+  /** Display-ready string: CMS ISO is formatted at the fetch boundary. */
   lastUpdated: string;
-  body: string;
-  metaDescription?: string;
+  body: EditorialBody;
+  seo: EditorialSeo;
 }
 
 /** @deprecated Use EditorialPage. Kept so older imports still type-check. */
