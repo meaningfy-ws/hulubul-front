@@ -49,17 +49,28 @@ export function Analytics() {
   }, []);
 
   useEffect(() => {
-    // Skip the very first render — `default` already covers it.
-    // Only push `update` when consent actually transitions.
+    // Assert the current consent state on EVERY distinct value —
+    // including the very first client render.
+    //
+    // Why not skip the first render: `ConsentProvider` resolves the
+    // stored choice via `useSyncExternalStore`, so a *returning*
+    // consented visitor already has `analytics: "granted"` on their
+    // first render — but `gtag('config')` has, by then, already sent
+    // the landing hit under the denied `default`. If we skip the
+    // first render (the previous behaviour) their consent is never
+    // upgraded and every session stays cookieless-denied forever.
+    // Pushing `update` is idempotent in Consent Mode, so re-asserting
+    // the denied state for a brand-new visitor is harmless (it equals
+    // the `default` already in the dataLayer). Pushing promptly also
+    // lets gtag flush the `wait_for_update`-buffered page_view as
+    // *granted* for returning/fast-consent visitors.
     const fingerprint = `${state.analytics}|${state.marketing}`;
     if (lastPushedRef.current === fingerprint) return;
-    if (lastPushedRef.current !== null) {
-      pushConsentUpdate({
-        analytics: state.analytics,
-        marketing: state.marketing,
-      });
-    }
     lastPushedRef.current = fingerprint;
+    pushConsentUpdate({
+      analytics: state.analytics,
+      marketing: state.marketing,
+    });
   }, [state.analytics, state.marketing]);
 
   if (!gaId) return null;

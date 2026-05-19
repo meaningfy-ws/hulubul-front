@@ -99,13 +99,36 @@ describe("<Analytics> — Consent Mode v2 Advanced", () => {
     expect(consentDefaults.length).toBeGreaterThanOrEqual(1);
   });
 
-  it("does NOT push update on first render (default already covers it)", () => {
+  it("pushes the stored consent on first render so returning consented visitors are not stuck denied", () => {
+    // Regression: ConsentProvider resolves a returning visitor's
+    // stored "granted" choice on the FIRST render. Skipping the first
+    // render (the old behaviour) meant their consent was never
+    // upgraded and every session stayed cookieless-denied forever.
     mockConsent.state = { analytics: "granted", marketing: "denied" };
     render(<Analytics />);
     const updates = (window.dataLayer ?? []).filter((entry) =>
       isGtagCall(entry, "consent", "update"),
     );
-    expect(updates).toHaveLength(0);
+    expect(updates).toHaveLength(1);
+    const args = updates[0] as IArguments;
+    expect(args[2]).toMatchObject({
+      analytics_storage: "granted",
+      ad_storage: "denied",
+    });
+  });
+
+  it("re-asserting the all-denied default on first render is harmless (equals the default)", () => {
+    // A brand-new visitor (no stored choice) starts all-denied. We
+    // still push an `update` — idempotent, mirrors the default.
+    mockConsent.state = { analytics: "denied", marketing: "denied" };
+    render(<Analytics />);
+    const updates = (window.dataLayer ?? []).filter((entry) =>
+      isGtagCall(entry, "consent", "update"),
+    );
+    expect(updates).toHaveLength(1);
+    expect((updates[0] as IArguments)[2]).toMatchObject({
+      analytics_storage: "denied",
+    });
   });
 });
 
