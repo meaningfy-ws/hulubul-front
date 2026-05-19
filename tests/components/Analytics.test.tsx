@@ -16,6 +16,23 @@ vi.mock("@next/third-parties/google", () => ({
   ),
 }));
 
+/**
+ * gtag.js only treats a dataLayer entry as a command when it is an
+ * `arguments` object — not a plain array. Match the real shape the
+ * gtag bridge now pushes.
+ */
+function isGtagCall(
+  entry: unknown,
+  command: string,
+  action: string,
+): boolean {
+  if (Object.prototype.toString.call(entry) !== "[object Arguments]") {
+    return false;
+  }
+  const args = entry as IArguments;
+  return args[0] === command && args[1] === action;
+}
+
 const mockConsent = {
   state: {
     analytics: "denied" as "granted" | "denied",
@@ -76,11 +93,8 @@ describe("<Analytics> — Consent Mode v2 Advanced", () => {
   it("pushes Consent Mode v2 default to dataLayer on mount", () => {
     render(<Analytics />);
     expect(Array.isArray(window.dataLayer)).toBe(true);
-    const consentDefaults = (window.dataLayer ?? []).filter(
-      (entry) =>
-        Array.isArray(entry) &&
-        entry[0] === "consent" &&
-        entry[1] === "default",
+    const consentDefaults = (window.dataLayer ?? []).filter((entry) =>
+      isGtagCall(entry, "consent", "default"),
     );
     expect(consentDefaults.length).toBeGreaterThanOrEqual(1);
   });
@@ -88,11 +102,8 @@ describe("<Analytics> — Consent Mode v2 Advanced", () => {
   it("does NOT push update on first render (default already covers it)", () => {
     mockConsent.state = { analytics: "granted", marketing: "denied" };
     render(<Analytics />);
-    const updates = (window.dataLayer ?? []).filter(
-      (entry) =>
-        Array.isArray(entry) &&
-        entry[0] === "consent" &&
-        entry[1] === "update",
+    const updates = (window.dataLayer ?? []).filter((entry) =>
+      isGtagCall(entry, "consent", "update"),
     );
     expect(updates).toHaveLength(0);
   });

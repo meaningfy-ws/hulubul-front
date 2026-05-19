@@ -5,6 +5,15 @@ import {
   trackWaitlistSubmit,
 } from "@/lib/tracking/events";
 
+/** gtag.js only honors `arguments` objects; plain arrays are ignored. */
+function isArgumentsObject(value: unknown): boolean {
+  return Object.prototype.toString.call(value) === "[object Arguments]";
+}
+
+function lastEntry(): IArguments {
+  return window.dataLayer![window.dataLayer!.length - 1] as IArguments;
+}
+
 beforeEach(() => {
   delete (window as { dataLayer?: unknown[] }).dataLayer;
 });
@@ -18,7 +27,9 @@ describe("trackEvent", () => {
   it("pushes an event to dataLayer when GA4 is loaded", () => {
     window.dataLayer = [];
     trackEvent("test_event", { foo: "bar" });
-    const last = window.dataLayer[window.dataLayer.length - 1] as unknown[];
+    const last = lastEntry();
+    expect(isArgumentsObject(last)).toBe(true);
+    expect(Array.isArray(last)).toBe(false);
     expect(last[0]).toBe("event");
     expect(last[1]).toBe("test_event");
     expect(last[2]).toMatchObject({ foo: "bar" });
@@ -39,7 +50,8 @@ describe("trackWaitlistSubmit", () => {
   it("pushes a waitlist_submit event with role + source + event_id", () => {
     window.dataLayer = [];
     trackWaitlistSubmit("expeditor", "landing", "uuid-1");
-    const last = window.dataLayer[window.dataLayer.length - 1] as unknown[];
+    const last = lastEntry();
+    expect(isArgumentsObject(last)).toBe(true);
     expect(last[1]).toBe("waitlist_submit");
     expect(last[2]).toMatchObject({
       role: "expeditor",
@@ -53,7 +65,8 @@ describe("trackSurveySubmit", () => {
   it("pushes a survey_submit event with role + source + event_id", () => {
     window.dataLayer = [];
     trackSurveySubmit("transportator", "standalone", "uuid-2");
-    const last = window.dataLayer[window.dataLayer.length - 1] as unknown[];
+    const last = lastEntry();
+    expect(isArgumentsObject(last)).toBe(true);
     expect(last[1]).toBe("survey_submit");
     expect(last[2]).toMatchObject({
       role: "transportator",
