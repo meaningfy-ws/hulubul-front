@@ -36,6 +36,28 @@ export function ensureGtagBootstrap(): void {
 }
 
 /**
+ * The canonical `gtag()` call.
+ *
+ * ⚠️ This MUST push an `arguments` object — NOT a plain array.
+ * gtag.js inspects each `dataLayer` entry and only treats it as a
+ * gtag command (`consent`, `config`, `event`, …) when it is an
+ * `arguments` object. A plain `["consent", "update", {…}]` array is
+ * interpreted as GTM-style data and **silently ignored**, which
+ * previously broke Consent Mode `update` (consenting users produced
+ * no hits) and dropped every custom `event`. This mirrors Google's
+ * documented snippet exactly: `function gtag(){dataLayer.push(arguments)}`.
+ */
+export function gtag(...args: unknown[]): void {
+  ensureGtagBootstrap();
+  if (typeof window === "undefined") return;
+  const push = function () {
+    // eslint-disable-next-line prefer-rest-params
+    window.dataLayer!.push(arguments);
+  } as (...a: unknown[]) => void;
+  push(...args);
+}
+
+/**
  * Pushes the Consent Mode v2 default. Must run BEFORE GA4 loads —
  * call this in an effect that mounts above the `<GoogleAnalytics>`
  * component, or in an inline bootstrap script.
@@ -46,19 +68,13 @@ export function ensureGtagBootstrap(): void {
  * is attributable.
  */
 export function pushConsentDefault(): void {
-  ensureGtagBootstrap();
-  if (typeof window === "undefined") return;
-  window.dataLayer!.push([
-    "consent",
-    "default",
-    {
-      ad_storage: "denied",
-      ad_user_data: "denied",
-      ad_personalization: "denied",
-      analytics_storage: "denied",
-      wait_for_update: 500,
-    },
-  ]);
+  gtag("consent", "default", {
+    ad_storage: "denied",
+    ad_user_data: "denied",
+    ad_personalization: "denied",
+    analytics_storage: "denied",
+    wait_for_update: 500,
+  });
 }
 
 /**
@@ -66,18 +82,12 @@ export function pushConsentDefault(): void {
  * changes (banner save, withdrawal).
  */
 export function pushConsentUpdate(choice: ConsentChoice): void {
-  ensureGtagBootstrap();
-  if (typeof window === "undefined") return;
   const ad = choice.marketing === "granted" ? "granted" : "denied";
   const analytics = choice.analytics === "granted" ? "granted" : "denied";
-  window.dataLayer!.push([
-    "consent",
-    "update",
-    {
-      ad_storage: ad,
-      ad_user_data: ad,
-      ad_personalization: ad,
-      analytics_storage: analytics,
-    },
-  ]);
+  gtag("consent", "update", {
+    ad_storage: ad,
+    ad_user_data: ad,
+    ad_personalization: ad,
+    analytics_storage: analytics,
+  });
 }

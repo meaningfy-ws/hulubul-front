@@ -1,4 +1,4 @@
-import { ensureGtagBootstrap } from "@/lib/consent/gtag-bridge";
+import { gtag } from "@/lib/consent/gtag-bridge";
 import type { SurveyRole, WaitlistRole } from "@/lib/roles";
 
 declare global {
@@ -8,10 +8,13 @@ declare global {
 }
 
 /**
- * Push a custom event into the dataLayer using the gtag command shape
- * (`["event", name, params]`). When GA4 is loaded the snippet
+ * Push a custom event into the dataLayer via the canonical `gtag()`
+ * (`gtag("event", name, params)`). When GA4 is loaded the snippet
  * dispatches it; when GA4 isn't loaded (consent denied or env unset)
- * the entry just buffers harmlessly.
+ * the entry just buffers harmlessly until gtag.js replays it.
+ *
+ * Uses the shared `gtag()` helper so the entry is an `arguments`
+ * object — a plain array would be silently ignored by gtag.js.
  *
  * Migration to GTM (tracking spec §3.1.1) doesn't change this code —
  * GTM picks events up from the same dataLayer.
@@ -20,9 +23,7 @@ export function trackEvent(
   name: string,
   params: Record<string, unknown> = {},
 ): void {
-  ensureGtagBootstrap();
-  if (typeof window === "undefined") return;
-  window.dataLayer!.push(["event", name, params]);
+  gtag("event", name, params);
 }
 
 /**
