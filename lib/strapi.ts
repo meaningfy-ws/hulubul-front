@@ -1,5 +1,7 @@
 import qs from "qs";
 import { buildLandingPopulate } from "./populate";
+import { reportEmptyLandingSections } from "./landing-invariants";
+import { logger } from "./logger";
 import {
   isStrapiNotFound,
   parseStrapiError,
@@ -58,6 +60,7 @@ export async function getLandingPage(
     if (locale !== DEFAULT_LOCALE_CODE) return getLandingPage(DEFAULT_LOCALE_CODE);
     throw new LandingPageNotPublishedError();
   }
+  reportEmptyLandingSections(json.data);
   return json.data;
 }
 
@@ -94,6 +97,12 @@ export async function getEditorialPage(
     if (!res.ok) throwStrapiError(path, res);
     const json = (await res.json()) as { data: StrapiEditorialEntry | null };
     if (!json.data) return orRoFallback(null);
+    if (!Array.isArray(json.data.body) || json.data.body.length === 0) {
+      logger.warn(
+        `cms/page-${slug}`,
+        `body blocks are empty — CMS entry exists but has no content`,
+      );
+    }
     return mapEditorialEntry(slug, json.data);
   } catch (e) {
     if (isStrapiNotFound(e)) return orRoFallback(null);
