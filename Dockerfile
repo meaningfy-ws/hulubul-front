@@ -13,6 +13,15 @@ WORKDIR /app
 ARG NEXT_PUBLIC_STRAPI_URL
 ENV NEXT_PUBLIC_STRAPI_URL=${NEXT_PUBLIC_STRAPI_URL}
 
+# Production has hardcoded fallbacks for these (lib/tracking/config.ts,
+# lib/seo.ts); the ARGs exist so staging/preview builds can override
+# them. Without the ARG, compose's --build-arg would be silently
+# dropped and the override would have no effect.
+ARG NEXT_PUBLIC_GA_ID
+ENV NEXT_PUBLIC_GA_ID=${NEXT_PUBLIC_GA_ID}
+ARG NEXT_PUBLIC_SITE_URL
+ENV NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL}
+
 # Deployed-commit signature for the footer. next.config.ts reads BUILD_SHA
 # and inlines it as NEXT_PUBLIC_BUILD_SHA at build time. The ops deploy
 # already receives the commit as `sha`; it just needs to forward it as
