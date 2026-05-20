@@ -20,6 +20,16 @@ ENV NEXT_PUBLIC_STRAPI_URL=${NEXT_PUBLIC_STRAPI_URL}
 ARG BUILD_SHA
 ENV BUILD_SHA=${BUILD_SHA}
 
+# Search-engine ownership verification tokens are emitted by
+# app/layout.tsx's `metadata.verification`. Next.js evaluates that at
+# `next build` time (the home page is statically pre-rendered), so the
+# values must reach the build stage as ARGs — runtime container env
+# arrives too late and the meta tags are baked out as absent.
+ARG GOOGLE_SITE_VERIFICATION
+ENV GOOGLE_SITE_VERIFICATION=${GOOGLE_SITE_VERIFICATION}
+ARG BING_SITE_VERIFICATION
+ENV BING_SITE_VERIFICATION=${BING_SITE_VERIFICATION}
+
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
