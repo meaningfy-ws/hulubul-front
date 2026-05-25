@@ -10,10 +10,20 @@
  */
 
 import {
+  AUTH_PROVIDERS,
   PROVIDER_FACEBOOK,
   PROVIDER_GOOGLE,
+  PROVIDER_TIKTOK,
   type AuthProvider,
 } from "./auth-providers";
+
+// Single owner of the env-key → provider mapping. Used by both readAuthEnv
+// (server-side IdP construction) and getEnabledAuthProviders (UI decision).
+const PROVIDER_ENV_KEY: Record<AuthProvider, string> = {
+  [PROVIDER_GOOGLE]: "ZITADEL_IDP_GOOGLE",
+  [PROVIDER_FACEBOOK]: "ZITADEL_IDP_FACEBOOK",
+  [PROVIDER_TIKTOK]: "ZITADEL_IDP_TIKTOK",
+};
 
 export class AuthDisabledError extends Error {
   constructor() {
@@ -47,6 +57,20 @@ export function isAuthEnabled(): boolean {
   return process.env.NEXT_PUBLIC_AUTH_ENABLED === "true";
 }
 
+/**
+ * Returns the providers whose IdP env is currently configured. Reads
+ * process.env at call time — meant to be invoked from server components
+ * that already render per-request (e.g. <Signup>) so the result reflects
+ * the running container's env, not the build-time env.
+ */
+export function getEnabledAuthProviders(): readonly AuthProvider[] {
+  if (!isAuthEnabled()) return [];
+  return AUTH_PROVIDERS.filter((p) => {
+    const v = process.env[PROVIDER_ENV_KEY[p]];
+    return typeof v === "string" && v.length > 0;
+  });
+}
+
 export function readAuthEnv(): AuthEnv {
   if (!isAuthEnabled()) throw new AuthDisabledError();
 
@@ -55,8 +79,8 @@ export function readAuthEnv(): AuthEnv {
   const clientSecret = process.env.ZITADEL_CLIENT_SECRET;
   const redirectUri = process.env.AUTH_REDIRECT_URI;
   const cookieSecret = process.env.AUTH_COOKIE_SECRET;
-  const idpGoogle = process.env.ZITADEL_IDP_GOOGLE;
-  const idpFacebook = process.env.ZITADEL_IDP_FACEBOOK;
+  const idpGoogle = process.env[PROVIDER_ENV_KEY[PROVIDER_GOOGLE]];
+  const idpFacebook = process.env[PROVIDER_ENV_KEY[PROVIDER_FACEBOOK]];
 
   const missing: string[] = [];
   if (!issuer) missing.push("ZITADEL_ISSUER");

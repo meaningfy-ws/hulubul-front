@@ -3,73 +3,61 @@
 //   "Kill-switch off — buttons hidden, routes 404" (button render half)
 //   "Facebook button is hidden in Stage 1"
 //   "Adding a third provider is config + UI only" (forward-looking)
+//
+// AuthButtons is a pure presenter: it receives `providers` from its caller
+// (the orchestrator <Signup>), which obtained them from getEnabledAuthProviders
+// in lib/auth-env. No env reads happen here; no env mocking needed.
 
-import { describe, expect, it, afterEach, beforeEach } from "vitest";
+import { describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { AuthButtons } from "@/components/landing/AuthButtons";
-
-const KEYS = [
-  "NEXT_PUBLIC_AUTH_ENABLED",
-  "ZITADEL_IDP_GOOGLE",
-  "ZITADEL_IDP_FACEBOOK",
-];
-
-let snapshot: Record<string, string | undefined> = {};
-
-beforeEach(() => {
-  snapshot = {};
-  for (const k of KEYS) {
-    snapshot[k] = process.env[k];
-    delete process.env[k];
-  }
-});
-
-afterEach(() => {
-  for (const k of KEYS) {
-    if (snapshot[k] === undefined) delete process.env[k];
-    else process.env[k] = snapshot[k];
-  }
-});
+import {
+  PROVIDER_FACEBOOK,
+  PROVIDER_GOOGLE,
+} from "@/lib/auth-providers";
 
 describe("Feature: <AuthButtons />", () => {
-  describe("Given the kill-switch is off", () => {
+  describe("Given the providers list is empty", () => {
     it("Then it renders nothing", () => {
-      process.env.NEXT_PUBLIC_AUTH_ENABLED = "false";
-      const { container } = render(<AuthButtons />);
+      const { container } = render(<AuthButtons providers={[]} />);
       expect(container.firstChild).toBeNull();
     });
   });
 
-  describe("Given the kill-switch is on and Google IdP is configured", () => {
+  describe("Given providers=[google]", () => {
     it("Then the Google button renders and links to /api/auth/start?provider=google", () => {
-      process.env.NEXT_PUBLIC_AUTH_ENABLED = "true";
-      process.env.ZITADEL_IDP_GOOGLE = "222";
-      render(<AuthButtons />);
+      render(<AuthButtons providers={[PROVIDER_GOOGLE]} />);
       const link = screen.getByRole("link", { name: /continuă cu google/i });
       expect(link).toHaveAttribute(
         "href",
         "/api/auth/start?provider=google",
       );
     });
-  });
 
-  describe("Given Facebook IdP env is NOT set", () => {
-    it("Then the Facebook button is not rendered (Stage-1 default)", () => {
-      process.env.NEXT_PUBLIC_AUTH_ENABLED = "true";
-      process.env.ZITADEL_IDP_GOOGLE = "222";
-      render(<AuthButtons />);
+    it("And the Facebook button is not rendered", () => {
+      render(<AuthButtons providers={[PROVIDER_GOOGLE]} />);
       expect(
         screen.queryByRole("link", { name: /continuă cu facebook/i }),
       ).toBeNull();
     });
+
+    it("And the Google button carries the Google G-logo SVG glyph", () => {
+      const { container } = render(
+        <AuthButtons providers={[PROVIDER_GOOGLE]} />,
+      );
+      const svg = container.querySelector(
+        ".auth-button--google .auth-button__glyph",
+      );
+      expect(svg).not.toBeNull();
+      expect(svg!.tagName.toLowerCase()).toBe("svg");
+    });
   });
 
-  describe("Given Facebook IdP env IS set (forward-compat sanity)", () => {
-    it("Then the Facebook button renders alongside Google", () => {
-      process.env.NEXT_PUBLIC_AUTH_ENABLED = "true";
-      process.env.ZITADEL_IDP_GOOGLE = "222";
-      process.env.ZITADEL_IDP_FACEBOOK = "333";
-      render(<AuthButtons />);
+  describe("Given providers=[google, facebook]", () => {
+    it("Then both buttons render in the order given", () => {
+      render(
+        <AuthButtons providers={[PROVIDER_GOOGLE, PROVIDER_FACEBOOK]} />,
+      );
       expect(
         screen.getByRole("link", { name: /continuă cu google/i }),
       ).toBeInTheDocument();
@@ -79,33 +67,12 @@ describe("Feature: <AuthButtons />", () => {
     });
   });
 
-  describe("Given no IdP env is configured but the switch is on", () => {
-    it("Then no buttons render (no IdP → no button)", () => {
-      process.env.NEXT_PUBLIC_AUTH_ENABLED = "true";
-      const { container } = render(<AuthButtons />);
-      expect(container.querySelectorAll("a").length).toBe(0);
-    });
-  });
-
-  describe("Given the parent passes hidden={true} (a prefill cookie is active)", () => {
+  describe("Given hidden={true} (a prefill cookie is active)", () => {
     it("Then AuthButtons renders nothing — re-clicking would be confusing UX", () => {
-      process.env.NEXT_PUBLIC_AUTH_ENABLED = "true";
-      process.env.ZITADEL_IDP_GOOGLE = "222";
-      const { container } = render(<AuthButtons hidden />);
-      expect(container.firstChild).toBeNull();
-    });
-  });
-
-  describe("Given the Google button renders", () => {
-    it("Then it carries the Google G-logo SVG glyph", () => {
-      process.env.NEXT_PUBLIC_AUTH_ENABLED = "true";
-      process.env.ZITADEL_IDP_GOOGLE = "222";
-      const { container } = render(<AuthButtons />);
-      const svg = container.querySelector(
-        ".auth-button--google .auth-button__glyph",
+      const { container } = render(
+        <AuthButtons hidden providers={[PROVIDER_GOOGLE]} />,
       );
-      expect(svg).not.toBeNull();
-      expect(svg!.tagName.toLowerCase()).toBe("svg");
+      expect(container.firstChild).toBeNull();
     });
   });
 });

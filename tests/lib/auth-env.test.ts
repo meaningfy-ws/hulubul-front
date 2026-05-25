@@ -3,6 +3,7 @@ import { describe, expect, it, beforeEach, afterEach } from "vitest";
 import {
   readAuthEnv,
   isAuthEnabled,
+  getEnabledAuthProviders,
   AuthDisabledError,
   MissingAuthEnvError,
 } from "@/lib/auth-env";
@@ -108,6 +109,54 @@ describe("Feature: lib/auth-env reader", () => {
       setHappyEnv();
       process.env.AUTH_COOKIE_SECRET = "too-short";
       expect(() => readAuthEnv()).toThrow(MissingAuthEnvError);
+    });
+  });
+
+  // Adapter that the Signup orchestrator calls each request to decide which
+  // provider buttons the presenter (AuthButtons) should render. Lives next to
+  // readAuthEnv so the env→provider mapping has a single owner.
+  describe("Feature: getEnabledAuthProviders", () => {
+    describe("Given the kill-switch is off", () => {
+      it("Then it returns an empty list", () => {
+        process.env.ZITADEL_IDP_GOOGLE = "222";
+        expect(getEnabledAuthProviders()).toEqual([]);
+      });
+    });
+
+    describe("Given the kill-switch is on but no IdP env is configured", () => {
+      it("Then it returns an empty list", () => {
+        process.env.NEXT_PUBLIC_AUTH_ENABLED = "true";
+        expect(getEnabledAuthProviders()).toEqual([]);
+      });
+    });
+
+    describe("Given the kill-switch is on and only Google IdP is configured", () => {
+      it("Then it returns [PROVIDER_GOOGLE]", () => {
+        process.env.NEXT_PUBLIC_AUTH_ENABLED = "true";
+        process.env.ZITADEL_IDP_GOOGLE = "222";
+        expect(getEnabledAuthProviders()).toEqual([PROVIDER_GOOGLE]);
+      });
+    });
+
+    describe("Given both Google and Facebook IdPs are configured", () => {
+      it("Then it returns both providers in AUTH_PROVIDERS order", () => {
+        process.env.NEXT_PUBLIC_AUTH_ENABLED = "true";
+        process.env.ZITADEL_IDP_GOOGLE = "222";
+        process.env.ZITADEL_IDP_FACEBOOK = "333";
+        expect(getEnabledAuthProviders()).toEqual([
+          PROVIDER_GOOGLE,
+          PROVIDER_FACEBOOK,
+        ]);
+      });
+    });
+
+    describe("Given an IdP env is set to an empty string", () => {
+      it("Then that provider is not enabled", () => {
+        process.env.NEXT_PUBLIC_AUTH_ENABLED = "true";
+        process.env.ZITADEL_IDP_GOOGLE = "222";
+        process.env.ZITADEL_IDP_FACEBOOK = "";
+        expect(getEnabledAuthProviders()).toEqual([PROVIDER_GOOGLE]);
+      });
     });
   });
 });

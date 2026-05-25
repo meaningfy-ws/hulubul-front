@@ -5,9 +5,14 @@ import { SignupForm, type SignupFormPrefill } from "./SignupForm";
 import { AuthButtons } from "./AuthButtons";
 import { SplitTitle } from "./SplitTitle";
 import { readServerPrefill } from "@/lib/server-prefill";
+import { getEnabledAuthProviders } from "@/lib/auth-env";
 
 export async function Signup({ data }: { data: SignupSection }) {
   const prefill = await readServerPrefill();
+  // Computed here (request-scoped — readServerPrefill above already forces
+  // dynamic rendering via cookies()) so the env read happens at request time
+  // inside the running container, not at build time when the env is empty.
+  const providers = getEnabledAuthProviders();
   const initialPrefill: SignupFormPrefill | undefined = prefill
     ? {
         email: prefill.email,
@@ -31,7 +36,10 @@ export async function Signup({ data }: { data: SignupSection }) {
         </Reveal>
 
         <Reveal className="form-card">
-          <AuthButtons hidden={Boolean(initialPrefill)} />
+          <AuthButtons
+            hidden={Boolean(initialPrefill)}
+            providers={providers}
+          />
           <Suspense fallback={null}>
             <SignupForm data={data} initialPrefill={initialPrefill} />
           </Suspense>
