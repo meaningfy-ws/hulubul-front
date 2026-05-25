@@ -46,6 +46,9 @@ describe("Feature: lib/zitadel buildAuthStart (Stage 1)", () => {
       expect(p.get("nonce")).toBeTruthy();
       expect(p.get("redirect_uri")).toBe(TEST_ZITADEL_ENV.redirectUri);
       expect(p.get("idp_hint")).toBe(TEST_ZITADEL_ENV.idpGoogle);
+      // prompt=select_account so visitors with multiple Google accounts get
+      // the picker every time, not whichever account is currently "primary".
+      expect(p.get("prompt")).toBe("select_account");
     });
 
     it("Then the flow cookie value decodes back to {code_verifier, state, nonce, returnTo, createdAt}", async () => {

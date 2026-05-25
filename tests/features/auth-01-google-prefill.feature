@@ -71,6 +71,25 @@ Feature: Google prefill on the waitlist signup form
     Then the Nav shows "Bună, Alice" on the very first paint
     And there is no flicker through the "Mă înscriu" CTA state
 
+  Scenario: Forget-me clears the prefill cookie and brings the auth UI back
+    Given a valid Stage-1 prefill cookie is set in the user's browser
+    And the SignupForm is rendered with that prefill
+    When the user clicks "Nu ești tu? Șterge."
+    Then the client POSTs to "/api/auth/clear-prefill"
+    And the server responds 204 with Set-Cookie clearing PREFILL_COOKIE
+    And the page is reloaded
+    And on the new render the Nav shows the CTA "Mă înscriu" (no greeting)
+    And "Continuă cu Google" is rendered again above the form
+    And the SignupForm fields are empty
+    But Zitadel's upstream session is not ended (Stage-3 territory)
+
+  Scenario: Re-clicking the provider after forget-me triggers Google's account picker
+    Given the user just used "Nu ești tu? Șterge." to clear the prefill
+    When they click "Continuă cu Google" again
+    Then the Zitadel authorize URL carries "prompt=select_account"
+    And Google shows the "Choose an account" picker even though the visitor
+        previously signed in this browser session
+
   Scenario: Returning visitor without a fresh Google flow keeps the remember-me greeting
     Given the prefill cookie is absent
     And the remember-me cookie contains name="Ion Popescu"

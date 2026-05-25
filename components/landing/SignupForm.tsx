@@ -170,13 +170,28 @@ export function SignupForm({
     })();
   }, []);
 
-  function handleClearIdentity() {
+  async function handleClearIdentity() {
     clearRememberedIdentity();
     setName("");
     setEmail("");
     setWhatsapp("");
     setRemember(false);
     setHasPrefill(false);
+    // If there's an active Stage-1 prefill cookie, clear it server-side too.
+    // The cookie is HttpOnly so the client cannot touch it directly. After
+    // the round-trip we reload so the async server components (`<Nav>`,
+    // `<Signup>`) re-render without the cookie — nav reverts to the CTA,
+    // the provider button row reappears, the form is empty.
+    if (initialPrefill) {
+      try {
+        await fetch("/api/auth/clear-prefill", { method: "POST" });
+      } catch {
+        // Network blip — fall through to reload anyway. The cookie may still
+        // be present, but `verifyPrefillCookie` will accept it for one more
+        // render at worst; the user can re-click to retry.
+      }
+      if (typeof window !== "undefined") window.location.reload();
+    }
   }
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {

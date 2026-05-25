@@ -228,6 +228,11 @@ export async function buildAuthStart(
     state,
     nonce,
     idp_hint: idpHint,
+    // Always show the account chooser at the upstream IdP. Cheap insurance
+    // against a returning visitor accidentally re-using whichever Google
+    // account is the browser's current "primary". Zitadel relays this to
+    // Google verbatim.
+    prompt: "select_account",
   });
 
   const createdAt = Math.floor(Date.now() / 1000);

@@ -55,6 +55,15 @@ These follow from §3.1 step 8 and exist purely for clarity / non-regression:
 - **Auth button hidden:** while the prefill cookie is valid (the SignupForm has `initialPrefill`), `<AuthButtons>` is rendered with `hidden={true}` — re-offering the provider button when the form is already populated would be confusing. The button reappears on the next visit once the prefill cookie expires (10 min TTL) or after a successful waitlist submit.
 - **Nav greeting upgrades immediately:** `<Nav>` is an async server component that also reads the prefill cookie (via `lib/server-prefill.ts`); the "Bună, {firstName}" greeting appears on the same render that processes the OIDC callback, *without* a client-side hydration delay. The client-side fallback (`<NavCta>` reading `remember-me`) still kicks in for returning visitors who didn't go through a Google round-trip on this visit. Precedence: prefill > remember-me.
 
+### 3.2.ter Forget-me path
+
+When the user clicks **"Nu ești tu? Șterge."** (the existing button in `SignupForm`):
+
+1. Client clears `remember-me` (localStorage) and resets form state.
+2. If a Stage-1 prefill cookie is active, client POSTs `/api/auth/clear-prefill`. The server responds 204 with `Set-Cookie: PREFILL_COOKIE=; Max-Age=0; HttpOnly; SameSite=Lax`.
+3. Client triggers `location.reload()`. The async server components (`<Nav>`, `<Signup>`) re-render without the cookie: nav reverts to the CMS CTA, `<AuthButtons>` reappears, form is empty.
+4. **Out of scope for Stage 1:** ending the upstream Zitadel/Google session. Zitadel still holds its session for that Google account; clicking "Continuă cu Google" again sees `prompt=select_account` (see §5.1) so the user is shown the picker and can choose a different account. A true sign-out lands with Stage 3 (`design/epic-signup/03-auth-middleware.md`).
+
 ### 3.3 Re-entry / "remembered" path
 
 If the user previously submitted the waitlist (with or without Google), `lib/remember-me.ts` has already filled name/email on next visit. **Precedence**:
@@ -83,8 +92,10 @@ lib/server-prefill.ts          — server-only adapter: reads + verifies PREFILL
 ### 4.2 New route handlers (`app/api/auth/`)
 
 ```
-app/api/auth/start/route.ts    — GET ?provider=google → 302 Zitadel
-app/api/auth/callback/route.ts — GET ?code&state → 302 /#signup (+ prefill cookie)
+app/api/auth/start/route.ts        — GET ?provider=google → 302 Zitadel
+app/api/auth/callback/route.ts     — GET ?code&state → 302 /#signup (+ prefill cookie)
+app/api/auth/clear-prefill/route.ts — POST → 204 + Set-Cookie clearing PREFILL_COOKIE
+                                       (forget-me; kill-switch aware)
 ```
 
 ### 4.3 New components (`components/landing/`)
@@ -165,6 +176,10 @@ Add to `.dependency-cruiser.cjs`:
 ```
 
 ## 5. Module contracts
+
+### 5.0 Authorize-request `prompt`
+
+`buildAuthStart` unconditionally sets `prompt=select_account` on the authorize URL. Zitadel relays this to the upstream IdP. Rationale: visitors with multiple Google accounts in the browser get the chooser every time, eliminating an entire class of "wrong account" identity-confusion bugs (S1-R3) at the cost of one extra click for the single-account majority — acceptable trade. Asserted in `tests/lib/zitadel.buildAuthStart.test.ts`.
 
 ### 5.1 `lib/zitadel.ts`
 
