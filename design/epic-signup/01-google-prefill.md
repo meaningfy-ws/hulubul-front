@@ -3,7 +3,7 @@
 > **Status:** Spec. Implementation gated on review.
 > **Date:** 2026-05-25.
 > **Prerequisites:** [`00-architecture.md`](./00-architecture.md), [`zitadel-google-runbook.md`](./zitadel-google-runbook.md) (executed; `.env.local` populated; manual round-trip verified).
-> **Gherkin scenarios:** [`features/01-google-prefill.feature`](./features/01-google-prefill.feature).
+> **Gherkin scenarios:** [`../../tests/features/auth-01-google-prefill.feature`](../../tests/features/auth-01-google-prefill.feature).
 > **Plan:** [`01-google-prefill-plan.md`](./01-google-prefill-plan.md).
 
 ## 1. Goal
@@ -233,7 +233,7 @@ This is the **only** place Romanian auth strings live. Backend CMS spec `backend
 
 A pull request implementing Stage 1 is approved when **all** of these are true:
 
-- [ ] All Gherkin scenarios in [`features/01-google-prefill.feature`](./features/01-google-prefill.feature) have at least one passing Vitest test asserting them by name.
+- [ ] All Gherkin scenarios in [`../../tests/features/auth-01-google-prefill.feature`](../../tests/features/auth-01-google-prefill.feature) have at least one passing Vitest test asserting them by name.
 - [ ] `npm test` is green and total test count rose by ≥ 25 (rough estimate of new test surface).
 - [ ] Coverage targets in [`00-architecture.md §3`](./00-architecture.md#coverage-targets) are met.
 - [ ] `npm run typecheck` clean.
@@ -271,5 +271,5 @@ WhatsApp field — untouched. Logout — Stage 3. `/account` page — Stage 3. R
 - [`zitadel-google-runbook.md`](./zitadel-google-runbook.md) — operator-side setup (run before implementation).
 - [`login.md`](./login.md) — the original full-auth epic (Stage 3 will implement what's left of it).
 - [`remember-me.md`](./remember-me.md) — the existing identity-prefill mechanism this stage composes with.
-- [`features/01-google-prefill.feature`](./features/01-google-prefill.feature) — Gherkin scenarios.
+- [`../../tests/features/auth-01-google-prefill.feature`](../../tests/features/auth-01-google-prefill.feature) — Gherkin scenarios.
 - [`01-google-prefill-plan.md`](./01-google-prefill-plan.md) — TDD implementation steps.

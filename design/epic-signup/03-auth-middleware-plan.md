@@ -1,6 +1,6 @@
 # Stage 3 — Implementation plan (TDD)
 
-> **Pairs with:** [`03-auth-middleware.md`](./03-auth-middleware.md), [`features/03-auth-middleware.feature`](./features/03-auth-middleware.feature).
+> **Pairs with:** [`03-auth-middleware.md`](./03-auth-middleware.md), [`../../tests/features/auth-03-auth-middleware.feature`](../../tests/features/auth-03-auth-middleware.feature).
 > **Discipline:** strict red → green → refactor. **Run `gitnexus_impact` on `middleware.ts` and `app/api/auth/callback/route.ts` before any edit**, per CLAUDE.md.
 
 ## Step 0 — Regression guard for public routes
@@ -84,4 +84,4 @@ The `intent` is carried in a **separate** short-lived cookie (`AUTH_INTENT_COOKI
 
 ## Definition of done
 
-All Gherkin scenarios in `features/03-auth-middleware.feature` covered; byte-invariance guards on `lib/zitadel.ts` and `lib/prefill-cookie.ts` green; public-routes regression green; manual smoke recorded.
+All Gherkin scenarios in `../../tests/features/auth-03-auth-middleware.feature` covered; byte-invariance guards on `lib/zitadel.ts` and `lib/prefill-cookie.ts` green; public-routes regression green; manual smoke recorded.

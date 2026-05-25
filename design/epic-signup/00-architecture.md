@@ -104,7 +104,7 @@ Following the project's `lib/*` convention and Meaningfy layered principles, the
 
 ### INV-10 — Tests are isomorphic to source.
 
-For every new source file `X.ts` there exists a `tests/.../X.test.ts` (or `.test.tsx`) at the corresponding path. Gherkin feature files live in `design/epic-signup/features/<stage>.feature` and are paired with Vitest step-style integration tests.
+For every new source file `X.ts` there exists a `tests/.../X.test.ts` (or `.test.tsx`) at the corresponding path. Gherkin feature files live in `tests/features/auth-<stage>.feature` (the canonical project-wide location, alongside the pre-existing `routes-*.feature` files) and are paired with Vitest step-style integration tests. The `.feature` files are inert documentation — no Gherkin runner is installed (D11/D12); each scenario is mirrored by a `describe("Given … When … Then …")` block in the corresponding Vitest file, linked by a `// Implements scenarios: …` header comment.
 
 ## 3. Test taxonomy
 
@@ -115,7 +115,7 @@ This taxonomy applies uniformly to Stages 1–3 and to the notification bubble s
 | **Unit** | Vitest | Pure functions: builders, parsers, validators, cookie sign/verify. No HTTP, no DOM, no env-dependent code paths. | `tests/lib/*` |
 | **Integration / feature** | Vitest + MSW | Route handlers exercised in full, with MSW mocking Zitadel's discovery, token, JWKS, and userinfo endpoints. Cookie writes verified via `Set-Cookie` header. | `tests/api/*` |
 | **UI / component** | Vitest + Testing Library + JSDOM | Components render correctly under each session/prefill state; user interactions trigger correct effects. Strict `@testing-library/jest-dom` matchers. | `tests/components/*` |
-| **Behaviour spec (Gherkin)** | Hand-authored `.feature` files | Customer-facing acceptance scenarios in `Given / When / Then` form, with `Scenario Outline` for variants. Each scenario maps to one or more Vitest tests via behaviour-driven test naming (`describe("Given … When … Then …")`). | `design/epic-signup/features/*.feature` |
+| **Behaviour spec (Gherkin)** | Hand-authored `.feature` files | Customer-facing acceptance scenarios in `Given / When / Then` form, with `Scenario Outline` for variants. Each scenario maps to one or more Vitest tests via behaviour-driven test naming (`describe("Given … When … Then …")`). | `tests/features/auth-*.feature` |
 | **End-to-end (browser)** | **Not introduced in this epic.** | Reserved for a future epic that introduces Playwright. | — |
 
 ### TDD discipline

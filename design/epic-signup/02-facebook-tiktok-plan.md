@@ -1,6 +1,6 @@
 # Stage 2 — Implementation plan (TDD)
 
-> **Pairs with:** [`02-facebook-tiktok.md`](./02-facebook-tiktok.md), [`features/02-facebook-tiktok.feature`](./features/02-facebook-tiktok.feature).
+> **Pairs with:** [`02-facebook-tiktok.md`](./02-facebook-tiktok.md), [`../../tests/features/auth-02-facebook-tiktok.feature`](../../tests/features/auth-02-facebook-tiktok.feature).
 > **Discipline:** strict red → green → refactor. Same conventions as Stage 1 plan.
 > **Hard constraint:** if any step requires editing `lib/zitadel.ts`, `lib/prefill-cookie.ts`, or the route handlers, **stop** — the Stage-1 architecture is wrong and needs reassessment.
 
@@ -76,6 +76,6 @@
 ## Definition of done
 
 - Stage-1 byte-invariance guard test green (or, in the explicit T5 exception case, updated and re-justified).
-- All Gherkin scenarios in `features/02-facebook-tiktok.feature` covered.
+- All Gherkin scenarios in `../../tests/features/auth-02-facebook-tiktok.feature` covered.
 - Kill-switch still disables all providers.
 - Manual smoke transcripts in PR description.

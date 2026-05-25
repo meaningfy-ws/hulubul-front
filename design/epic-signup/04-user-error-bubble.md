@@ -3,7 +3,7 @@
 > **Status:** Spec. Implementation in its own PR, scheduled **after** Stage 1 has merged. Stage 1 ships with a minimal inline banner; this stage replaces it with the cross-cutting bubble.
 > **Date:** 2026-05-25.
 > **Prerequisites:** None hard. Useful to read [`00-architecture.md`](./00-architecture.md) for the two-channel principle (INV-7).
-> **Gherkin scenarios:** [`features/04-user-error-bubble.feature`](./features/04-user-error-bubble.feature).
+> **Gherkin scenarios:** [`../../tests/features/auth-04-user-error-bubble.feature`](../../tests/features/auth-04-user-error-bubble.feature).
 > **Plan:** [`04-user-error-bubble-plan.md`](./04-user-error-bubble-plan.md).
 
 ## 1. Goal
@@ -122,7 +122,7 @@ The URL-bridge layer in §3.4 maps each `?auth_status=<code>` to a `NOTIFY_CODES
 
 ## 4. Acceptance criteria
 
-- [ ] Gherkin scenarios in `features/04-user-error-bubble.feature` covered.
+- [ ] Gherkin scenarios in `../../tests/features/auth-04-user-error-bubble.feature` covered.
 - [ ] `lib/notify.ts` has ≥ 95% coverage (it's the seam every feature will rely on).
 - [ ] `<Notify />` renders correctly at mobile and desktop breakpoints (screenshot tests if practical, otherwise manual smoke in PR).
 - [ ] Stage 1's inline cancel notice is removed and replaced with `notify()` + URL bridge.
@@ -150,5 +150,5 @@ The URL-bridge layer in §3.4 maps each `?auth_status=<code>` to a `NOTIFY_CODES
 
 - [`00-architecture.md`](./00-architecture.md) — INV-7 (two channels).
 - [`01-google-prefill.md`](./01-google-prefill.md) — first consumer.
-- [`features/04-user-error-bubble.feature`](./features/04-user-error-bubble.feature)
+- [`../../tests/features/auth-04-user-error-bubble.feature`](../../tests/features/auth-04-user-error-bubble.feature)
 - [`04-user-error-bubble-plan.md`](./04-user-error-bubble-plan.md)

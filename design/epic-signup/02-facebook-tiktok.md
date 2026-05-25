@@ -3,7 +3,7 @@
 > **Status:** Spec. Implementation gated on Stage 1 being merged and live.
 > **Date:** 2026-05-25.
 > **Prerequisites:** Stages 0 (runbook) and 1 complete. [`00-architecture.md`](./00-architecture.md) read.
-> **Gherkin scenarios:** [`features/02-facebook-tiktok.feature`](./features/02-facebook-tiktok.feature).
+> **Gherkin scenarios:** [`../../tests/features/auth-02-facebook-tiktok.feature`](../../tests/features/auth-02-facebook-tiktok.feature).
 > **Plan:** [`02-facebook-tiktok-plan.md`](./02-facebook-tiktok-plan.md).
 
 ## 1. Goal
@@ -60,7 +60,7 @@ Spike output is recorded in `design/epic-signup/spike-tiktok.md` (not yet writte
 - [ ] `lib/zitadel.ts` is **byte-identical** to its Stage-1-merged content. Verify by `git diff main..stage-2 -- lib/zitadel.ts` producing no output.
 - [ ] `lib/prefill-cookie.ts` is **byte-identical**.
 - [ ] `app/api/auth/start/route.ts` and `app/api/auth/callback/route.ts` are **byte-identical** (apart from possibly one parametrised string).
-- [ ] Gherkin scenarios in `features/02-facebook-tiktok.feature` are covered by Vitest tests.
+- [ ] Gherkin scenarios in `../../tests/features/auth-02-facebook-tiktok.feature` are covered by Vitest tests.
 - [ ] Kill-switch (INV-8) still works: with `NEXT_PUBLIC_AUTH_ENABLED=false`, all buttons are hidden.
 - [ ] Single-provider gating works: with only `ZITADEL_IDP_GOOGLE` set, only the Google button renders.
 - [ ] Manual smoke test against the configured Zitadel covers both Facebook and (if implemented) TikTok happy + cancel paths.
@@ -84,5 +84,5 @@ Spike output is recorded in `design/epic-signup/spike-tiktok.md` (not yet writte
 
 - [`00-architecture.md`](./00-architecture.md)
 - [`01-google-prefill.md`](./01-google-prefill.md)
-- [`features/02-facebook-tiktok.feature`](./features/02-facebook-tiktok.feature)
+- [`../../tests/features/auth-02-facebook-tiktok.feature`](../../tests/features/auth-02-facebook-tiktok.feature)
 - [`02-facebook-tiktok-plan.md`](./02-facebook-tiktok-plan.md)

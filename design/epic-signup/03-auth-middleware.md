@@ -3,7 +3,7 @@
 > **Status:** Spec. Implementation gated on a real product need (the first authenticated feature).
 > **Date:** 2026-05-25.
 > **Prerequisites:** Stages 1 (and ideally 2) live. [`00-architecture.md`](./00-architecture.md) read. [`login.md`](./login.md) consulted for the original full-auth requirements that Stage 3 ultimately implements.
-> **Gherkin scenarios:** [`features/03-auth-middleware.feature`](./features/03-auth-middleware.feature).
+> **Gherkin scenarios:** [`../../tests/features/auth-03-auth-middleware.feature`](../../tests/features/auth-03-auth-middleware.feature).
 > **Plan:** [`03-auth-middleware-plan.md`](./03-auth-middleware-plan.md).
 
 ## 1. Goal
@@ -80,7 +80,7 @@ A user who signs in for *both* purposes (rare) gets both cookies. They are indep
 
 ## 5. Acceptance criteria
 
-- [ ] All Gherkin scenarios in `features/03-auth-middleware.feature` covered.
+- [ ] All Gherkin scenarios in `../../tests/features/auth-03-auth-middleware.feature` covered.
 - [ ] `lib/zitadel.ts` and `lib/prefill-cookie.ts` are byte-identical to Stage 2 merge. Verified by a guard test.
 - [ ] Anonymous GET `/account` → 307 to `/api/auth/start?provider=…&intent=login&return_to=/account` (`return_to` allowlist-validated).
 - [ ] Authenticated GET `/account` → 200, shows session user.
@@ -114,5 +114,5 @@ A user who signs in for *both* purposes (rare) gets both cookies. They are indep
 
 - [`login.md`](./login.md) — the original full-auth epic; Stage 3 implements its essence.
 - [`00-architecture.md`](./00-architecture.md)
-- [`features/03-auth-middleware.feature`](./features/03-auth-middleware.feature)
+- [`../../tests/features/auth-03-auth-middleware.feature`](../../tests/features/auth-03-auth-middleware.feature)
 - [`03-auth-middleware-plan.md`](./03-auth-middleware-plan.md)
