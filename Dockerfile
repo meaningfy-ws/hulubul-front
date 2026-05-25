@@ -22,6 +22,12 @@ ENV NEXT_PUBLIC_GA_ID=${NEXT_PUBLIC_GA_ID}
 ARG NEXT_PUBLIC_SITE_URL
 ENV NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL}
 
+# Feature flag read by client components (e.g. AuthButtons). Next.js inlines
+# NEXT_PUBLIC_* into the browser bundle at `next build`, so it must arrive
+# as a build arg — runtime env is too late.
+ARG NEXT_PUBLIC_AUTH_ENABLED=true
+ENV NEXT_PUBLIC_AUTH_ENABLED=${NEXT_PUBLIC_AUTH_ENABLED}
+
 # Deployed-commit signature for the footer. next.config.ts reads BUILD_SHA
 # and inlines it as NEXT_PUBLIC_BUILD_SHA at build time. The ops deploy
 # already receives the commit as `sha`; it just needs to forward it as
