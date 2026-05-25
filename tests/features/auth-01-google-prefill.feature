@@ -57,6 +57,27 @@ Feature: Google prefill on the waitlist signup form
     Then the response includes a Set-Cookie header that clears the prefill cookie
     And a subsequent reload of "/#signup" without a new Google flow falls back to remember-me or empty fields
 
+  # ─── UX side-effects of a successful prefill ──────────────────────────────
+
+  Scenario: Auth button is hidden while a prefill cookie is active
+    Given a valid Stage-1 prefill cookie is set in the user's browser
+    When the user visits "/#signup"
+    Then "Continuă cu Google" is NOT rendered above the form
+    But the SignupForm still renders with the prefilled fields
+
+  Scenario: Nav greeting appears on the same render as the callback redirect
+    Given the user just completed a Google round-trip with name="Alice Doe"
+    When the redirect to "/#signup" finishes processing
+    Then the Nav shows "Bună, Alice" on the very first paint
+    And there is no flicker through the "Mă înscriu" CTA state
+
+  Scenario: Returning visitor without a fresh Google flow keeps the remember-me greeting
+    Given the prefill cookie is absent
+    And the remember-me cookie contains name="Ion Popescu"
+    When the user visits "/#signup"
+    Then the server-rendered Nav shows the CTA "Mă înscriu"
+    And after client-side hydration the Nav upgrades to "Bună, Ion"
+
   # ─── Negative paths — user-initiated ──────────────────────────────────────
 
   Scenario: User cancels at Google's consent screen

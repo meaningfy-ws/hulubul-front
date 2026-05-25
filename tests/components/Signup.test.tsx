@@ -105,6 +105,11 @@ describe("Feature: <Signup /> server component", () => {
       expect(email.value).toBe("alice@example.com");
       expect(email).toHaveAttribute("readonly");
       expect(screen.getByText(/verificat prin google/i)).toBeInTheDocument();
+      // After a successful Google round-trip, re-offering "Continuă cu Google"
+      // would be confusing UX — assert the auth buttons block is hidden.
+      expect(
+        screen.queryByRole("link", { name: /continuă cu google/i }),
+      ).toBeNull();
     });
   });
 

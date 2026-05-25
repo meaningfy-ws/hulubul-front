@@ -40,6 +40,44 @@ describe("<NavCta>", () => {
     expect(screen.queryByRole("link", { name: "Mă înscriu" })).toBeNull();
   });
 
+  it("shows the prefilled first name immediately on first paint when the server passes prefilledFirstName", () => {
+    render(
+      <NavCta
+        ctaLabel="Mă înscriu"
+        ctaHref="#signup"
+        prefilledFirstName="Alice"
+      />,
+    );
+    // No waitFor — the greeting must be present on the very first paint so
+    // there's no CTA flicker right after the OIDC callback redirect.
+    expect(screen.getByText("Bună, Alice")).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Mă înscriu" })).toBeNull();
+  });
+
+  it("prefers prefilledFirstName over a different remember-me name", async () => {
+    window.localStorage.setItem(
+      REMEMBER_STORAGE_KEY,
+      JSON.stringify({
+        v: 2,
+        name: "Old Name",
+        email: "old@example.com",
+        savedAt: new Date().toISOString(),
+      }),
+    );
+    render(
+      <NavCta
+        ctaLabel="Mă înscriu"
+        ctaHref="#signup"
+        prefilledFirstName="New"
+      />,
+    );
+    expect(screen.getByText("Bună, New")).toBeInTheDocument();
+    // After hydration the prefill wins; remember-me does not overwrite it.
+    await waitFor(() =>
+      expect(screen.queryByText(/bună, old/i)).toBeNull(),
+    );
+  });
+
   it("uses only the first name (split on whitespace)", async () => {
     window.localStorage.setItem(
       REMEMBER_STORAGE_KEY,

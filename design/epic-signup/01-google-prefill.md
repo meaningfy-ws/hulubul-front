@@ -48,6 +48,13 @@ See [`00-architecture.md §7`](./00-architecture.md). Restated for the lazy read
 | ID-token signature/claim verification fails | `auth_status=token_invalid`. Same UX as above. Logged as security event. |
 | Prefill cookie verification fails on return (tampered, expired, secret rotated) | Cookie silently ignored; form renders empty (falls back to remember-me). No bubble — this is not a user-visible failure. |
 
+### 3.2.bis UX side-effects of a successful prefill
+
+These follow from §3.1 step 8 and exist purely for clarity / non-regression:
+
+- **Auth button hidden:** while the prefill cookie is valid (the SignupForm has `initialPrefill`), `<AuthButtons>` is rendered with `hidden={true}` — re-offering the provider button when the form is already populated would be confusing. The button reappears on the next visit once the prefill cookie expires (10 min TTL) or after a successful waitlist submit.
+- **Nav greeting upgrades immediately:** `<Nav>` is an async server component that also reads the prefill cookie (via `lib/server-prefill.ts`); the "Bună, {firstName}" greeting appears on the same render that processes the OIDC callback, *without* a client-side hydration delay. The client-side fallback (`<NavCta>` reading `remember-me`) still kicks in for returning visitors who didn't go through a Google round-trip on this visit. Precedence: prefill > remember-me.
+
 ### 3.3 Re-entry / "remembered" path
 
 If the user previously submitted the waitlist (with or without Google), `lib/remember-me.ts` has already filled name/email on next visit. **Precedence**:
@@ -69,6 +76,8 @@ lib/cookies.ts                 — cookie-name constants (INV-5)
 lib/auth-providers.ts          — PROVIDER_GOOGLE etc. constants (INV-5)
 lib/auth-events.ts             — log-event constants (INV-5)
 lib/auth-env.ts                — typed env-var reader with kill-switch helper
+lib/server-prefill.ts          — server-only adapter: reads + verifies PREFILL_COOKIE
+                                  (used by both Signup and Nav so the read isn't duplicated)
 ```
 
 ### 4.2 New route handlers (`app/api/auth/`)
@@ -93,10 +102,32 @@ components/landing/SignupForm.tsx
   - renders "verificat prin Google" badge when emailVerified && provider==="google"
 
 components/landing/Signup.tsx (the parent)
-  - reads PREFILL_COOKIE via next/headers (Server Component)
-  - clears the cookie via Set-Cookie response header
+  - async server component
+  - delegates PREFILL_COOKIE read to lib/server-prefill.ts
   - passes claims to SignupForm
-  - mounts <AuthButtons /> above the form
+  - mounts <AuthButtons hidden={…} /> above the form (hides the button row
+    when a prefill cookie is in play to avoid re-offering the provider after
+    a successful round-trip)
+
+components/landing/Nav.tsx
+  - becomes async server component
+  - reads PREFILL_COOKIE via lib/server-prefill.ts and forwards the first name
+    to <NavCta /> via the new `prefilledFirstName` prop
+  - lets the "Bună, {firstName}" greeting appear on the very first paint after
+    /api/auth/callback redirects, with no hydration flicker
+
+components/landing/NavCta.tsx
+  - new optional prop `prefilledFirstName?: string`
+  - renders the greeting immediately when present
+  - falls back to the existing client-side `readRemembered()` upgrade for
+    returning visitors who didn't do a Google round-trip on this visit
+  - precedence: prefilledFirstName (this visit) > remember-me (previous visits)
+
+components/landing/AuthButtons.tsx
+  - new optional prop `hidden?: boolean` — parent suppresses the button row
+    when a prefill cookie is active
+  - renders proper Google-styled button with inline G-logo SVG (no remote asset,
+    no CSP allow-list needed); CSS lives in app/globals.css under .auth-buttons
 ```
 
 ### 4.5 New env vars
@@ -261,6 +292,8 @@ See also [`00-architecture.md §2`](./00-architecture.md#2-architectural-invaria
 | S1-R9 | `email_verified === false` shown as "verified" | Badge gated on `emailVerified === true`. Unit test asserts the negative case. |
 | S1-R10 | Two-button-row layout breaks the form on mobile | Visual regression covered by component test rendering at narrow viewport; manual mobile check in PR. |
 | S1-R11 | Zitadel's IdP callback URL diverges from what's registered at Google Cloud (e.g. Login UI v1 ↔ v2 path shift) | **Detection:** smoke-test the happy path + admin-console login after any tenant change; symptom is universal `Error 400: redirect_uri_mismatch`. **Mitigation:** register **both** v1 (`/ui/login/login/externalidp/callback`) and v2 (`/idps/callback`) URIs in Google's OAuth client. Runbook §3 step 18 and §8 carry the recovery procedure. Observed and fixed during Stage-1 setup of `hulubu0-fddnjo`. |
+| S1-R12 | Provider button still visible after a successful Google round-trip, tempting a re-click that re-overwrites the form | `<AuthButtons hidden={true} />` when `initialPrefill` is set in `<Signup>`. Asserted by a Signup component test. |
+| S1-R13 | Nav still shows the CTA after Google sign-in until the user reloads | `<Nav>` becomes async server-rendered and reads PREFILL_COOKIE via `lib/server-prefill.ts`; the greeting is emitted on the same render that processes the callback. Asserted by `NavCta` test "shows the prefilled first name immediately on first paint". |
 
 ## 8. Out of scope reminders
 
