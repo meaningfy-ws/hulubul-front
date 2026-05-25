@@ -1,34 +1,26 @@
 /**
- * Server-rendered list of provider buttons that the visitor clicks to start
- * the OIDC round-trip. Plain `<a>` tags — no client JS.
+ * Pure presenter for the provider buttons that start the OIDC round-trip.
+ * Plain `<a>` tags — no client JS.
  *
- * Per INV-8 the kill-switch hides the buttons. The parent `<Signup>` also
+ * The `providers` list is computed by the orchestrator <Signup>, which calls
+ * `getEnabledAuthProviders()` (lib/auth-env). Keeping env access out of this
+ * component preserves the layering — UI depends on a typed prop, not on
+ * process.env — and makes the component statically renderable and trivially
+ * testable.
+ *
+ * Per INV-8 the kill-switch yields an empty `providers` list. The parent also
  * passes `hidden` to suppress the buttons when a prefill cookie is already in
  * play: re-offering the provider button after a fresh round-trip would be
  * confusing UX since the form is already populated.
  */
 
-import { unstable_noStore as noStore } from "next/cache";
 import {
-  AUTH_PROVIDERS,
   PROVIDER_FACEBOOK,
   PROVIDER_GOOGLE,
   PROVIDER_TIKTOK,
   type AuthProvider,
 } from "@/lib/auth-providers";
 import { buttonContinueWith } from "@/lib/auth-copy";
-
-const PROVIDER_ENV_KEY: Record<AuthProvider, string> = {
-  google: "ZITADEL_IDP_GOOGLE",
-  facebook: "ZITADEL_IDP_FACEBOOK",
-  tiktok: "ZITADEL_IDP_TIKTOK",
-};
-
-function isProviderConfigured(provider: AuthProvider): boolean {
-  const key = PROVIDER_ENV_KEY[provider];
-  const value = process.env[key];
-  return typeof value === "string" && value.length > 0;
-}
 
 function ProviderGlyph({ provider }: { provider: AuthProvider }) {
   if (provider === PROVIDER_GOOGLE) {
@@ -100,24 +92,18 @@ function ProviderGlyph({ provider }: { provider: AuthProvider }) {
 }
 
 export interface AuthButtonsProps {
+  /** Providers to render, in the order given. */
+  providers: readonly AuthProvider[];
   /** When true (e.g. a fresh prefill cookie is active), render nothing. */
   hidden?: boolean;
 }
 
-export function AuthButtons({ hidden = false }: AuthButtonsProps = {}) {
-  // `isProviderConfigured` reads ZITADEL_IDP_* via a computed key, which
-  // Next can't statically inline. Opt this subtree out of the static cache
-  // so the values are read from the container's runtime env at request
-  // time — applies to every provider in AUTH_PROVIDERS automatically.
-  noStore();
-  if (hidden) return null;
-  if (process.env.NEXT_PUBLIC_AUTH_ENABLED !== "true") return null;
-  const enabled = AUTH_PROVIDERS.filter(isProviderConfigured);
-  if (enabled.length === 0) return null;
+export function AuthButtons({ providers, hidden = false }: AuthButtonsProps) {
+  if (hidden || providers.length === 0) return null;
 
   return (
     <div className="auth-buttons" aria-label="Conectare rapidă">
-      {enabled.map((provider) => (
+      {providers.map((provider) => (
         <a
           key={provider}
           className={`auth-button auth-button--${provider}`}
