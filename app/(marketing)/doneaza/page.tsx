@@ -2,11 +2,7 @@ import {
   EditorialPageView,
   makeEditorialMetadata,
 } from "@/components/editorial/EditorialPageView";
-import { StripeBuyButton } from "@/components/donate/StripeBuyButton";
-import {
-  STRIPE_BUY_BUTTON_ID_RECURRING,
-  STRIPE_DONATE_URL_RECURRING,
-} from "@/lib/donate";
+import { STRIPE_DONATE_URL, STRIPE_DONATE_URL_RECURRING } from "@/lib/donate";
 
 export const generateMetadata = makeEditorialMetadata("doneaza");
 
@@ -17,18 +13,43 @@ export default function DonatePageRo() {
       locale="ro"
       asideSlot={
         <>
-          <StripeBuyButton
-            title="Donează o singură dată"
-            description="Alege singur suma. Plata se face direct prin Stripe — Hulubul nu vede datele cardului tău."
-            fallbackLabel="Donează o singură dată"
-          />
-          <StripeBuyButton
-            buttonId={STRIPE_BUY_BUTTON_ID_RECURRING}
-            fallbackHref={STRIPE_DONATE_URL_RECURRING}
-            title="Donează lunar"
-            description="Alege un nivel; donația se reînnoiește lunar. Poți anula oricând din e-mailul de confirmare Stripe."
-            fallbackLabel="Donează lunar"
-          />
+          <div className="donate-card">
+            <h2 className="donate-card-title">Donează lunar</h2>
+            <p className="donate-card-description">
+              Alege un nivel; donația se reînnoiește lunar. Poți anula
+              oricând din e-mailul de confirmare Stripe.
+            </p>
+            <a
+              href={STRIPE_DONATE_URL_RECURRING}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="donate-button donate-button--primary"
+            >
+              Donează lunar prin Stripe
+            </a>
+            <p className="donate-button-note">
+              Vei fi redirecționat către pagina securizată Stripe.
+            </p>
+          </div>
+
+          <div className="donate-card">
+            <h2 className="donate-card-title">Donează o singură dată</h2>
+            <p className="donate-card-description">
+              Alege singur suma. Plata se face direct prin Stripe — Hulubul
+              nu vede datele cardului tău.
+            </p>
+            <a
+              href={STRIPE_DONATE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="donate-button donate-button--primary"
+            >
+              Donează prin Stripe
+            </a>
+            <p className="donate-button-note">
+              Vei fi redirecționat către pagina securizată Stripe.
+            </p>
+          </div>
         </>
       }
     />

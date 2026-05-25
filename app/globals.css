@@ -1118,7 +1118,7 @@ h2.site-h2 em {
   }
 }
 
-/* ----- Donate card (host for Stripe Buy Button) ----- */
+/* ----- Donate card (hosts our styled CTA link to Stripe) ----- */
 .donate-card {
   background: var(--cream-light, #fff);
   border: 1px solid var(--cream-dark, #eadfd1);
@@ -1138,9 +1138,31 @@ h2.site-h2 em {
   margin: 0 0 16px;
   line-height: 1.55;
 }
-.donate-card stripe-buy-button {
+.donate-button {
   display: block;
   width: 100%;
+  background: var(--ink);
+  color: var(--cream);
+  padding: 12px 24px;
+  border: none;
+  border-radius: 999px;
+  font-family: var(--font-inter), sans-serif;
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  text-decoration: none;
+  text-align: center;
+}
+.donate-button:hover {
+  background: var(--turquoise);
+  transform: translateY(-1px);
+}
+.donate-button-note {
+  font-size: 12px;
+  color: var(--ink-soft);
+  margin: 12px 0 0;
+  line-height: 1.5;
 }
 
 /* ================ SURVEY ================ */
