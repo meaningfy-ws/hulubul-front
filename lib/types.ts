@@ -8,7 +8,8 @@ export type EditorialPageSlug =
   | "confidentialitate"
   | "termeni"
   | "despre-proiect"
-  | "pentru-transportatori";
+  | "pentru-transportatori"
+  | "doneaza";
 
 /**
  * Dual-source body. The CMS sends Strapi 5 rich-text `blocks`; the

@@ -91,6 +91,8 @@ export const INDEXABLE_ROUTES: readonly IndexableRoute[] = [
   { path: "/despre-proiect", changeFrequency: "monthly", priority: 0.6 },
   { path: "/confidentialitate", changeFrequency: "monthly", priority: 0.5 },
   { path: "/termeni", changeFrequency: "monthly", priority: 0.5 },
+  { path: "/doneaza", changeFrequency: "monthly", priority: 0.5 },
+  { path: "/donate", changeFrequency: "monthly", priority: 0.5 },
 ] as const;
 
 /**
