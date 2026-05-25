@@ -8,6 +8,7 @@
  * confusing UX since the form is already populated.
  */
 
+import { unstable_noStore as noStore } from "next/cache";
 import {
   AUTH_PROVIDERS,
   PROVIDER_FACEBOOK,
@@ -104,6 +105,11 @@ export interface AuthButtonsProps {
 }
 
 export function AuthButtons({ hidden = false }: AuthButtonsProps = {}) {
+  // `isProviderConfigured` reads ZITADEL_IDP_* via a computed key, which
+  // Next can't statically inline. Opt this subtree out of the static cache
+  // so the values are read from the container's runtime env at request
+  // time — applies to every provider in AUTH_PROVIDERS automatically.
+  noStore();
   if (hidden) return null;
   if (process.env.NEXT_PUBLIC_AUTH_ENABLED !== "true") return null;
   const enabled = AUTH_PROVIDERS.filter(isProviderConfigured);
