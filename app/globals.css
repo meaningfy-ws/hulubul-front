@@ -1102,6 +1102,9 @@ h2.site-h2 em {
 }
 .legal-page--with-aside .legal-aside {
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 @media (min-width: 960px) {
   .legal-page--with-aside .legal-grid {

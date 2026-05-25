@@ -32,11 +32,9 @@ Before anything else — thank you. Thank you to everyone who filled out the sur
 
 ## What we use the money for
 
-- **Servers and infrastructure** — hosting, database, email, monitoring.
-- **Domains and certificates** — \`hulubul.com\`, SSL certificate, email services.
-- **Working tools** — software licences needed to build and operate the platform.
+- **Infrastructure** — hosting, database, email, monitoring, the \`hulubul.com\` domain, SSL certificate, and the working tools we need to run the platform.
+- **New features on the platform** — fees for the developers and operations people who build and maintain Hulubul. As donations grow, we can expand the team and ship new features faster.
 - **Research** — interviews with carriers and senders, small incentives for survey participants.
-- **What we do not spend on** — salaries. We currently work as volunteers. If that ever changes, we'll say so openly on this page.
 
 ## Why we have no ads
 
@@ -48,7 +46,7 @@ The payment runs through **Stripe**, a secure processor used by thousands of org
 
 ## Frequently asked questions
 
-- **Can I donate monthly?** Not yet. We're working on it. For now, one-time donations only.
+- **Can I donate monthly?** Yes — this page has two options: a one-time donation (pick any amount) or a monthly donation (pick a tier). The monthly donation renews automatically until you cancel from your Stripe confirmation email.
 - **Can I get an invoice or receipt?** Stripe automatically emails you a confirmation. For formal tax documents, write to us and we'll handle it manually.
 - **Are donations tax-deductible?** No — Hulubul is not currently registered as a non-profit. That may change in the future.
 
@@ -58,9 +56,7 @@ If you can't or don't want to donate money, you help us just as much by:
 
 - filling out [the sender survey](/sondaj/expeditori),
 - joining the [waitlist](/#signup),
-- telling others about Hulubul.
-
-*Această pagină este disponibilă și în [română](/doneaza).*`,
+- telling others about Hulubul.`,
     },
   },
 };

@@ -14,6 +14,17 @@ interface StripeBuyButtonProps {
   description?: string;
   /** Plain-text fallback rendered inside <noscript> when JS is disabled. */
   fallbackLabel?: string;
+  /**
+   * Override the Buy Button ID. Defaults to the one-time donation button.
+   * Use the recurring button ID for the monthly tier card.
+   */
+  buttonId?: string;
+  /**
+   * Override the <noscript> fallback link. Defaults to the one-time
+   * Payment Link. Pass the recurring Payment Link when overriding
+   * `buttonId` to the recurring button.
+   */
+  fallbackHref?: string;
 }
 
 /**
@@ -26,11 +37,16 @@ interface StripeBuyButtonProps {
  * Stripe's Buy Button renders an internal iframe — this is Stripe's own
  * embed surface (unlike trying to iframe a Payment Link, which is blocked
  * by their X-Frame-Options).
+ *
+ * Multiple instances on the same page share the loader script (next/script
+ * dedupes by src URL).
  */
 export function StripeBuyButton({
   title,
   description,
   fallbackLabel = "Donează prin Stripe",
+  buttonId = STRIPE_BUY_BUTTON_ID,
+  fallbackHref = STRIPE_DONATE_URL,
 }: StripeBuyButtonProps) {
   return (
     <div className="donate-card">
@@ -44,13 +60,13 @@ export function StripeBuyButton({
       ) : null}
 
       <stripe-buy-button
-        buy-button-id={STRIPE_BUY_BUTTON_ID}
+        buy-button-id={buttonId}
         publishable-key={STRIPE_PUBLISHABLE_KEY}
       />
 
       <noscript>
         <a
-          href={STRIPE_DONATE_URL}
+          href={fallbackHref}
           target="_blank"
           rel="noopener noreferrer"
           className="donate-button donate-button--primary"

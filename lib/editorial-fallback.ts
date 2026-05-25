@@ -180,11 +180,9 @@ Nu cerem comisioane, nu schimbăm cum lucrezi cu clienții tăi. Vrem doar să-�
 
 ## La ce folosim banii
 
-- **Servere și infrastructură** — hosting, baza de date, e-mail, monitorizare.
-- **Domenii și certificate** — \`hulubul.com\`, certificat SSL, servicii de e-mail.
-- **Unelte de lucru** — licențe necesare pentru a dezvolta și opera platforma.
+- **Infrastructură** — hosting, baza de date, e-mail, monitorizare, domeniul \`hulubul.com\`, certificat SSL și uneltele de lucru necesare pentru a opera platforma.
+- **Funcții noi pe platformă** — onorarii pentru dezvoltatorii și oamenii de operațiuni care construiesc și mențin Hulubul. Pe măsură ce donațiile cresc, putem extinde echipa și livra funcții noi mai repede.
 - **Cercetare** — interviuri cu transportatori și expeditori, mici stimulente pentru participanții la sondaje.
-- **Ce nu folosim** — salarii. Acum lucrăm voluntar. Dacă acest lucru se schimbă, vom spune deschis pe această pagină.
 
 ## De ce nu avem reclame
 
@@ -196,7 +194,7 @@ Plata se face prin **Stripe**, un procesator securizat folosit de mii de organiz
 
 ## Întrebări frecvente
 
-- **Pot dona lunar?** Nu încă. Lucrăm la asta. Pentru moment doar donații unice.
+- **Pot dona lunar?** Da — pe această pagină ai două opțiuni: o donație unică (alegi suma) sau o donație lunară (alegi un nivel). Donația lunară se reînnoiește automat până când o anulezi din e-mailul de confirmare Stripe.
 - **Pot primi factură / chitanță?** Stripe îți trimite automat o confirmare pe e-mail. Pentru documente fiscale formale, scrie-ne și ne ocupăm manual.
 - **Donațiile sunt deductibile fiscal?** Nu, momentan Hulubul nu este ONG sau asociație înregistrată. Asta se poate schimba în viitor.
 
@@ -206,9 +204,7 @@ Dacă nu poți sau nu vrei să donezi, ne ajuți la fel de mult dacă:
 
 - completezi [sondajul pentru expeditori](/sondaj/expeditori),
 - te înscrii pe [lista de așteptare](/#signup),
-- spui și altora despre Hulubul.
-
-*This page is also available in [English](/donate).*`,
+- spui și altora despre Hulubul.`,
     },
   },
 };
