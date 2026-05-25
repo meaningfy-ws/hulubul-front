@@ -17,7 +17,12 @@ import { Signup } from "@/components/landing/Signup";
 import { Faq } from "@/components/landing/Faq";
 // Nav and Footer are rendered by the root layout; every page gets them.
 
-export const revalidate = 300;
+// The Signup section reads runtime env (lib/auth-env → getEnabledAuthProviders)
+// to decide which provider buttons to render. Forcing dynamic rendering keeps
+// that read at request time inside the running container; the previous
+// `revalidate = 300` cached the build-time render forever, so the buttons
+// (computed when env was empty during `next build`) never reached visitors.
+export const dynamic = "force-dynamic";
 
 async function tryGetLandingPage() {
   try {
