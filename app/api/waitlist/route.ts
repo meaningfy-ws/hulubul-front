@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { waitlistSchema } from "@/lib/waitlist-schema";
-import { submitWaitlist, findDuplicateRegistration } from "@/lib/strapi";
+import { submitWaitlist } from "@/lib/strapi";
 import {
   dispatchConversion,
   generateEventId,
@@ -149,36 +149,11 @@ export async function POST(request: Request) {
   delete enriched.client;
   delete enriched.consent;
 
-  // Soft dedupe: block only an EXACT repeat (same email + role + cities).
-  // A different role or different cities is a legitimate new registration
-  // (e.g. one parent, kids in Italy and France, one email). On an exact
-  // repeat we tell the user it was already registered on that date and to
-  // be patient — nothing more. A failure in the lookup itself is treated
-  // like any other upstream failure — we do NOT fall through to insert.
-  try {
-    const existing = await findDuplicateRegistration({
-      email: data.email,
-      role: data.role,
-      cities: data.cities,
-    });
-    if (existing) {
-      logger.info(
-        "api/waitlist",
-        `dedupe hit reqId=${requestId} email=${maskEmail(data.email)} registeredAt=${existing.registeredAt}`,
-      );
-      return errorResponse(ErrorCode.AlreadyRegistered, requestId, {
-        registeredAt: existing.registeredAt,
-      });
-    }
-  } catch (error) {
-    const { code, upstreamStatus } = classify(error);
-    logger.error(
-      "api/waitlist",
-      `dedupe lookup failed reqId=${requestId} code=${code} upstream=${upstreamStatus} email=${maskEmail(data.email)}`,
-      error,
-    );
-    return errorResponse(code, requestId, { upstreamStatus });
-  }
+  // Per design/epic-signup/00-architecture.md INV-2, waitlist submissions are
+  // immutable events: the same person may submit multiple times (different
+  // role, different cities, even an exact repeat) and every submission
+  // becomes its own row. No frontend-side dedup, no ALREADY_REGISTERED.
+  // Identity-uniqueness lives in Zitadel; this collection is event-shaped.
 
   try {
     await submitWaitlist(
