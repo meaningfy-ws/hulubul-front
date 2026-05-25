@@ -13,9 +13,15 @@ export async function Nav({ data }: { data: NavComponent }) {
   return (
     <nav className="site-nav">
       <Logo data={data} />
+      {/*
+        Donate CTA replaces the CMS-supplied signup CTA in the header.
+        The CMS values (`data.ctaLabel`, `data.ctaHref`) are intentionally
+        ignored here until we either give the CMS a dedicated "header CTA"
+        slot or this decision changes. See design/epic-donate/.
+      */}
       <NavCta
-        ctaLabel={data.ctaLabel}
-        ctaHref={data.ctaHref}
+        ctaLabel="Donează"
+        ctaHref="/doneaza"
         prefilledFirstName={prefilledFirstName ?? undefined}
       />
     </nav>
