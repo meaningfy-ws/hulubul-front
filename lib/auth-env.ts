@@ -13,15 +13,19 @@ import {
   AUTH_PROVIDERS,
   PROVIDER_FACEBOOK,
   PROVIDER_GOOGLE,
+  PROVIDER_INSTAGRAM,
   PROVIDER_TIKTOK,
   type AuthProvider,
 } from "./auth-providers";
 
 // Single owner of the env-key → provider mapping. Used by both readAuthEnv
 // (server-side IdP construction) and getEnabledAuthProviders (UI decision).
+// Adding a provider here + in AUTH_PROVIDERS is the only wiring change
+// needed to enable a new button at runtime.
 const PROVIDER_ENV_KEY: Record<AuthProvider, string> = {
   [PROVIDER_GOOGLE]: "ZITADEL_IDP_GOOGLE",
   [PROVIDER_FACEBOOK]: "ZITADEL_IDP_FACEBOOK",
+  [PROVIDER_INSTAGRAM]: "ZITADEL_IDP_INSTAGRAM",
   [PROVIDER_TIKTOK]: "ZITADEL_IDP_TIKTOK",
 };
 
@@ -80,7 +84,6 @@ export function readAuthEnv(): AuthEnv {
   const redirectUri = process.env.AUTH_REDIRECT_URI;
   const cookieSecret = process.env.AUTH_COOKIE_SECRET;
   const idpGoogle = process.env[PROVIDER_ENV_KEY[PROVIDER_GOOGLE]];
-  const idpFacebook = process.env[PROVIDER_ENV_KEY[PROVIDER_FACEBOOK]];
 
   const missing: string[] = [];
   if (!issuer) missing.push("ZITADEL_ISSUER");
@@ -94,10 +97,16 @@ export function readAuthEnv(): AuthEnv {
 
   if (missing.length > 0) throw new MissingAuthEnvError(missing);
 
-  const idps: Partial<Record<AuthProvider, string>> = {
-    [PROVIDER_GOOGLE]: idpGoogle!,
-  };
-  if (idpFacebook) idps[PROVIDER_FACEBOOK] = idpFacebook;
+  // Build the optional-IdP map by iterating AUTH_PROVIDERS so new providers
+  // (Instagram, TikTok, ...) wire up the moment their constant is added to
+  // PROVIDER_ENV_KEY — no per-provider branch to maintain here. Google is
+  // required (missing-keys check above); the rest are present only when
+  // their env is non-empty, mirroring getEnabledAuthProviders.
+  const idps: Partial<Record<AuthProvider, string>> = {};
+  for (const provider of AUTH_PROVIDERS) {
+    const value = process.env[PROVIDER_ENV_KEY[provider]];
+    if (value && value.length > 0) idps[provider] = value;
+  }
 
   return {
     enabled: true,

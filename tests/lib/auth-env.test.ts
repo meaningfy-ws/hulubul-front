@@ -7,7 +7,12 @@ import {
   AuthDisabledError,
   MissingAuthEnvError,
 } from "@/lib/auth-env";
-import { PROVIDER_GOOGLE, PROVIDER_FACEBOOK } from "@/lib/auth-providers";
+import {
+  PROVIDER_GOOGLE,
+  PROVIDER_FACEBOOK,
+  PROVIDER_INSTAGRAM,
+  PROVIDER_TIKTOK,
+} from "@/lib/auth-providers";
 
 const ENV_KEYS = [
   "NEXT_PUBLIC_AUTH_ENABLED",
@@ -16,6 +21,8 @@ const ENV_KEYS = [
   "ZITADEL_CLIENT_SECRET",
   "ZITADEL_IDP_GOOGLE",
   "ZITADEL_IDP_FACEBOOK",
+  "ZITADEL_IDP_INSTAGRAM",
+  "ZITADEL_IDP_TIKTOK",
   "AUTH_REDIRECT_URI",
   "AUTH_COOKIE_SECRET",
 ] as const;
@@ -156,6 +163,50 @@ describe("Feature: lib/auth-env reader", () => {
         process.env.ZITADEL_IDP_GOOGLE = "222";
         process.env.ZITADEL_IDP_FACEBOOK = "";
         expect(getEnabledAuthProviders()).toEqual([PROVIDER_GOOGLE]);
+      });
+    });
+
+    describe("Given Instagram and TikTok IdPs are configured alongside Google", () => {
+      it("Then all four providers are returned in AUTH_PROVIDERS order", () => {
+        process.env.NEXT_PUBLIC_AUTH_ENABLED = "true";
+        process.env.ZITADEL_IDP_GOOGLE = "222";
+        process.env.ZITADEL_IDP_FACEBOOK = "333";
+        process.env.ZITADEL_IDP_INSTAGRAM = "444";
+        process.env.ZITADEL_IDP_TIKTOK = "555";
+        expect(getEnabledAuthProviders()).toEqual([
+          PROVIDER_GOOGLE,
+          PROVIDER_FACEBOOK,
+          PROVIDER_INSTAGRAM,
+          PROVIDER_TIKTOK,
+        ]);
+      });
+    });
+
+    describe("Given an arbitrary subset of optional IdPs (Google + Instagram only)", () => {
+      it("Then the subset is returned in declared order — buttons are interchangeable per env", () => {
+        process.env.NEXT_PUBLIC_AUTH_ENABLED = "true";
+        process.env.ZITADEL_IDP_GOOGLE = "222";
+        process.env.ZITADEL_IDP_INSTAGRAM = "444";
+        expect(getEnabledAuthProviders()).toEqual([
+          PROVIDER_GOOGLE,
+          PROVIDER_INSTAGRAM,
+        ]);
+      });
+    });
+  });
+
+  // Mirrors readAuthEnv's optional-IdP map for the new providers.
+  describe("Feature: readAuthEnv.idps covers all configured providers", () => {
+    describe("Given Google + Instagram + TikTok envs are set (no Facebook)", () => {
+      it("Then idps maps only the providers whose env is non-empty", () => {
+        setHappyEnv();
+        process.env.ZITADEL_IDP_INSTAGRAM = "444";
+        process.env.ZITADEL_IDP_TIKTOK = "555";
+        const env = readAuthEnv();
+        expect(env.idps[PROVIDER_GOOGLE]).toBe("222");
+        expect(env.idps[PROVIDER_FACEBOOK]).toBeUndefined();
+        expect(env.idps[PROVIDER_INSTAGRAM]).toBe("444");
+        expect(env.idps[PROVIDER_TIKTOK]).toBe("555");
       });
     });
   });

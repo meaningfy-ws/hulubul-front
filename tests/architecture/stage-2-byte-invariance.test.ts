@@ -19,8 +19,18 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
 const STAGE_1_PINNED_SHA256: Record<string, string> = {
+  // BUMPED in the Instagram/TikTok PR — added `instagram: PROVIDER_INSTAGRAM`
+  // to `ID_TOKEN_PROVIDER_CLAIMS` so callbacks from the Instagram IdP infer
+  // the correct provider (otherwise inferProvider falls back to Google and
+  // Instagram users get a "verificat prin Google" tag). This is a one-line,
+  // pure-data extension of the existing claim-map, mirroring how
+  // PROVIDER_TIKTOK was already present. No control-flow changes; no
+  // contract change to buildAuthStart / completeAuthCallback. Considered a
+  // legitimate Stage-2 exception of the same shape as the documented Step T5
+  // (see 02-facebook-tiktok-plan.md). Future modifications still trip this
+  // guard and require the same justification.
   "lib/zitadel.ts":
-    "4a20c2e989d6a9d02c9a54dfd3c5b56f89a508b08f339a926e6b22b5931fd4b3",
+    "f5a9c4e388f422178bb4f457f0ec547a181a142d24d9e3955b15b623c985a561",
   "lib/prefill-cookie.ts":
     "44da357f57f9c9b42812720bcbfc4ccc221d1a642cb98f8a6985bf0b1e394d52",
   "app/api/auth/start/route.ts":

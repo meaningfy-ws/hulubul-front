@@ -14,11 +14,13 @@ export const AUTH_COPY = {
   buttonContinueWith: {
     google: "Continuă cu Google",
     facebook: "Continuă cu Facebook",
+    instagram: "Continuă cu Instagram",
     tiktok: "Continuă cu TikTok",
   },
   verifiedTag: {
     google: "verificat prin Google",
     facebook: "verificat prin Facebook",
+    instagram: "verificat prin Instagram",
     tiktok: "verificat prin TikTok",
   },
   notice: {
@@ -36,6 +38,7 @@ export type NoticeKey = keyof typeof AUTH_COPY.notice;
 const PROVIDER_DISPLAY_NAME: Record<AuthProvider, string> = {
   google: "Google",
   facebook: "Facebook",
+  instagram: "Instagram",
   tiktok: "TikTok",
 };
 
