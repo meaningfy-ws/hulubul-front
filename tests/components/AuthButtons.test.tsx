@@ -86,4 +86,26 @@ describe("Feature: <AuthButtons />", () => {
       expect(container.querySelectorAll("a").length).toBe(0);
     });
   });
+
+  describe("Given the parent passes hidden={true} (a prefill cookie is active)", () => {
+    it("Then AuthButtons renders nothing — re-clicking would be confusing UX", () => {
+      process.env.NEXT_PUBLIC_AUTH_ENABLED = "true";
+      process.env.ZITADEL_IDP_GOOGLE = "222";
+      const { container } = render(<AuthButtons hidden />);
+      expect(container.firstChild).toBeNull();
+    });
+  });
+
+  describe("Given the Google button renders", () => {
+    it("Then it carries the Google G-logo SVG glyph", () => {
+      process.env.NEXT_PUBLIC_AUTH_ENABLED = "true";
+      process.env.ZITADEL_IDP_GOOGLE = "222";
+      const { container } = render(<AuthButtons />);
+      const svg = container.querySelector(
+        ".auth-button--google .auth-button__glyph",
+      );
+      expect(svg).not.toBeNull();
+      expect(svg!.tagName.toLowerCase()).toBe("svg");
+    });
+  });
 });
