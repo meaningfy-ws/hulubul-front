@@ -24,7 +24,8 @@ ENV NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL}
 
 # Feature flag read by client components (e.g. AuthButtons). Next.js inlines
 # NEXT_PUBLIC_* into the browser bundle at `next build`, so it must arrive
-# as a build arg — runtime env is too late.
+# as a build arg — runtime env is too late. Ops deploy forwards this from
+# the GitHub secret of the same name.
 ARG NEXT_PUBLIC_AUTH_ENABLED=true
 ENV NEXT_PUBLIC_AUTH_ENABLED=${NEXT_PUBLIC_AUTH_ENABLED}
 
