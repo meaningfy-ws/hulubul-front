@@ -37,9 +37,33 @@ async function tryGetLandingPage() {
   }
 }
 
+/**
+ * Fallback metadata used when the CMS is unreachable or has no published
+ * landing entry. Without this, generateMetadata returned `{}` — leaving the
+ * page without a `<meta name="description">` tag, which fails the
+ * Lighthouse SEO audit (`meta-description`). The fallback also keeps OG /
+ * Twitter cards from breaking when shared while the backend is down.
+ */
+const FALLBACK_DESCRIPTION =
+  "Hulubul.com — platformă pentru curse între diaspora moldovenească și Republica Moldova. Înscrie-te pe lista de așteptare pentru a fi printre primii utilizatori.";
+
 export async function generateMetadata(): Promise<Metadata> {
   const { page } = await tryGetLandingPage();
-  if (!page) return {};
+  if (!page) {
+    return {
+      description: FALLBACK_DESCRIPTION,
+      alternates: { canonical: makeCanonical("/") },
+      openGraph: {
+        description: FALLBACK_DESCRIPTION,
+        locale: "ro_RO",
+        url: makeCanonical("/"),
+      },
+      twitter: {
+        card: "summary_large_image",
+        description: FALLBACK_DESCRIPTION,
+      },
+    };
+  }
 
   const { seo } = page;
   return {
