@@ -5,7 +5,7 @@ import { SplitTitle } from "./SplitTitle";
 
 export function Faq({ data }: { data: FaqSection }) {
   return (
-    <section className="faq-section">
+    <section id="faq" className="faq-section">
       <Reveal>
         <div className="section-label">{data.label}</div>
         <SplitTitle

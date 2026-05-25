@@ -44,19 +44,15 @@ Ads would pollute the data and shift who we listen to — our customers would be
 
 The payment runs through **Stripe**, a secure processor used by thousands of organisations across Europe. Hulubul **never sees or stores** your card data. You'll be redirected to Stripe's secure page; you can come back to the site once you're done.
 
-## Frequently asked questions
-
-- **Can I donate monthly?** Yes — this page has two options: a one-time donation (pick any amount) or a monthly donation (pick a tier). The monthly donation renews automatically until you cancel from your Stripe confirmation email.
-- **Can I get an invoice or receipt?** Stripe automatically emails you a confirmation. For formal tax documents, write to us and we'll handle it manually.
-- **Are donations tax-deductible?** No — Hulubul is not currently registered as a non-profit. That may change in the future.
-
 ## Other ways to support us
 
 If you can't or don't want to donate money, you help us just as much by:
 
 - filling out [the sender survey](/sondaj/expeditori),
 - joining the [waitlist](/#signup),
-- telling others about Hulubul.`,
+- telling others about Hulubul.
+
+For frequently asked questions about donations and other forms of support, see the [FAQ section](/#faq) on the home page.`,
     },
   },
 };

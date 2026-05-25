@@ -192,19 +192,15 @@ Reclamele ar polua datele și ar schimba pe cine ascultăm — clienții ar deve
 
 Plata se face prin **Stripe**, un procesator securizat folosit de mii de organizații în Europa. Hulubul **nu vede și nu stochează** datele cardului tău. Vei fi redirecționat către pagina securizată Stripe; după plată poți reveni pe site.
 
-## Întrebări frecvente
-
-- **Pot dona lunar?** Da — pe această pagină ai două opțiuni: o donație unică (alegi suma) sau o donație lunară (alegi un nivel). Donația lunară se reînnoiește automat până când o anulezi din e-mailul de confirmare Stripe.
-- **Pot primi factură / chitanță?** Stripe îți trimite automat o confirmare pe e-mail. Pentru documente fiscale formale, scrie-ne și ne ocupăm manual.
-- **Donațiile sunt deductibile fiscal?** Nu, momentan Hulubul nu este ONG sau asociație înregistrată. Asta se poate schimba în viitor.
-
 ## Altă formă de sprijin
 
 Dacă nu poți sau nu vrei să donezi, ne ajuți la fel de mult dacă:
 
 - completezi [sondajul pentru expeditori](/sondaj/expeditori),
 - te înscrii pe [lista de așteptare](/#signup),
-- spui și altora despre Hulubul.`,
+- spui și altora despre Hulubul.
+
+Pentru întrebări frecvente despre donații și alte forme de sprijin, vezi secțiunea [Întrebări frecvente](/#faq) de pe pagina principală.`,
     },
   },
 };
