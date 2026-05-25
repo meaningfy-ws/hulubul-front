@@ -15,10 +15,11 @@ export interface NavCtaProps {
 }
 
 /**
- * Nav CTA that upgrades to a personalised greeting once the visitor has
- * either a Stage-1 prefill cookie (server-rendered via `prefilledFirstName`)
- * or remember-me data stored client-side. Default state (no identity) is the
- * CMS-configured signup button. SSR and first paint match.
+ * Nav CTA. The CTA link is rendered ALWAYS (so visitors can always reach the
+ * Donate page from the header). When a returning visitor's name is known —
+ * either via Stage-1 prefill cookie (server-rendered via `prefilledFirstName`)
+ * or via remember-me data stored client-side — a personalised greeting is
+ * rendered alongside the CTA, not in place of it. SSR and first paint match.
  */
 export function NavCta({ ctaLabel, ctaHref, prefilledFirstName }: NavCtaProps) {
   const [firstName, setFirstName] = useState<string | null>(
@@ -39,22 +40,22 @@ export function NavCta({ ctaLabel, ctaHref, prefilledFirstName }: NavCtaProps) {
     setHydrated(true);
   }, [prefilledFirstName]);
 
-  if (prefilledFirstName || (hydrated && firstName)) {
-    return (
-      <span className="nav-greeting">
-        Bună, {prefilledFirstName ?? firstName}
-      </span>
-    );
-  }
-
   // CMS stores the CTA target as `#signup`, which only resolves on the landing
   // page. On other routes (e.g. /sondaj) a bare fragment is a no-op — prefix
   // `/` so the click always navigates back to the landing anchor.
   const href = ctaHref.startsWith("#") ? `/${ctaHref}` : ctaHref;
 
+  const greetingName =
+    prefilledFirstName ?? (hydrated && firstName ? firstName : null);
+
   return (
-    <a href={href} className="nav-cta">
-      {ctaLabel}
-    </a>
+    <div className="nav-cta-group">
+      {greetingName ? (
+        <span className="nav-greeting">Bună, {greetingName}</span>
+      ) : null}
+      <a href={href} className="nav-cta">
+        {ctaLabel}
+      </a>
+    </div>
   );
 }

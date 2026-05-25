@@ -23,7 +23,7 @@ describe("<NavCta>", () => {
     ).toHaveAttribute("href", "/#signup");
   });
 
-  it("replaces the CTA with a greeting after the remembered identity loads", async () => {
+  it("shows a greeting alongside the CTA after the remembered identity loads", async () => {
     window.localStorage.setItem(
       REMEMBER_STORAGE_KEY,
       JSON.stringify({
@@ -37,10 +37,14 @@ describe("<NavCta>", () => {
     await waitFor(() =>
       expect(screen.getByText(/bună, ion/i)).toBeInTheDocument(),
     );
-    expect(screen.queryByRole("link", { name: "Mă înscriu" })).toBeNull();
+    // The CTA stays visible alongside the greeting — visitors can always
+    // reach the donate page from the header.
+    expect(
+      screen.getByRole("link", { name: "Mă înscriu" }),
+    ).toBeInTheDocument();
   });
 
-  it("shows the prefilled first name immediately on first paint when the server passes prefilledFirstName", () => {
+  it("shows the prefilled first name alongside the CTA on first paint when the server passes prefilledFirstName", () => {
     render(
       <NavCta
         ctaLabel="Mă înscriu"
@@ -49,9 +53,12 @@ describe("<NavCta>", () => {
       />,
     );
     // No waitFor — the greeting must be present on the very first paint so
-    // there's no CTA flicker right after the OIDC callback redirect.
+    // there's no flicker right after the OIDC callback redirect.
     expect(screen.getByText("Bună, Alice")).toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: "Mă înscriu" })).toBeNull();
+    // CTA stays alongside the greeting (never disappears).
+    expect(
+      screen.getByRole("link", { name: "Mă înscriu" }),
+    ).toBeInTheDocument();
   });
 
   it("prefers prefilledFirstName over a different remember-me name", async () => {

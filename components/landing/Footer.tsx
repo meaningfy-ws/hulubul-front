@@ -46,7 +46,10 @@ export function Footer({ data }: { data: FooterSection }) {
                 design/epic-survey/post-waitlist.md §6.
               */}
               {isPlatform ? (
-                <a href="/sondaj/expeditori">Sondaj pentru expeditori</a>
+                <>
+                  <a href="/sondaj/expeditori">Sondaj pentru expeditori</a>
+                  <a href="/doneaza">Donează</a>
+                </>
               ) : null}
             </div>
           );
