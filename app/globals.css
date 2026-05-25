@@ -102,6 +102,11 @@ nav.site-nav {
   transform: translateY(-1px);
 }
 
+.nav-cta-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
 .nav-greeting {
   font-family: var(--font-fraunces), serif;
   font-style: italic;
