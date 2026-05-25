@@ -385,6 +385,76 @@ describe("Feature: CLIENT_VALIDATION surfaces the specific field message", () =>
   });
 });
 
+describe("Feature: Stage-1 forget-me clears the prefill cookie + reloads", () => {
+  describe("Given an active prefill and the user clicks 'Nu ești tu? Șterge.'", () => {
+    it("Then the client POSTs /api/auth/clear-prefill and triggers a reload", async () => {
+      const fetchSpy = vi
+        .fn()
+        .mockResolvedValue(new Response(null, { status: 204 }));
+      global.fetch = fetchSpy;
+      const reload = vi.fn();
+      Object.defineProperty(window, "location", {
+        configurable: true,
+        value: { ...window.location, reload },
+      });
+
+      const user = userEvent.setup();
+      render(
+        <SignupForm
+          data={signup}
+          initialPrefill={{
+            email: "alice@example.com",
+            name: "Alice Doe",
+            emailVerified: true,
+            provider: "google",
+          }}
+        />,
+      );
+      await user.click(screen.getByRole("button", { name: /nu ești tu/i }));
+
+      await waitFor(() =>
+        expect(fetchSpy).toHaveBeenCalledWith(
+          "/api/auth/clear-prefill",
+          expect.objectContaining({ method: "POST" }),
+        ),
+      );
+      await waitFor(() => expect(reload).toHaveBeenCalled());
+    });
+  });
+
+  describe("Given the manual flow (no initialPrefill) and the user clicks the same button", () => {
+    it("Then no /api/auth/clear-prefill call is made and no reload is triggered", async () => {
+      const fetchSpy = vi
+        .fn()
+        .mockResolvedValue(new Response(null, { status: 204 }));
+      global.fetch = fetchSpy;
+      const reload = vi.fn();
+      Object.defineProperty(window, "location", {
+        configurable: true,
+        value: { ...window.location, reload },
+      });
+
+      window.localStorage.setItem(
+        REMEMBER_STORAGE_KEY,
+        JSON.stringify({
+          v: 2,
+          name: "Ion",
+          email: "ion@example.com",
+          savedAt: new Date().toISOString(),
+        }),
+      );
+
+      const user = userEvent.setup();
+      render(<SignupForm data={signup} />);
+      const btn = await screen.findByRole("button", { name: /nu ești tu/i });
+      await user.click(btn);
+
+      expect(fetchSpy).not.toHaveBeenCalled();
+      expect(reload).not.toHaveBeenCalled();
+    });
+  });
+});
+
 describe("Feature: Stage-1 Google prefill via initialPrefill prop", () => {
   describe("Given an initialPrefill with verified Google identity", () => {
     it("When the form mounts, Then email is prefilled & read-only and the verified-by-Google tag is visible", () => {
