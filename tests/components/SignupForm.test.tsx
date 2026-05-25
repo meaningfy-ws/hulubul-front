@@ -385,6 +385,128 @@ describe("Feature: CLIENT_VALIDATION surfaces the specific field message", () =>
   });
 });
 
+describe("Feature: Stage-1 Google prefill via initialPrefill prop", () => {
+  describe("Given an initialPrefill with verified Google identity", () => {
+    it("When the form mounts, Then email is prefilled & read-only and the verified-by-Google tag is visible", () => {
+      render(
+        <SignupForm
+          data={signup}
+          initialPrefill={{
+            email: "alice@example.com",
+            name: "Alice Doe",
+            emailVerified: true,
+            provider: "google",
+          }}
+        />,
+      );
+      const email = screen.getByLabelText(/email/i) as HTMLInputElement;
+      expect(email.value).toBe("alice@example.com");
+      expect(email).toHaveAttribute("readonly");
+      const name = screen.getByLabelText(/nume/i) as HTMLInputElement;
+      expect(name.value).toBe("Alice Doe");
+      expect(name).not.toHaveAttribute("readonly");
+      expect(screen.getByText(/verificat prin google/i)).toBeInTheDocument();
+    });
+  });
+
+  describe("Given an initialPrefill from an unverified email", () => {
+    it("Then the email is prefilled but NO verified-by tag is shown", () => {
+      render(
+        <SignupForm
+          data={signup}
+          initialPrefill={{
+            email: "alice@example.com",
+            name: "Alice Doe",
+            emailVerified: false,
+            provider: "google",
+          }}
+        />,
+      );
+      expect(
+        screen.queryByText(/verificat prin google/i),
+      ).not.toBeInTheDocument();
+    });
+  });
+
+  describe("Given initialPrefill is provided AND remember-me has a different value", () => {
+    it("Then initialPrefill wins (precedence rule from spec §3.3)", () => {
+      window.localStorage.setItem(
+        REMEMBER_STORAGE_KEY,
+        JSON.stringify({
+          v: 2,
+          name: "Old Name",
+          email: "old@example.com",
+          savedAt: new Date().toISOString(),
+        }),
+      );
+      render(
+        <SignupForm
+          data={signup}
+          initialPrefill={{
+            email: "new@example.com",
+            name: "New Name",
+            emailVerified: true,
+            provider: "google",
+          }}
+        />,
+      );
+      expect(
+        (screen.getByLabelText(/email/i) as HTMLInputElement).value,
+      ).toBe("new@example.com");
+      expect(
+        (screen.getByLabelText(/nume/i) as HTMLInputElement).value,
+      ).toBe("New Name");
+    });
+  });
+
+  describe("Given a Google prefill is active", () => {
+    it("Then the WhatsApp field is empty and editable (Google never returns phone)", () => {
+      render(
+        <SignupForm
+          data={signup}
+          initialPrefill={{
+            email: "alice@example.com",
+            name: "Alice Doe",
+            emailVerified: true,
+            provider: "google",
+          }}
+        />,
+      );
+      const wa = screen.getByLabelText(/whatsapp/i) as HTMLInputElement;
+      expect(wa.value).toBe("");
+      expect(wa).not.toHaveAttribute("readonly");
+    });
+  });
+
+  describe("Given a submit happens with initialPrefill present", () => {
+    it("Then the POST body has the prefilled email + name but no Zitadel sub or provider field", async () => {
+      mockFetchOk();
+      const user = userEvent.setup();
+      render(
+        <SignupForm
+          data={signup}
+          initialPrefill={{
+            email: "bob@example.com",
+            name: "Bob Roe",
+            emailVerified: true,
+            provider: "google",
+          }}
+        />,
+      );
+      await addCity(user, "Lux");
+      await tickConsent(user);
+      await user.click(screen.getByRole("button", { name: signup.submitLabel }));
+      await waitFor(() => expect(global.fetch).toHaveBeenCalled());
+      const body = submittedBody();
+      expect(body.email).toBe("bob@example.com");
+      expect(body.name).toBe("Bob Roe");
+      expect(body).not.toHaveProperty("sub");
+      expect(body).not.toHaveProperty("provider");
+      expect(body).not.toHaveProperty("emailVerified");
+    });
+  });
+});
+
 describe("Feature: accessible label associations", () => {
   it("the city field's <label for> points at a real input (not a div)", async () => {
     mockFetchOk();

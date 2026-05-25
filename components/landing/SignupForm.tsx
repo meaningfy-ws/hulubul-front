@@ -25,6 +25,8 @@ import { validationMessage } from "@/lib/errors/messages";
 import { FORM_STATUS, type FormStatus } from "@/lib/form-status";
 import { trackWaitlistSubmit } from "@/lib/tracking/events";
 import { useConsent } from "@/components/consent/ConsentProvider";
+import type { AuthProvider } from "@/lib/auth-providers";
+import { verifiedTag } from "@/lib/auth-copy";
 
 // Defensive fallback: stale links shared in the wild can have the malformed
 // shape `/#signup?role=X` (query embedded in the fragment). Parse it so the
@@ -76,7 +78,20 @@ type Status = FormStatus;
 const parseRole = (value: string | null, fallback: Role): Role =>
   parseRoleIn(value, WAITLIST_ROLES, fallback);
 
-export function SignupForm({ data }: { data: SignupSection }) {
+export interface SignupFormPrefill {
+  email: string;
+  name: string;
+  emailVerified: boolean;
+  provider: AuthProvider;
+}
+
+export function SignupForm({
+  data,
+  initialPrefill,
+}: {
+  data: SignupSection;
+  initialPrefill?: SignupFormPrefill;
+}) {
   const searchParams = useSearchParams();
   const consentCtx = useConsent();
   const defaultRole = (data.roleDefault as Role) ?? "expeditor";
@@ -103,8 +118,8 @@ export function SignupForm({ data }: { data: SignupSection }) {
       document.getElementById("signup")?.scrollIntoView({ behavior: "smooth" });
     }
   }, [defaultRole]);
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
+  const [name, setName] = useState(initialPrefill?.name ?? "");
+  const [email, setEmail] = useState(initialPrefill?.email ?? "");
   const [whatsapp, setWhatsapp] = useState("");
   const [cities, setCities] = useState<string[]>([]);
   const [remember, setRemember] = useState(true);
@@ -125,13 +140,20 @@ export function SignupForm({ data }: { data: SignupSection }) {
   const [errorTone, setErrorTone] = useState<"error" | "info">("error");
 
   useEffect(() => {
-    const remembered = readRemembered();
-    if (remembered) {
-      setName(remembered.name);
-      setEmail(remembered.email);
-      if (remembered.whatsapp) setWhatsapp(remembered.whatsapp);
-      setRemember(true);
+    // Precedence (spec §3.3): an initialPrefill from a fresh Google round-trip
+    // wins over the remember-me cookie. Only consult remember-me when no
+    // initialPrefill is supplied.
+    if (initialPrefill) {
       setHasPrefill(true);
+    } else {
+      const remembered = readRemembered();
+      if (remembered) {
+        setName(remembered.name);
+        setEmail(remembered.email);
+        if (remembered.whatsapp) setWhatsapp(remembered.whatsapp);
+        setRemember(true);
+        setHasPrefill(true);
+      }
     }
     if (typeof window !== "undefined") {
       captureUtmFromUrl(window.location.search, document.referrer);
@@ -334,6 +356,11 @@ export function SignupForm({ data }: { data: SignupSection }) {
         <label htmlFor="waitlist-email">
           Email
           <span className="hint">Aici îți trimitem anunțul de lansare.</span>
+          {initialPrefill?.emailVerified ? (
+            <span className="form-verified-tag" data-provider={initialPrefill.provider}>
+              {verifiedTag(initialPrefill.provider)}
+            </span>
+          ) : null}
         </label>
         <input
           id="waitlist-email"
@@ -344,6 +371,7 @@ export function SignupForm({ data }: { data: SignupSection }) {
           onChange={(e) => setEmail(e.target.value)}
           required
           autoComplete="email"
+          readOnly={Boolean(initialPrefill)}
         />
       </div>
 

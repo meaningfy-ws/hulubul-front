@@ -1,6 +1,18 @@
 import "@testing-library/jest-dom/vitest";
 import { afterAll, afterEach, beforeAll, vi } from "vitest";
+import {
+  TextDecoder as NodeTextDecoder,
+  TextEncoder as NodeTextEncoder,
+} from "node:util";
 import { server } from "./msw/server";
+
+// Vitest's jsdom env installs a TextEncoder whose output Uint8Arrays come from
+// a different realm than Node's. Libraries that do `instanceof Uint8Array`
+// (jose, openid-client) reject those. Restore Node's globals.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+(globalThis as any).TextEncoder = NodeTextEncoder;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+(globalThis as any).TextDecoder = NodeTextDecoder;
 
 // jsdom 25 ships an incomplete Storage on window.localStorage (getItem/setItem
 // are undefined in some setups). Install a Map-backed polyfill when that's the

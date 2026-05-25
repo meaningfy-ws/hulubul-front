@@ -48,6 +48,27 @@ module.exports = {
       },
     },
     {
+      name: "no-zitadel-in-components",
+      severity: "error",
+      comment:
+        "lib/zitadel.ts is OIDC plumbing; UI components must not import it (INV-3, INV-9).",
+      from: { path: "^components/" },
+      to: { path: "^lib/zitadel\\.ts$" },
+    },
+    {
+      name: "no-prefill-cookie-in-components",
+      severity: "error",
+      comment:
+        "lib/prefill-cookie.ts must be used via server components / route handlers, not nested into client UI components (INV-9).",
+      from: {
+        path: "^components/.+\\.tsx$",
+        // Allow the parent server component that legitimately reads the
+        // cookie (Signup.tsx).
+        pathNot: "^components/landing/Signup\\.tsx$",
+      },
+      to: { path: "^lib/prefill-cookie\\.ts$" },
+    },
+    {
       name: "no-circular",
       severity: "warn",
       comment: "Circular dependencies hint at fuzzy module boundaries.",
