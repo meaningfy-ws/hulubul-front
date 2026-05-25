@@ -7,18 +7,16 @@ import {
 
 vi.mock("@/lib/strapi", () => ({
   submitWaitlist: vi.fn().mockResolvedValue(undefined),
-  findDuplicateRegistration: vi.fn().mockResolvedValue(null),
 }));
 vi.mock("@/lib/server-events/dispatcher", () => ({
   dispatchConversion: vi.fn().mockResolvedValue(undefined),
   generateEventId: vi.fn(() => "evt-fixed"),
 }));
 
-import { submitWaitlist, findDuplicateRegistration } from "@/lib/strapi";
+import { submitWaitlist } from "@/lib/strapi";
 import { dispatchConversion } from "@/lib/server-events/dispatcher";
 
 const submit = submitWaitlist as ReturnType<typeof vi.fn>;
-const findByEmail = findDuplicateRegistration as ReturnType<typeof vi.fn>;
 const dispatch = dispatchConversion as ReturnType<typeof vi.fn>;
 
 const validBody = () => ({
@@ -41,7 +39,6 @@ function makeReq(body: unknown) {
 
 beforeEach(() => {
   submit.mockReset().mockResolvedValue(undefined);
-  findByEmail.mockReset().mockResolvedValue(null);
   dispatch.mockReset().mockResolvedValue(undefined);
 });
 
@@ -54,32 +51,17 @@ describe("waitlist route — structured error contract", () => {
     expect(dispatch).toHaveBeenCalledOnce();
   });
 
-  it("duplicate email → 409 ALREADY_REGISTERED with the date, no insert, no conversion", async () => {
-    findByEmail.mockResolvedValue({ registeredAt: "2026-04-27T08:30:00.000Z" });
-    const res = await POST(makeReq(validBody()));
-    expect(res.status).toBe(409);
-    const body = await res.json();
-    expect(body.ok).toBe(false);
-    expect(body.error.code).toBe("ALREADY_REGISTERED");
-    expect(body.error.message).toContain("27/04/2026");
-    expect(body.error.requestId).toBeTruthy();
-    expect(res.headers.get("x-request-id")).toBe(body.error.requestId);
-    expect(submit).not.toHaveBeenCalled();
-    expect(dispatch).not.toHaveBeenCalled();
-  });
-
-  it("same email but NOT an exact duplicate (different role/cities) → registers normally", async () => {
-    // findDuplicateRegistration already encodes the role/cities rule; from
-    // the route's view a non-duplicate simply resolves null → it submits.
-    findByEmail.mockResolvedValue(null);
-    const res = await POST(makeReq({ ...validBody(), cities: ["Paris"] }));
-    expect(res.status).toBe(201);
-    expect(submit).toHaveBeenCalledOnce();
-    expect(findByEmail).toHaveBeenCalledWith({
-      email: "ion@example.com",
-      role: "expeditor",
-      cities: ["Paris"],
-    });
+  it("Per INV-2: a repeated email + role + cities still inserts (waitlist is event-shaped)", async () => {
+    // Same payload twice in a row — both must succeed. INV-2 prohibits the
+    // frontend from short-circuiting duplicates: identity-uniqueness lives
+    // in Zitadel, not in the waitlist collection.
+    const body = validBody();
+    const first = await POST(makeReq(body));
+    expect(first.status).toBe(201);
+    const second = await POST(makeReq(body));
+    expect(second.status).toBe(201);
+    expect(submit).toHaveBeenCalledTimes(2);
+    expect(dispatch).toHaveBeenCalledTimes(2);
   });
 
   it("Strapi 400 validation → 422 UPSTREAM_VALIDATION carrying the real upstream status", async () => {
@@ -102,16 +84,6 @@ describe("waitlist route — structured error contract", () => {
     const res = await POST(makeReq(validBody()));
     expect(res.status).toBe(503);
     expect((await res.json()).error.code).toBe("UPSTREAM_DOWN");
-  });
-
-  it("if the dedupe lookup itself fails, map the error and do NOT insert", async () => {
-    findByEmail.mockRejectedValue(
-      new StrapiUpstreamError("/api/waitlist-submissions", 503),
-    );
-    const res = await POST(makeReq(validBody()));
-    expect(res.status).toBe(503);
-    expect((await res.json()).error.code).toBe("UPSTREAM_DOWN");
-    expect(submit).not.toHaveBeenCalled();
   });
 
   it("invalid payload → 400 CLIENT_VALIDATION with per-field issues in details", async () => {
