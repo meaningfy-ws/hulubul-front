@@ -1091,6 +1091,55 @@ h2.site-h2 em {
   font-size: 14px;
 }
 
+/* ----- Legal page with side aside (donate) ----- */
+.legal-page--with-aside {
+  max-width: 1080px;
+}
+.legal-page--with-aside .legal-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 32px;
+}
+.legal-page--with-aside .legal-aside {
+  min-width: 0;
+}
+@media (min-width: 960px) {
+  .legal-page--with-aside .legal-grid {
+    grid-template-columns: minmax(0, 1fr) 320px;
+    align-items: start;
+    gap: 48px;
+  }
+  .legal-page--with-aside .legal-aside {
+    position: sticky;
+    top: 120px;
+  }
+}
+
+/* ----- Donate card (host for Stripe Buy Button) ----- */
+.donate-card {
+  background: var(--cream-light, #fff);
+  border: 1px solid var(--cream-dark, #eadfd1);
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+}
+.donate-card-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0 0 8px;
+  letter-spacing: -0.01em;
+}
+.donate-card-description {
+  font-size: 14px;
+  color: var(--ink-soft);
+  margin: 0 0 16px;
+  line-height: 1.55;
+}
+.donate-card stripe-buy-button {
+  display: block;
+  width: 100%;
+}
+
 /* ================ SURVEY ================ */
 .survey-page {
   max-width: 760px;

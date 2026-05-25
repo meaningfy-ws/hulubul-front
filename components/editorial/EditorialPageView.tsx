@@ -118,6 +118,13 @@ interface EditorialPageViewProps {
   path?: string;
   /** Optional content rendered after the article body — e.g. a CTA. */
   footerSlot?: React.ReactNode;
+  /**
+   * Optional sidebar rendered next to the article. When present the page
+   * switches to a 2-column grid on desktop (sticky aside) and stacks the
+   * aside below the article on mobile. Used by the donate pages to host
+   * the Stripe Buy Button card.
+   */
+  asideSlot?: React.ReactNode;
 }
 
 /**
@@ -135,6 +142,7 @@ export async function EditorialPageView({
   locale = DEFAULT_LOCALE_CODE,
   path,
   footerSlot,
+  asideSlot,
 }: EditorialPageViewProps) {
   const page = await loadPage(slug, locale);
   const chrome = CHROME[locale];
@@ -149,27 +157,42 @@ export async function EditorialPageView({
     things.push(loadJsonLdSnippet("service-transporters"));
   }
 
+  const article = (
+    <article>
+      <h1 className="serif">{page.title}</h1>
+      <p className="legal-meta">
+        {chrome.lastUpdatedPrefix} {page.lastUpdated}.
+      </p>
+
+      {page.body.format === "blocks" ? (
+        <BlocksRenderer content={page.body.blocks} />
+      ) : (
+        <MarkdownText>{page.body.markdown}</MarkdownText>
+      )}
+
+      {footerSlot}
+
+      <p>
+        <Link href="/">{chrome.backToHome}</Link>
+      </p>
+    </article>
+  );
+
+  const mainClass = asideSlot
+    ? "legal-page legal-page--with-aside"
+    : "legal-page";
+
   return (
-    <main className="legal-page">
+    <main className={mainClass}>
       <JsonLd data={buildGraph(things as never)} />
-      <article>
-        <h1 className="serif">{page.title}</h1>
-        <p className="legal-meta">
-          {chrome.lastUpdatedPrefix} {page.lastUpdated}.
-        </p>
-
-        {page.body.format === "blocks" ? (
-          <BlocksRenderer content={page.body.blocks} />
-        ) : (
-          <MarkdownText>{page.body.markdown}</MarkdownText>
-        )}
-
-        {footerSlot}
-
-        <p>
-          <Link href="/">{chrome.backToHome}</Link>
-        </p>
-      </article>
+      {asideSlot ? (
+        <div className="legal-grid">
+          {article}
+          <aside className="legal-aside">{asideSlot}</aside>
+        </div>
+      ) : (
+        article
+      )}
     </main>
   );
 }

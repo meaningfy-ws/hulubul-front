@@ -2,7 +2,7 @@ import {
   EditorialPageView,
   makeEditorialMetadata,
 } from "@/components/editorial/EditorialPageView";
-import { DonateButton } from "@/components/donate/DonateButton";
+import { StripeBuyButton } from "@/components/donate/StripeBuyButton";
 
 export const generateMetadata = makeEditorialMetadata("doneaza", {
   locale: "en",
@@ -15,7 +15,13 @@ export default function DonatePageEn() {
       slug="doneaza"
       locale="en"
       path="/donate"
-      footerSlot={<DonateButton source="donate-page-en" locale="en" />}
+      asideSlot={
+        <StripeBuyButton
+          title="Donate now"
+          description="The payment is handled directly by Stripe. Hulubul never sees your card data."
+          fallbackLabel="Donate via Stripe"
+        />
+      }
     />
   );
 }
