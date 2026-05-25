@@ -260,6 +260,7 @@ See also [`00-architecture.md §2`](./00-architecture.md#2-architectural-invaria
 | S1-R8 | Hardcoded Romanian copy needs designer changes | Centralised in `lib/auth-copy.ts`; backend spec exists for CMS migration. |
 | S1-R9 | `email_verified === false` shown as "verified" | Badge gated on `emailVerified === true`. Unit test asserts the negative case. |
 | S1-R10 | Two-button-row layout breaks the form on mobile | Visual regression covered by component test rendering at narrow viewport; manual mobile check in PR. |
+| S1-R11 | Zitadel's IdP callback URL diverges from what's registered at Google Cloud (e.g. Login UI v1 ↔ v2 path shift) | **Detection:** smoke-test the happy path + admin-console login after any tenant change; symptom is universal `Error 400: redirect_uri_mismatch`. **Mitigation:** register **both** v1 (`/ui/login/login/externalidp/callback`) and v2 (`/idps/callback`) URIs in Google's OAuth client. Runbook §3 step 18 and §8 carry the recovery procedure. Observed and fixed during Stage-1 setup of `hulubu0-fddnjo`. |
 
 ## 8. Out of scope reminders
 

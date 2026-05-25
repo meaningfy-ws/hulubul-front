@@ -79,7 +79,14 @@ Now the credentials:
 15. **Application type:** **Web application**.
 16. **Name:** `hulubul-zitadel-broker`.
 17. **Authorised JavaScript origins:** leave blank.
-18. **Authorised redirect URIs:** add **one** — `https://<your-tenant>.zitadel.cloud/ui/login/login/externalidp/callback`. (Zitadel's callback when *it* is the OAuth client against Google. Confirm the exact path on your Zitadel tenant — it's printed by Zitadel in §4 below.)
+18. **Authorised redirect URIs:** the callback URL is *the path on the Zitadel tenant where Google sends the user after consent*. **It depends on which Zitadel Login UI your tenant runs**, and Zitadel is the source of truth — copy it from the Google IdP detail page (Default Settings → Identity Providers → Google → Callback URL) after step 4 below.
+
+    Known shapes (observed in `eu1.zitadel.cloud` tenants in 2026):
+
+    - **Newer / Login UI v2 (current `eu1` free-tier default):** `https://<tenant>.zitadel.cloud/idps/callback`
+    - **Legacy / Login UI v1:** `https://<tenant>.zitadel.cloud/ui/login/login/externalidp/callback`
+
+    **Register both** in Google's "Authorised redirect URIs" list. Google supports multiple URIs per OAuth client at zero cost, and registering both insulates the integration from a Zitadel Login-Version flip (which otherwise breaks every Google sign-in with `Error 400: redirect_uri_mismatch`). Verified during the Stage-1 setup of `hulubu0-fddnjo`: the `/idps/callback` form is what Zitadel actually sent; only the v1 form was registered initially, which blocked all Google sign-ins until the v2 form was added.
 19. Create. **Copy the Client ID and Client Secret shown** — these go into **Zitadel**, not into your app's `.env`.
 
 ## 4. Zitadel — add Google as an upstream Identity Provider
@@ -221,7 +228,7 @@ Expect a number ≥ 1. This is what `openid-client` will fetch to verify ID-toke
 
 | Symptom | Most common cause |
 |---|---|
-| `redirect_uri_mismatch` from Google | URI in Google Cloud Credentials doesn't match the one Zitadel prints on its IdP page. They must be **byte-identical**. |
+| `redirect_uri_mismatch` from Google | Zitadel's actual callback URL is not registered in Google's OAuth client. **Recovery:** open Google's "Access blocked / Error 400" page → click "If you are a developer of this app, see error details" → it prints `redirect_uri=…`. Copy that value verbatim and add it to **Google Cloud → Credentials → OAuth client `hulubul-zitadel-broker` → Authorised redirect URIs** → Save → wait ~30 s for Google's edge cache. **Common offender:** Zitadel's Login UI v2 sends `/idps/callback` while only the v1 path `/ui/login/login/externalidp/callback` was registered (or vice versa). Register **both** to be safe — see §3 step 18. |
 | `redirect_uri_mismatch` from Zitadel | The `AUTH_REDIRECT_URI` in your `.env.local` doesn't match a URI in the Zitadel application's Redirect URIs list. Case-sensitive, trailing-slash sensitive. |
 | Zitadel picker appears instead of going to Google | `idp_hint` missing or the IdP ID is wrong. Verify by inspecting the authorize URL. |
 | `invalid_client` from `/oauth/v2/token` | Client secret was regenerated since you copied it, or you have an old value cached. |
