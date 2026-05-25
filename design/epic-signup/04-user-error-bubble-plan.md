@@ -1,6 +1,6 @@
 # Stage 4 — Implementation plan (TDD)
 
-> **Pairs with:** [`04-user-error-bubble.md`](./04-user-error-bubble.md), [`features/04-user-error-bubble.feature`](./features/04-user-error-bubble.feature).
+> **Pairs with:** [`04-user-error-bubble.md`](./04-user-error-bubble.md), [`../../tests/features/auth-04-user-error-bubble.feature`](../../tests/features/auth-04-user-error-bubble.feature).
 > **Discipline:** strict red → green → refactor.
 
 ## Step 0 — Audit existing primitives (no code)
@@ -63,4 +63,4 @@ Confirm the state described in spec §2 still holds. If a notification primitive
 
 ## Definition of done
 
-All Gherkin scenarios in `features/04-user-error-bubble.feature` green; lint clean; bundle delta ≤ 4 KB gzipped.
+All Gherkin scenarios in `../../tests/features/auth-04-user-error-bubble.feature` green; lint clean; bundle delta ≤ 4 KB gzipped.

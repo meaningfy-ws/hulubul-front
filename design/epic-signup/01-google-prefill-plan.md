@@ -1,6 +1,6 @@
 # Stage 1 — Implementation plan (TDD)
 
-> **Pairs with:** [`01-google-prefill.md`](./01-google-prefill.md), [`features/01-google-prefill.feature`](./features/01-google-prefill.feature).
+> **Pairs with:** [`01-google-prefill.md`](./01-google-prefill.md), [`../../tests/features/auth-01-google-prefill.feature`](../../tests/features/auth-01-google-prefill.feature).
 > **Discipline:** strict red → green → refactor per test file. One commit per step. Reference the Gherkin scenario in the commit message.
 > **Prerequisite:** runbook executed, `.env.local` populated, manual round-trip succeeded.
 
@@ -10,7 +10,7 @@
 - **Green:** minimum code to pass.
 - **Refactor:** only after green. Re-run tests.
 - **Commit:** `feat(auth-s1, step N): <scenario id>` or `test(auth-s1, step N): …`.
-- **Gherkin link:** at the top of each test file, comment `// Implements scenarios: <names>` from `features/01-google-prefill.feature`.
+- **Gherkin link:** at the top of each test file, comment `// Implements scenarios: <names>` from `../../tests/features/auth-01-google-prefill.feature`.
 
 ## Step 0 — Regression guard for the existing manual flow
 
