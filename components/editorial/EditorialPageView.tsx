@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { getEditorialPage } from "@/lib/strapi";
 import { EDITORIAL_FALLBACK } from "@/lib/editorial-fallback";
+import { EDITORIAL_FALLBACK_EN } from "@/lib/editorial-fallback-en";
 import { BlocksRenderer } from "@strapi/blocks-react-renderer";
 import { MarkdownText } from "@/components/landing/MarkdownText";
 import { JsonLd } from "@/components/seo/JsonLd";
@@ -13,33 +14,81 @@ import {
   loadJsonLdSnippet,
 } from "@/lib/jsonld/builders";
 import type { EditorialPage, EditorialPageSlug } from "@/lib/types";
+import { DEFAULT_LOCALE_CODE, type Locale } from "@/lib/locale";
+
+interface EditorialChrome {
+  homeLabel: string;
+  backToHome: string;
+  lastUpdatedPrefix: string;
+}
+
+const CHROME: Record<Locale, EditorialChrome> = {
+  ro: {
+    homeLabel: "Acasă",
+    backToHome: "← Înapoi la pagina principală",
+    lastUpdatedPrefix: "Ultima actualizare:",
+  },
+  en: {
+    homeLabel: "Home",
+    backToHome: "← Back to the home page",
+    lastUpdatedPrefix: "Last updated:",
+  },
+};
+
+function pickFallback(
+  slug: EditorialPageSlug,
+  locale: Locale,
+): EditorialPage {
+  if (locale === "en") {
+    const en = EDITORIAL_FALLBACK_EN[slug];
+    if (en) return en;
+  }
+  return EDITORIAL_FALLBACK[slug];
+}
 
 /**
  * Server-side loader: prefer the CMS entry, fall back to the build-time
- * copy in `lib/editorial-fallback.ts`. Errors are logged but never thrown
- * — a stale CMS must never take a legal page offline.
+ * copy. Errors are logged but never thrown — a stale CMS must never take a
+ * legal/editorial page offline.
  */
-async function loadPage(slug: EditorialPageSlug): Promise<EditorialPage> {
+async function loadPage(
+  slug: EditorialPageSlug,
+  locale: Locale,
+): Promise<EditorialPage> {
   try {
-    const cms = await getEditorialPage(slug);
+    const cms = await getEditorialPage(slug, locale);
     if (cms) return cms;
   } catch (error) {
     logger.error(`page/${slug}`, "CMS fetch failed", error);
   }
-  return EDITORIAL_FALLBACK[slug];
+  return pickFallback(slug, locale);
+}
+
+interface EditorialMetadataOptions {
+  /** Override `/${slug}` when the route URL differs from the slug (e.g. `/donate` for EN). */
+  path?: string;
+  locale?: Locale;
 }
 
 /**
  * Returns a `generateMetadata` function bound to a slug. Each route file
  * exports `export const generateMetadata = makeEditorialMetadata("foo")`.
  *
- * Sets the canonical URL so the metadataBase resolves OG / Twitter
- * card images against the right host.
+ * For locale-specific routes, pass `{ locale, path }` so the canonical URL
+ * and fallback copy match the URL the user actually visits.
+ *
+ * Sets the canonical URL so the metadataBase resolves OG / Twitter card
+ * images against the right host.
  */
-export function makeEditorialMetadata(slug: EditorialPageSlug) {
+export function makeEditorialMetadata(
+  slug: EditorialPageSlug,
+  options: EditorialMetadataOptions = {},
+) {
+  const locale = options.locale ?? DEFAULT_LOCALE_CODE;
+  const path = options.path ?? `/${slug}`;
   return async function generateMetadata(): Promise<Metadata> {
-    const page = await loadPage(slug);
-    const canonical = makeCanonical(`/${slug}`);
+    const page = await loadPage(slug, locale);
+    const canonical = makeCanonical(path);
     // CMS `seo.metaTitle` is authoritative when set; otherwise the page
     // title. pageTitle() still guarantees no double-branding either way.
     const ogTitle = page.seo.metaTitle ?? page.title;
@@ -61,28 +110,39 @@ export function makeEditorialMetadata(slug: EditorialPageSlug) {
   };
 }
 
+interface EditorialPageViewProps {
+  slug: EditorialPageSlug;
+  /** Locale for fetching + chrome strings. Defaults to `ro`. */
+  locale?: Locale;
+  /** Route path for the breadcrumb (defaults to `/${slug}`). */
+  path?: string;
+  /** Optional content rendered after the article body — e.g. a CTA. */
+  footerSlot?: React.ReactNode;
+}
+
 /**
  * The shared body for all editorial pages (privacy, terms, about,
- * pentru-transportatori). Each route file's default export is a thin
- * wrapper: `<EditorialPageView slug="…" />`.
+ * pentru-transportatori, doneaza, donate). Each route file's default export is
+ * a thin wrapper: `<EditorialPageView slug="…" />`.
  *
- * The component emits two JSON-LD entities per page:
- *   1. A `BreadcrumbList` (Home → this page).
- *   2. For `pentru-transportatori`, the transporter `Service` snippet.
- *
- * The root layout already emits `Organization` + `WebSite`, so search
- * engines see the full entity graph as one coherent model.
+ * The component emits a `BreadcrumbList` JSON-LD entity per page, plus a
+ * `Service` snippet for `pentru-transportatori`. The root layout already
+ * emits `Organization` + `WebSite`, so search engines see the full entity
+ * graph as one coherent model.
  */
 export async function EditorialPageView({
   slug,
-}: {
-  slug: EditorialPageSlug;
-}) {
-  const page = await loadPage(slug);
+  locale = DEFAULT_LOCALE_CODE,
+  path,
+  footerSlot,
+}: EditorialPageViewProps) {
+  const page = await loadPage(slug, locale);
+  const chrome = CHROME[locale];
+  const routePath = path ?? `/${slug}`;
   const things: unknown[] = [
     buildBreadcrumbList([
-      { name: "Acasă", path: "/" },
-      { name: page.title, path: `/${slug}` },
+      { name: chrome.homeLabel, path: "/" },
+      { name: page.title, path: routePath },
     ]),
   ];
   if (slug === "pentru-transportatori") {
@@ -94,7 +154,9 @@ export async function EditorialPageView({
       <JsonLd data={buildGraph(things as never)} />
       <article>
         <h1 className="serif">{page.title}</h1>
-        <p className="legal-meta">Ultima actualizare: {page.lastUpdated}.</p>
+        <p className="legal-meta">
+          {chrome.lastUpdatedPrefix} {page.lastUpdated}.
+        </p>
 
         {page.body.format === "blocks" ? (
           <BlocksRenderer content={page.body.blocks} />
@@ -102,8 +164,10 @@ export async function EditorialPageView({
           <MarkdownText>{page.body.markdown}</MarkdownText>
         )}
 
+        {footerSlot}
+
         <p>
-          <Link href="/">← Înapoi la pagina principală</Link>
+          <Link href="/">{chrome.backToHome}</Link>
         </p>
       </article>
     </main>
