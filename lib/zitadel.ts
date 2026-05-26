@@ -19,6 +19,7 @@ import {
   isAuthProvider,
   PROVIDER_FACEBOOK,
   PROVIDER_GOOGLE,
+  PROVIDER_INSTAGRAM,
   PROVIDER_TIKTOK,
   type AuthProvider,
 } from "./auth-providers";
@@ -252,6 +253,7 @@ export async function buildAuthStart(
 const ID_TOKEN_PROVIDER_CLAIMS: Record<string, AuthProvider> = {
   google: PROVIDER_GOOGLE,
   facebook: PROVIDER_FACEBOOK,
+  instagram: PROVIDER_INSTAGRAM,
   tiktok: PROVIDER_TIKTOK,
 };
 

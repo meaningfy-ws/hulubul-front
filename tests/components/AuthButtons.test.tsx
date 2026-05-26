@@ -14,6 +14,8 @@ import { AuthButtons } from "@/components/landing/AuthButtons";
 import {
   PROVIDER_FACEBOOK,
   PROVIDER_GOOGLE,
+  PROVIDER_INSTAGRAM,
+  PROVIDER_TIKTOK,
 } from "@/lib/auth-providers";
 
 describe("Feature: <AuthButtons />", () => {
@@ -64,6 +66,51 @@ describe("Feature: <AuthButtons />", () => {
       expect(
         screen.getByRole("link", { name: /continuă cu facebook/i }),
       ).toBeInTheDocument();
+    });
+  });
+
+  describe("Given providers=[instagram]", () => {
+    it("Then the Instagram button renders and links to /api/auth/start?provider=instagram", () => {
+      render(<AuthButtons providers={[PROVIDER_INSTAGRAM]} />);
+      const link = screen.getByRole("link", { name: /continuă cu instagram/i });
+      expect(link).toHaveAttribute(
+        "href",
+        "/api/auth/start?provider=instagram",
+      );
+    });
+  });
+
+  describe("Given providers=[tiktok]", () => {
+    it("Then the TikTok button renders and links to /api/auth/start?provider=tiktok", () => {
+      render(<AuthButtons providers={[PROVIDER_TIKTOK]} />);
+      const link = screen.getByRole("link", { name: /continuă cu tiktok/i });
+      expect(link).toHaveAttribute(
+        "href",
+        "/api/auth/start?provider=tiktok",
+      );
+    });
+  });
+
+  describe("Given providers=[google, facebook, instagram, tiktok]", () => {
+    it("Then all four buttons render in the order given", () => {
+      const { container } = render(
+        <AuthButtons
+          providers={[
+            PROVIDER_GOOGLE,
+            PROVIDER_FACEBOOK,
+            PROVIDER_INSTAGRAM,
+            PROVIDER_TIKTOK,
+          ]}
+        />,
+      );
+      const links = Array.from(container.querySelectorAll("a"));
+      const classes = links.map((a) => a.className.split(/\s+/).pop());
+      expect(classes).toEqual([
+        "auth-button--google",
+        "auth-button--facebook",
+        "auth-button--instagram",
+        "auth-button--tiktok",
+      ]);
     });
   });
 

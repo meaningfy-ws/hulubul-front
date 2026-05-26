@@ -17,6 +17,12 @@ export interface TestZitadelEnv {
   redirectUri: string;
   cookieSecret: string;
   idpGoogle: string;
+  /** Optional — set to exercise the Facebook (Stage-2) provider path. */
+  idpFacebook?: string;
+  /** Optional — set to exercise the Instagram (Stage-2) provider path. */
+  idpInstagram?: string;
+  /** Optional — set to exercise the TikTok (Stage-2) provider path. */
+  idpTiktok?: string;
 }
 
 export const TEST_ZITADEL_ENV: TestZitadelEnv = {
@@ -34,6 +40,15 @@ export function applyTestZitadelEnv(env: TestZitadelEnv = TEST_ZITADEL_ENV) {
   process.env.ZITADEL_CLIENT_ID = env.clientId;
   process.env.ZITADEL_CLIENT_SECRET = env.clientSecret;
   process.env.ZITADEL_IDP_GOOGLE = env.idpGoogle;
+  if (env.idpFacebook) {
+    process.env.ZITADEL_IDP_FACEBOOK = env.idpFacebook;
+  }
+  if (env.idpInstagram) {
+    process.env.ZITADEL_IDP_INSTAGRAM = env.idpInstagram;
+  }
+  if (env.idpTiktok) {
+    process.env.ZITADEL_IDP_TIKTOK = env.idpTiktok;
+  }
   process.env.AUTH_REDIRECT_URI = env.redirectUri;
   process.env.AUTH_COOKIE_SECRET = env.cookieSecret;
 }
@@ -46,6 +61,8 @@ export function clearTestZitadelEnv() {
     "ZITADEL_CLIENT_SECRET",
     "ZITADEL_IDP_GOOGLE",
     "ZITADEL_IDP_FACEBOOK",
+    "ZITADEL_IDP_INSTAGRAM",
+    "ZITADEL_IDP_TIKTOK",
     "AUTH_REDIRECT_URI",
     "AUTH_COOKIE_SECRET",
   ]) {
