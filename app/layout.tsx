@@ -94,6 +94,20 @@ export default function RootLayout({
     >
       <head>
         {/*
+          Manual <meta name="description"> in the initial HTML head as a
+          safety net for Lighthouse's meta-description SEO audit.
+          Reason: the landing page sets `export const dynamic = "force-dynamic"`
+          (needed so the Signup component reads runtime env per request), and
+          Next 15 streams async page metadata into the body via
+          `AsyncMetadataOutlet` rather than emitting it in the initial <head>.
+          Lighthouse audits the served HTML before the metadata is hoisted,
+          sees no <meta name="description">, and fails the SEO category.
+          This static tag guarantees the audit always passes; per-page
+          generateMetadata still emits the more specific description that
+          search engines and social cards consume.
+        */}
+        <meta name="description" content={DEFAULT_SITE_DESCRIPTION} />
+        {/*
           Preconnect to the Google Analytics origins so the TLS
           handshake + DNS lookup happen in parallel with React
           hydration, not sequentially after gtag.js requests them.
