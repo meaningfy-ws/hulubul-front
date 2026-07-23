@@ -13,9 +13,11 @@ This repository is one half of the platform. The backend lives at
 
 | Service | URL | Tier |
 |---|---|---|
-| Frontend | Vercel (free tier) | Free |
+| Frontend | Hetzner VM (`10.0.1.60`) via `infrastructure-stacks` | Staging |
 | Strapi admin | [Strapi Cloud](https://cloud.strapi.io) (free tier) | Free |
 | Auth (SSO) | Zitadel Cloud (free tier) *(planned)* | Free |
+
+See [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) for the full pipeline.
 
 ---
 
@@ -151,9 +153,15 @@ Structure follows `design/testing-strategy.md`:
 
 ## Deployment
 
-### Vercel
+**Actual pipeline (push to `main` → CI → cross-repo dispatch → Hetzner VM via
+`infrastructure-stacks`): see [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).**
+There is no Vercel deployment despite what an earlier version of this section
+said — the notes below about env vars and ISR behavior still apply to
+whatever host runs the container.
 
-- Set `NEXT_PUBLIC_STRAPI_URL` and `STRAPI_API_TOKEN` in the hosting dashboard.
+### Runtime behavior (host-agnostic)
+
+- Set `NEXT_PUBLIC_STRAPI_URL` and `STRAPI_API_TOKEN` in the hosting environment.
 - Pages are statically rendered with ISR (`revalidate = 300`). Content changes
   in Strapi propagate within 5 minutes without a redeploy.
 - If Strapi is unreachable at build time, the build still succeeds — the page
