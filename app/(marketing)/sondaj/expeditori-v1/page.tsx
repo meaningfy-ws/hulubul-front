@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import Link from "next/link";
-import { SurveyFormV2 } from "@/components/survey/SurveyFormV2";
+import { SurveyForm } from "@/components/survey/SurveyForm";
 
 export const metadata: Metadata = {
   title: "Sondaj pentru expeditori",
   description:
-    "Împărtășește cum trimiți colete și ce ți-ar economisi timp. Ne ajută să construim platforma cum trebuie.",
+    "Împărtășește cum trimiți pachete și ce ți-ar economisi timp. Ne ajută să construim platforma cum trebuie.",
   // Survey is a transient form, not a search target — keep it out of
   // the index (also disallowed in robots.txt as defense in depth).
   robots: { index: false, follow: false },
@@ -23,12 +23,18 @@ export default function SenderSurveyPage() {
         <h1 className="serif">Cum trimiți un colet acasă?</h1>
         <p className="survey-lead">
           Suntem la început și vrem să construim platforma pe ce ai nevoie
-          tu — nu pe presupunerile noastre. Durează ~3 minute.
+          tu — nu pe presupunerile noastre. Durează ~3 minute. Toate
+          întrebările în afară de identitate sunt opționale.
+        </p>
+        <p className="legal-meta">
+          Ești transportator, nu expeditor? Sondajul pentru voi vine curând —
+          între timp poți să te înscrii pe{" "}
+          <Link href="/#signup">lista de așteptare</Link>.
         </p>
       </header>
 
       <Suspense fallback={null}>
-        <SurveyFormV2 />
+        <SurveyForm />
       </Suspense>
     </main>
   );

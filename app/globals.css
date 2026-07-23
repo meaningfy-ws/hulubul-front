@@ -1430,6 +1430,23 @@ label.checkbox-option > span {
   font-size: 14px;
   border-radius: 2px;
 }
+/* Per-field validation highlight — a question that failed a group-level
+   check (route, "select at least one", the alpha-testing consent gate)
+   that native HTML required/type can't express on its own. */
+.form-group.field-invalid {
+  border-left: 3px solid var(--stamp-red);
+  margin-left: -16px;
+  padding-left: 13px;
+}
+.form-group input.field-invalid,
+.form-group textarea.field-invalid {
+  border-color: var(--stamp-red);
+}
+.field-error-text {
+  color: var(--stamp-red);
+  font-size: 13px;
+  margin-top: 6px;
+}
 /* Non-failure outcomes (already registered, rate-limited): informative,
    not alarming — calmer palette than the red error state. */
 .form-error--info {

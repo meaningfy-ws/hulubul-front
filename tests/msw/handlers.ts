@@ -21,4 +21,11 @@ export const handlers = [
       { status: 201 },
     );
   }),
+  http.post(`${TEST_STRAPI_URL}/api/survey-sender-v2s`, async ({ request }) => {
+    const body = (await request.json()) as { data?: Record<string, unknown> };
+    return HttpResponse.json(
+      { data: { id: 1, documentId: "ghi", ...(body.data ?? {}) }, meta: {} },
+      { status: 201 },
+    );
+  }),
 ];

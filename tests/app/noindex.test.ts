@@ -1,10 +1,18 @@
 import { describe, expect, it } from "vitest";
 import { metadata as senderSurveyMeta } from "@/app/(marketing)/sondaj/expeditori/page";
+import { metadata as senderSurveyV1Meta } from "@/app/(marketing)/sondaj/expeditori-v1/page";
 import { metadata as adminMeta } from "@/app/admin/rute/page";
 
 describe("noindex on transient pages", () => {
-  it("/sondaj/expeditori is noindex, nofollow", () => {
+  it("/sondaj/expeditori (v2) is noindex, nofollow", () => {
     expect(senderSurveyMeta.robots).toMatchObject({
+      index: false,
+      follow: false,
+    });
+  });
+
+  it("/sondaj/expeditori-v1 is noindex, nofollow", () => {
+    expect(senderSurveyV1Meta.robots).toMatchObject({
       index: false,
       follow: false,
     });
