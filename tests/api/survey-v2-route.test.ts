@@ -24,11 +24,27 @@ const validPayload = {
   wantsToTest: "nu",
 };
 
-function req(body: unknown): Request {
+function req(body: unknown, headers: Record<string, string> = {}): Request {
   return new Request("http://test/api/survey-v2", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...headers },
     body: JSON.stringify(body),
+  });
+}
+
+/** Captures the `data` object Strapi actually receives for this one request. */
+function captureStrapiPayload(): Promise<Record<string, unknown>> {
+  return new Promise((resolve) => {
+    server.use(
+      http.post(`${TEST_STRAPI_URL}/api/survey-sender-v2s`, async ({ request }) => {
+        const body = (await request.json()) as { data: Record<string, unknown> };
+        resolve(body.data);
+        return HttpResponse.json(
+          { data: { id: 1, documentId: "ghi", ...body.data }, meta: {} },
+          { status: 201 },
+        );
+      }),
+    );
   });
 }
 
@@ -77,6 +93,49 @@ describe("POST /api/survey-v2", () => {
     );
     const res = await POST(req(validPayload));
     expect(res.status).toBe(502);
+  });
+
+  it("forwards the client-resolved location as-is, without IP fallback", async () => {
+    const captured = captureStrapiPayload();
+    const res = await POST(
+      req(
+        {
+          ...validPayload,
+          location: { source: "geolocation", lat: 49.6, lon: 6.1, accuracyMeters: 32 },
+        },
+        { "x-vercel-ip-country": "LU", "x-vercel-ip-city": "Luxembourg" },
+      ),
+    );
+    expect(res.status).toBe(201);
+    expect((await captured).location).toEqual({
+      source: "geolocation",
+      lat: 49.6,
+      lon: 6.1,
+      accuracyMeters: 32,
+    });
+  });
+
+  it("falls back to IP-derived location when the client sends none and IP headers are present", async () => {
+    const captured = captureStrapiPayload();
+    const res = await POST(
+      req(validPayload, {
+        "x-vercel-ip-country": "LU",
+        "x-vercel-ip-city": "Luxembourg",
+      }),
+    );
+    expect(res.status).toBe(201);
+    expect((await captured).location).toEqual({
+      source: "ip",
+      city: "Luxembourg",
+      country: "LU",
+    });
+  });
+
+  it("forwards a null location when the client sends none and no IP headers are present", async () => {
+    const captured = captureStrapiPayload();
+    const res = await POST(req(validPayload));
+    expect(res.status).toBe(201);
+    expect((await captured).location).toBeNull();
   });
 
   it("returns 400 on invalid JSON", async () => {

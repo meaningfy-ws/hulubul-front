@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { SurveyFormV2 } from "@/components/survey/SurveyFormV2";
@@ -34,6 +34,15 @@ vi.mock("@/components/routes/CityTagInput", () => ({
   ),
 }));
 
+const originalGeolocation = navigator.geolocation;
+
+function mockGeo(impl: Geolocation["getCurrentPosition"] | undefined) {
+  Object.defineProperty(navigator, "geolocation", {
+    value: impl && { getCurrentPosition: impl, watchPosition: vi.fn(), clearWatch: vi.fn() },
+    configurable: true,
+  });
+}
+
 beforeEach(() => {
   Array.from(searchParams.keys()).forEach((k) => searchParams.delete(k));
   window.localStorage.removeItem(REMEMBER_STORAGE_KEY);
@@ -42,6 +51,14 @@ beforeEach(() => {
       status: 201,
     }),
   );
+  mockGeo(undefined);
+});
+
+afterEach(() => {
+  Object.defineProperty(navigator, "geolocation", {
+    value: originalGeolocation,
+    configurable: true,
+  });
 });
 
 function getBody() {
@@ -97,7 +114,43 @@ describe("<SurveyFormV2>", () => {
       switchReasons: ["o_singura_cerere"],
       mostImportantThing: "Să știu că pachetul chiar ajunge.",
       wantsToTest: "nu",
+      location: null,
     });
+  });
+
+  it("includes a resolved location in the payload when geolocation is granted", { timeout: 15000 }, async () => {
+    mockGeo((onSuccess) => {
+      onSuccess({
+        coords: { latitude: 49.6, longitude: 6.1, accuracy: 32 },
+      } as GeolocationPosition);
+    });
+    const user = userEvent.setup();
+    render(<SurveyFormV2 />);
+    await fillRequiredFields(user);
+    await user.click(screen.getByRole("button", { name: /trimite răspunsurile/i }));
+
+    await waitFor(() =>
+      expect(screen.getByText(/mulțumim/i)).toBeInTheDocument(),
+    );
+    expect(getBody()).toMatchObject({
+      location: { source: "geolocation", lat: 49.6, lon: 6.1, accuracyMeters: 32 },
+    });
+  });
+
+  it("submits successfully with no location when geolocation is denied", { timeout: 15000 }, async () => {
+    mockGeo((_ok, onError) => {
+      onError?.({ code: 1, message: "denied" } as GeolocationPositionError);
+    });
+    const user = userEvent.setup();
+    render(<SurveyFormV2 />);
+    await fillRequiredFields(user);
+    await user.click(screen.getByRole("button", { name: /trimite răspunsurile/i }));
+
+    await waitFor(() =>
+      expect(screen.getByText(/mulțumim/i)).toBeInTheDocument(),
+    );
+    expect(getBody()).toMatchObject({ location: null });
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
   it("caps a multi-select at ceil(n/2) selections (8 options -> 4, UX-only, no server rule)", async () => {
