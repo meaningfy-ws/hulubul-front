@@ -68,7 +68,15 @@ stood up later, update this doc (and probably rename the CI job).
 - **Backend (Strapi)**: deployed independently from
   `meaningfy-ws/strapi-cloud-template-blog-18c70c3ea8` — see that repo's own
   `docs/DEPLOY-RUNBOOK.md` for its deploy/permission-grant steps. A frontend
-  push does **not** deploy the backend and vice versa.
+  push does **not** deploy the backend and vice versa. **Not Strapi Cloud**,
+  despite the repo's name (that's just the source template it started
+  from): production Strapi is self-hosted, built from that source and run
+  as a Docker container (`hulubul-strapi`) on the *same* Hetzner VM as this
+  frontend, behind Traefik at `api.hulubul.com`, sharing the same
+  `infrastructure-stacks` `hulubul/docker-compose.yml` stack (which also
+  defines the `db` Postgres container and the `traefik` reverse proxy). A
+  push to either repo only deploys that repo's own service, but both land
+  on the same VM via the same stack.
 - **Local dev**: `npm run dev`, reads `.env.local` (copy `.env.example`).
   Talking to the real backend requires a real `STRAPI_API_TOKEN` — see
   `design/spec-survey-sender-v2-backend.md` for how that collection's token

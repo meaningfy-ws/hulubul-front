@@ -14,8 +14,18 @@ This repository is one half of the platform. The backend lives at
 | Service | URL | Tier |
 |---|---|---|
 | Frontend | Hetzner VM (`10.0.1.60`) via `infrastructure-stacks` | Staging |
-| Strapi admin | [Strapi Cloud](https://cloud.strapi.io) (free tier) | Free |
+| Strapi admin | Self-hosted on the same Hetzner VM (Docker, behind Traefik at `api.hulubul.com`) — **not** Strapi Cloud | Staging |
 | Auth (SSO) | Zitadel Cloud (free tier) *(planned)* | Free |
+
+**Not Strapi Cloud.** Despite the backend repo's name
+(`strapi-cloud-template-blog-...`, just its source template's name), the
+Strapi instance actually serving `hulubul.com` is self-hosted: built from
+that repo's source and run as a Docker container (`hulubul-strapi`) on the
+same Hetzner VM as the frontend, alongside its own Postgres container —
+see `hulubul/docker-compose.yml` in `infrastructure-stacks` for the exact
+setup. A separate Strapi Cloud project (`*.strapiapp.com`) may exist for
+local dev/sandboxing, but confirm with whoever set it up before treating it
+as authoritative for anything — it is not what's live.
 
 See [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) for the full pipeline.
 
@@ -77,7 +87,9 @@ npm run dev          # copies .env.cloud → .env.local on first run
 ## Environment
 
 ```
-NEXT_PUBLIC_STRAPI_URL   # Base URL of the Strapi backend, e.g. https://xyz.strapiapp.com
+NEXT_PUBLIC_STRAPI_URL   # Base URL of the Strapi backend — production is https://api.hulubul.com
+                         # (self-hosted on Hetzner, NOT Strapi Cloud); a *.strapiapp.com URL
+                         # here means you're pointed at a separate Strapi Cloud sandbox, not prod.
 STRAPI_API_TOKEN         # Server-only token with read + waitlist/survey create permissions
 ```
 
@@ -171,14 +183,16 @@ whatever host runs the container.
 
 ```bash
 docker build \
-  --build-arg NEXT_PUBLIC_STRAPI_URL=https://your-project.strapiapp.com \
+  --build-arg NEXT_PUBLIC_STRAPI_URL=https://api.hulubul.com \
   -t hulubul-front .
 
 docker run -e STRAPI_API_TOKEN=your-token -p 3000:3000 hulubul-front
 ```
 
-- `NEXT_PUBLIC_STRAPI_URL` — your Strapi Cloud URL (e.g. `https://xyz.strapiapp.com`),
-  or a local Strapi instance. Baked in at build time for client bundles + ISR.
+- `NEXT_PUBLIC_STRAPI_URL` — the self-hosted Strapi URL (production:
+  `https://api.hulubul.com`, on the same Hetzner VM — not Strapi Cloud), or
+  a local Strapi instance for dev. Baked in at build time for client
+  bundles + ISR.
 - `STRAPI_API_TOKEN` — runtime-only, used by server-side route handlers.
 - Build tolerates Strapi downtime — renders a placeholder, ISR retries at runtime.
 
