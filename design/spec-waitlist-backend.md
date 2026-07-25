@@ -1,7 +1,14 @@
 # Waitlist — Backend Spec
 
+> **Infra note (2026-07-26):** "Strapi Cloud" below reflects this doc's
+> original date (2026-04-27). Production Strapi is now self-hosted on the
+> Hetzner VM behind `api.hulubul.com` — see `docs/DEPLOYMENT.md`. The
+> content-type contract described here is unaffected by that move; only
+> the hosting location changed.
+>
 > Date: 2026-04-27
-> Scope: full backend contract for the waitlist on Strapi Cloud.
+> Scope: full backend contract for the waitlist (content-type, permissions,
+> shape) — hosting location has since changed, see the note above.
 > Collection: `api::waitlist-submission.waitlist-submission`.
 > Companion doc: `design/spec-waitlist-frontend.md`.
 > Related: `design/strapi-runbook.md` (admin/edit flow),
@@ -318,7 +325,9 @@ here.
 
 ## 10. Strapi admin steps (for the backend operator)
 
-Run on Strapi Cloud (`design/strapi-runbook.md` §3):
+Run in the Strapi admin (`design/strapi-runbook.md` §3) — now self-hosted
+at `api.hulubul.com/admin`, not Strapi Cloud (see the infra note at the top
+of this file):
 
 1. **Content-Type Builder → Waitlist submission**
    - Add `cities` (JSON, optional). Description: *"Ordered city array. For all roles: index 0 = origin (departure), last = destination (arrival). Middle indices = waypoints in travel order."*

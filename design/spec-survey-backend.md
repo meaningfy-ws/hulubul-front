@@ -77,8 +77,12 @@ are granted — the next deploy will work.
 
 ## Acceptance
 
-1. `GET https://steadfast-bell-433fdd1ac5.strapiapp.com/api/survey-responses`
-   returns `200` with `{ data: [], meta: ... }` (instead of today's `404`).
+1. `GET <strapi-url>/api/survey-responses` returns `200` with `{ data: [],
+   meta: ... }` (instead of today's `404`). *(2026-07-26 note: the
+   `steadfast-bell-433fdd1ac5.strapiapp.com` host originally named here is
+   a Strapi Cloud sandbox, not production — production is self-hosted at
+   `api.hulubul.com`, see `docs/DEPLOYMENT.md`. Point this at whichever
+   instance you're actually verifying.)*
 2. A POST with the canonical payload from a successful frontend submission
    returns `201` and the row appears in Strapi admin under "Survey Responses".
 3. Submitting the form on `/sondaj/expeditori` shows the success state, and

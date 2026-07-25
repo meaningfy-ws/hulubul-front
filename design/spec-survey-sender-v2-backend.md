@@ -1,21 +1,45 @@
 # Spec — Survey Response v2 (Strapi backend)
 
-**Status: LIVE and verified end-to-end (2026-07-23).** Implemented on the
-backend repo's `feat/survey-sender-v2` branch (changes `survey-sender-v2-backend`
-+ `survey-sender-v2-permissive-choice-limits`, both archived there), merged to
-`main` via PR #12, deployed, and permissioned. Confirmed with a real POST
-against the deployed instance —
-`https://steadfast-bell-433fdd1ac5.strapiapp.com/api/survey-sender-v2s` →
-`201`, `documentId: i1sfk1tewt3qqndy3dpgjbun` — both directly and through this
-repo's own `app/api/survey-v2/route.ts`.
+**Status: LIVE, verified end-to-end against actual production (2026-07-26
+correction below).**
 
-**Note for whoever owns DNS/custom domains:** `NEXT_PUBLIC_STRAPI_URL=https://api.hulubul.com`
-(the value in `.env.example`) returned `401` for the same token that worked
-fine against `https://steadfast-bell-433fdd1ac5.strapiapp.com` — the custom
+**Correction (2026-07-26):** the original verification note (2026-07-23,
+preserved further down) tested against
+`https://steadfast-bell-433fdd1ac5.strapiapp.com` — a **separate Strapi
+Cloud sandbox project**, not the Strapi that serves `hulubul.com`.
+Production Strapi is self-hosted (Docker container `hulubul-strapi` on the
+same Hetzner VM as the frontend, behind Traefik at `api.hulubul.com` — see
+`docs/DEPLOYMENT.md`), with its own database and its own API token. The
+`401` mentioned below wasn't a DNS problem — `api.hulubul.com` was
+correctly routing to the real (self-hosted) Strapi all along; it simply
+doesn't accept the Strapi Cloud sandbox's token, because it's a different
+server. Re-verified directly against production during a 2026-07-26 bug
+investigation: `GET https://api.hulubul.com/api/survey-sender-v2s`
+(no auth) → `403 Forbidden` (route exists, same as `survey-senders` and
+`waitlist-submissions` — a `404` would mean the collection doesn't exist,
+`403` means it does and public access is correctly denied), and a real POST
+through `https://hulubul.com/api/survey-v2` → `201`. The collection is
+confirmed working on the actual production backend.
+
+**Original note (2026-07-23), preserved for history — the diagnosis in it
+was wrong, corrected above:** Implemented on the backend repo's
+`feat/survey-sender-v2` branch (changes `survey-sender-v2-backend` +
+`survey-sender-v2-permissive-choice-limits`, both archived there), merged
+to `main` via PR #12, deployed, and permissioned. Confirmed with a real
+POST against the deployed instance —
+`https://steadfast-bell-433fdd1ac5.strapiapp.com/api/survey-sender-v2s` →
+`201`, `documentId: i1sfk1tewt3qqndy3dpgjbun` — both directly and through
+this repo's own `app/api/survey-v2/route.ts`. ~~**Note for whoever owns
+DNS/custom domains:** `NEXT_PUBLIC_STRAPI_URL=https://api.hulubul.com` (the
+value in `.env.example`) returned `401` for the same token that worked fine
+against `https://steadfast-bell-433fdd1ac5.strapiapp.com` — the custom
 domain likely isn't pointed at this Strapi Cloud instance (or points at a
-different/stale one). Local `.env.local` now uses the `.strapiapp.com` URL
-directly; `.env.example` wasn't changed since fixing the custom domain is an
-infra/DNS matter, not a repo one.
+different/stale one).~~ Not a DNS issue — see correction above. Local dev
+pointed at `api.hulubul.com` needs a real token for *that* (self-hosted)
+Strapi instance, not the Strapi Cloud sandbox's token — the two aren't
+interchangeable. Whoever's doing backend-touching work locally should
+confirm which token they actually have before assuming either URL "is"
+production.
 
 **Confirmed compatible, with one notable adaptation**: `searchDuration` shipped
 as a plain Strapi `string`, not an `enumeration` — Strapi's content-type

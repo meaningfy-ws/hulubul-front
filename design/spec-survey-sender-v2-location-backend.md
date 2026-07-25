@@ -1,25 +1,31 @@
 # Spec — Add `location` to Survey Response v2 (Strapi backend)
 
-**Status: ALREADY LIVE — no backend action needed.** Verified 2026-07-25:
-the `location` field was already present on `survey-sender-v2` before this
-spec was even drafted (confirmed via `GET /api/survey-sender-v2s` — all 4
-pre-existing rows, dated 2026-07-23, already carry a `location: null` key,
-which Strapi only serializes for attributes actually defined in the
-content-type's schema). Write path also confirmed end-to-end: a real POST
-through `app/api/survey-v2/route.ts` against the live instance
-(`https://steadfast-bell-433fdd1ac5.strapiapp.com`) with
-`location: { source: "geolocation", lat: 49.611, lon: 6.131,
-accuracyMeters: 25 }` returned `201`, and the value came back unmodified on
-GET (row id 5, `documentId: du9ydi1a4s5dxpkkvvhwd3od`, self-labeled as test
-data to delete). This document is kept as the verification record, not a
-pending ask — nothing below requires backend work.
+**Status: UNVERIFIED against real production — correction, 2026-07-26.**
+Everything below this notice was verified against
+`https://steadfast-bell-433fdd1ac5.strapiapp.com`, which a separate
+2026-07-26 investigation established is a **Strapi Cloud sandbox project,
+not the Strapi that serves `hulubul.com`**. Production Strapi is
+self-hosted at `api.hulubul.com` (see `docs/DEPLOYMENT.md`). The
+"ALREADY LIVE" conclusion below does not carry over — it was true of the
+sandbox, not proven true of production.
 
-**Date:** 2026-07-25 (drafted as a hand-off request; downgraded to a
-verification record same day once the live check ran).
-**Amends:** `design/spec-survey-sender-v2-backend.md` (the `survey-sender-v2`
-collection, LIVE since 2026-07-23) — turns out that spec's original
-implementation already included this field, just undocumented in its own
-attribute table.
+**What IS confirmed on real production (2026-07-26):** a POST through
+`https://hulubul.com/api/survey-v2` with a populated `location` field
+returned `201` (row would be tagged `name:
+"prod-location-repro-2026-07-26"`). That only proves the request didn't
+error — Strapi returns `201` whether it stored an unrecognized field or
+silently dropped it, and this investigation has no admin/token access to
+the self-hosted instance to tell those apart by reading the row back.
+**Open action:** check Strapi admin (or query with a valid production
+token) for whether that row's `location` column has the submitted value or
+is empty/absent. If it's genuinely missing the column, the original ask in
+this spec — add `location: json` to `survey-sender-v2` — still needs doing,
+just against the *real* backend this time.
+
+**Date:** 2026-07-25 (drafted as a hand-off request, then wrongly marked
+resolved same day against the wrong instance); corrected 2026-07-26.
+**Amends:** `design/spec-survey-sender-v2-backend.md` (see that file's own
+2026-07-26 correction — same sandbox-vs-production mixup applies there).
 
 ## Why this was thought to be needed
 
@@ -28,8 +34,9 @@ capture — the same mechanism the landing waitlist form already uses
 (`lib/geolocation.ts` + IP fallback), requested with no visible consent UI
 and no prompt-driven copy. The attribute table in the amended spec
 (`design/spec-survey-sender-v2-backend.md`) never listed `location`, so the
-assumption going in was that Strapi would silently drop the field. The live
-check above disproves that: the field was already there.
+assumption going in was that Strapi would silently drop the field. The
+Strapi Cloud sandbox check disproved that for the sandbox; production
+remains to be confirmed (see the top-of-file correction).
 
 **Explicitly not doing:** a `locationConsent` field. Because the request is
 silent (no prompt UI, no "reține locația" checkbox), the only two outcomes
@@ -40,10 +47,11 @@ carries that distinction. A separate consent enum would just restate
 consent UI to this form, add `locationConsent` then, matching
 `waitlist-submission`'s existing shape — not before.
 
-## Strapi content type — confirmed shape (no change needed)
+## Strapi content type — shape confirmed on the sandbox only
 
-Collection-type `survey-sender-v2` (plural API id `survey-sender-v2s`)
-already has this attribute:
+Collection-type `survey-sender-v2` (plural API id `survey-sender-v2s`) had
+this attribute **on the Strapi Cloud sandbox** — production status unknown,
+see the top-of-file correction:
 
 | Field | Type | Required | Notes |
 |---|---|---|---|
@@ -94,9 +102,11 @@ doesn't have):**
 
 ## Permissions
 
-Confirmed sufficient as-is. `STRAPI_API_TOKEN` (`create`-only on
-`survey-sender-v2`) successfully wrote a `location` value in the live test
-POST — no additional grant was or is needed.
+Confirmed sufficient **on the sandbox**. Production's `create` permission
+on `survey-sender-v2` is separately known-good (it's how every real survey
+submission already reaches production Strapi at all) — but that says
+nothing about whether production's schema has the `location` column, which
+is the actual open question here.
 
 ## Frontend integration (implemented, awaiting this field)
 
@@ -116,23 +126,29 @@ POST — no additional grant was or is needed.
 - `lib/survey-v2.ts` — no change; `submitSurveyV2()` already forwards
   whatever's in the validated payload.
 
-## Acceptance — all confirmed live, 2026-07-25
+## Acceptance
 
-1. ✅ `GET .../api/survey-sender-v2s` returns `200`; all 4 pre-existing rows
-   carry `location: null`.
-2. ✅ (implied by existing rows predating this frontend change) — payloads
-   without `location` succeed exactly as before.
-3. ✅ A POST with `location: { source: "geolocation", lat: 49.611, lon:
-   6.131, accuracyMeters: 25 }` returned `201`; the value is visible,
-   unmodified, on row id 5 (`documentId: du9ydi1a4s5dxpkkvvhwd3od`).
-4. Not separately tested (already covered by #1/#2 — existing rows have
-   `location: null` and succeeded).
+1. ✅ **Sandbox**: `GET .../api/survey-sender-v2s` returns `200`; all 4
+   pre-existing rows carry `location: null`.
+2. ✅ **Production**: a POST without `location` succeeds (`201`) —
+   confirmed 2026-07-26 against `https://hulubul.com/api/survey-v2`.
+3. ✅ **Sandbox**: a POST with `location: { source: "geolocation", lat:
+   49.611, lon: 6.131, accuracyMeters: 25 }` returned `201`; the value is
+   visible, unmodified, on row id 5 (`documentId:
+   du9ydi1a4s5dxpkkvvhwd3od`).
+   ⬜ **Production**: same POST shape returned `201` via
+   `https://hulubul.com/api/survey-v2` (row tagged
+   `prod-location-repro-2026-07-26`), but whether the value actually landed
+   in the `location` column is **unverified** — needs a look via Strapi
+   admin or a production-scoped token.
+4. Not separately tested — covered by #1/#2.
 
-**Housekeeping:** row id 5 is a test record (`name:
-"location-verify-2026-07-25"`, free-text answer self-labeled "a se
-ignora/șterge") — the frontend's API token only has `create` permission, so
-it can't be deleted from this repo. Delete it from Strapi admin if desired;
-harmless to leave otherwise.
+**Housekeeping:** two test rows now exist that the frontend's `create`-only
+tokens can't delete themselves — sandbox row id 5 (`name:
+"location-verify-2026-07-25"`) and a production row (`name:
+"prod-location-repro-2026-07-26"`, plus an earlier `prod-repro-2026-07-26`
+without a location field from the same investigation). All self-labeled as
+test data to delete; harmless to leave otherwise.
 
 ## Out of scope
 
