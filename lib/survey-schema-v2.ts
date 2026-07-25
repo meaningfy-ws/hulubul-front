@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { Location } from "./location";
 
 // ---- Enums (v2 only — deliberately not shared with lib/survey-schema.ts,
 // see design.md Decision 2) ----
@@ -159,6 +160,11 @@ export const surveySchemaV2 = z
     wantsToTest: testingOptInEnumV2,
     testPhone: optionalText,
     testConsent: z.boolean().optional(),
+
+    // Best-effort, silently captured location — same optional shape as
+    // waitlist's `location` (lib/location.ts). No consent field: this form
+    // never prompts, so there's nothing beyond `location.source` to record.
+    location: Location.nullable().optional(),
 
     // Tracker-cookie consent for server-side conversion dispatch.
     consent: z

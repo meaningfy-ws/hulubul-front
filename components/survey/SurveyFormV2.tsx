@@ -16,6 +16,7 @@ import type {
   TrustSignalV2,
 } from "@/lib/survey-schema-v2";
 import { readRemembered } from "@/lib/remember-me";
+import { requestLocation, type LocationGranted } from "@/lib/geolocation";
 import { humanizeFormError } from "@/lib/form-errors";
 import { FORM_STATUS, type FormStatus } from "@/lib/form-status";
 import { trackEvent } from "@/lib/tracking/events";
@@ -61,6 +62,7 @@ export function SurveyFormV2() {
   const [wantsToTest, setWantsToTest] = useState<TestingOptInV2 | "">("");
   const [testPhone, setTestPhone] = useState("");
   const [testConsent, setTestConsent] = useState(false);
+  const [location, setLocation] = useState<LocationGranted | null>(null);
 
   const [status, setStatus] = useState<Status>(FORM_STATUS.Idle);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -136,6 +138,15 @@ export function SurveyFormV2() {
     if (remembered?.whatsapp) setTestPhone(remembered.whatsapp);
   }, [searchParams]);
 
+  // Silent geolocation request — same pattern as the landing waitlist form:
+  // no in-form prompt, fire-and-forget. If it hasn't resolved by submit
+  // time, the payload simply carries no location.
+  useEffect(() => {
+    void (async () => {
+      setLocation(await requestLocation());
+    })();
+  }, []);
+
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setErrorMessage(null);
@@ -179,6 +190,7 @@ export function SurveyFormV2() {
       wantsToTest: wantsToTest as TestingOptInV2,
       ...(wantsToTest !== "nu" && testPhone.trim() ? { testPhone: testPhone.trim() } : {}),
       ...(wantsToTest !== "nu" ? { testConsent } : {}),
+      location,
       consent: {
         analytics: consentCtx.state.analytics,
         marketing: consentCtx.state.marketing,

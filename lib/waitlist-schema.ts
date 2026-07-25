@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { waitlistRoleEnum } from "./roles";
 import type { WaitlistRole } from "./roles";
+import { Location } from "./location";
 
 // Re-exported under the historical names so existing imports keep working.
 // The canonical definition lives in `lib/roles.ts`.
@@ -8,19 +9,6 @@ export const Role = waitlistRoleEnum;
 export type Role = WaitlistRole;
 
 const City = z.string().trim().min(1).max(120);
-
-const LocationGranted = z.object({
-  source: z.literal("geolocation"),
-  lat: z.number(),
-  lon: z.number(),
-  accuracyMeters: z.number().nonnegative(),
-});
-const LocationIp = z.object({
-  source: z.literal("ip"),
-  city: z.string().nullable(),
-  country: z.string().length(2).nullable(),
-});
-const Location = z.union([LocationGranted, LocationIp]);
 
 const Utm = z.object({
   utm_source: z.string().max(256).optional(),

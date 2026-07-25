@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { surveySchemaV2 } from "@/lib/survey-schema-v2";
 import { submitSurveyV2 } from "@/lib/survey-v2";
+import { resolveIpLocation } from "@/lib/location";
 import {
   dispatchConversion,
   generateEventId,
@@ -29,7 +30,14 @@ export async function POST(request: Request) {
   }
 
   // Strip server-only `consent` before forwarding to Strapi.
-  const { consent, ...strapiPayload } = parsed.data;
+  const { consent, ...rest } = parsed.data;
+
+  // Silent capture: if the browser didn't resolve a location, fall back to
+  // request-header-derived IP location (same as app/api/waitlist/route.ts).
+  // No consent gating here — this form never prompts, so absence of a
+  // client-sent location is the only signal.
+  const location = rest.location ?? resolveIpLocation(request);
+  const strapiPayload = { ...rest, location };
 
   try {
     await submitSurveyV2(

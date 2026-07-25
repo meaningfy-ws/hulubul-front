@@ -14,6 +14,7 @@ import {
 import { messageForCode } from "@/lib/errors/messages";
 import { maskEmail } from "@/lib/errors/mask";
 import { logger } from "@/lib/logger";
+import { resolveIpLocation } from "@/lib/location";
 
 export const runtime = "nodejs";
 
@@ -95,16 +96,6 @@ function buildDevice(
     timezone: client?.timezone ?? null,
     dnt,
   };
-}
-
-function resolveIpLocation(request: Request) {
-  const country =
-    request.headers.get("x-vercel-ip-country") ??
-    request.headers.get("cf-ipcountry") ??
-    null;
-  const city = request.headers.get("x-vercel-ip-city") ?? null;
-  if (!country && !city) return null;
-  return { source: "ip" as const, city, country };
 }
 
 export async function POST(request: Request) {
